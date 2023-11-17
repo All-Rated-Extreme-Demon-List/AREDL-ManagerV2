@@ -1,0 +1,17 @@
+{
+	"token": "",
+
+	"clientId": "1173179654492934225",
+	"guildId": "1173011289744871594",
+
+	"priorityRoleID" : "1173011289874911419",
+	"submissionLockRoleID" : "1173011289891672126",
+
+	"pendingRecordsID" : "1173011290969604156",
+	"priorityRecordsID" : "1173011290738921502",
+
+	"acceptedRecordsID" : "1173011290969604158",
+	"deniedRecordsID" : "1173011290969604157",
+	"archiveRecordsID" : "1173011290969604160",
+	"recordsID" : "1173011291829436422"
+}
