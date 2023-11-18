@@ -1,0 +1,26 @@
+name: Deploy Bot
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "development"
+      - "main"
+
+jobs:
+  sync_to_backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Deploy files
+        uses: burnett01/rsync-deployments@6.0.0
+        with:
+          switches: -avz
+          path: ./
+          remote_path: ${{ secrets.DEPLOY_PATH }}/${{ github.ref_name }}
+          remote_host: ${{ secrets.DEPLOY_HOST }}
+          remote_user: ${{ secrets.DEPLOY_USER }}
+          remote_key: ${{ secrets.DEPLOY_KEY }}
