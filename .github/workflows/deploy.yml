@@ -15,6 +15,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Remove config.json
+        uses: JesseTG/rm@1.0.3
+        with:
+          path: config.json
+
       - name: Deploy files
         uses: burnett01/rsync-deployments@6.0.0
         with:
