@@ -93,7 +93,7 @@ module.exports = {
 				}
 
 				// Create embed to send with github code
-				const githubCode = `\`\`\`json\n{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": "${record.fps}"` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n```' : '\n}\n```');
+				const githubCode = `\`\`\`json\n{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n```' : '\n}\n```');
 				const acceptEmbed = new EmbedBuilder()
 					.setColor(0x8fce00)
 					.setTitle(`:white_check_mark: ${record.levelname}`)
