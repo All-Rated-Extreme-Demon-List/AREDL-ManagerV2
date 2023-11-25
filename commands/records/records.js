@@ -1,8 +1,18 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-
-const { dbRecords, dbInfos } = require('../../index.js');
 const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID } = require('../../config.json');
 
+const denyReasons = new Map()
+	.set('none', 'No reason has been selected, please contact a list moderator')
+	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
+	.set('raw', 'Please resubmit with raw footage')
+	.set('ldm', 'The LDM used in the completion does not comply with the guidelines')
+	.set('duplicate', 'The submission has been sent more than once.')
+	.set('hacked', 'The completion was deemed to be hacked')
+	.set('invalid', 'The specified level is not on the list')
+	.set('form', 'The submission was filled out incorrectly')
+	.set('joke', 'Please only submit serious submissions. The staff team does not have the time to deal with your bullshit')
+	.set('group', 'Please only provide one level per submission')
+	.set('run', 'The submission is not a run from 0% to 100%, or does not include the endscreen');
 
 module.exports = {
 	cooldown: 5,
@@ -52,13 +62,28 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('status')
-				.setDescription('Check the status of pending records')),
+				.setDescription('Check the status of pending records'))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('info')
+				.setDescription('Check the status of your submissions')
+				.addStringOption(option =>
+					option.setName('status')
+						.setDescription('Which records you want to check')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'Pending', value: 'pending' },
+							{ name: 'Accepted', value: 'accepted' },
+							{ name: 'Denied', value: 'denied' },
+						))),
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true });
 
+		const { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos } = require('../../index.js');
+
 		if (interaction.options.getSubcommand() === 'submit') {
 
-			// Record submitting
+			// Record submitting //
 
 			// Check list banned
 			if (interaction.member.roles.cache.has(submissionLockRoleID)) {
@@ -113,11 +138,12 @@ module.exports = {
 				.setTimestamp();
 
 			// Send message
-			const sent = await interaction.guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ embeds: [recordEmbed], components: [row] });
+			const sent = await interaction.guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ embeds: [recordEmbed] });
+			const sentvideo = await interaction.guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ content : `${interaction.options.getString('completionlink')}`, components: [row] });
 
 			// Add record to sqlite db
 			try {
-				await dbRecords.create({
+				await dbPendingRecords.create({
 					username: interaction.options.getString('username'),
 					submitter: interaction.user.id,
 					levelname: interaction.options.getString('levelname'),
@@ -127,30 +153,33 @@ module.exports = {
 					raw: 'None',
 					ldm: 0,
 					additionalnotes: 'None',
-					discordid: sent.id,
+					discordid: sentvideo.id,
+					embedDiscordid: sent.id,
 					priority: interaction.member.roles.cache.has(priorityRoleID),
 				});
 			} catch (error) {
 				console.log(`Couldn't register the record ; something went wrong with Sequelize : ${error}`);
 				await sent.delete();
+				await sentvideo.delete();
 				return await interaction.editReply(':x: Something went wrong while submitting the record; Please try again later');
 			}
 
 			// Check for and add optionnal values to db
-			if (interaction.options.getString('raw') != null) await dbRecords.update({ raw: interaction.options.getString('raw') }, { where: { discordid: sent.id } });
-			if (interaction.options.getInteger('ldm') != null) await dbRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sent.id } });
-			if (interaction.options.getString('additionalnotes') != null) await dbRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sent.id } });
+			if (interaction.options.getString('raw') != null) await dbPendingRecords.update({ raw: interaction.options.getString('raw') }, { where: { discordid: sent.id } });
+			if (interaction.options.getInteger('ldm') != null) await dbPendingRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sent.id } });
+			if (interaction.options.getString('additionalnotes') != null) await dbPendingRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sent.id } });
 
+			console.log(`${interaction.user.id} submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
 			// Reply
 			await interaction.editReply((interaction.member.roles.cache.has(priorityRoleID) ? ':white_check_mark: The priority record has been submitted successfully' : ':white_check_mark: The record has been submitted successfully'));
 
 		} else if (interaction.options.getSubcommand() === 'status') {
 
-			// Check record submissions status
+			// Check record submissions status //
 
 			// Get records info
-			const nbRecords = await dbRecords.count({ where: { priority: false } });
-			const nbPriorityRecords = await dbRecords.count({ where: { priority: true } });
+			const nbRecords = await dbPendingRecords.count({ where: { priority: false } });
+			const nbPriorityRecords = await dbPendingRecords.count({ where: { priority: true } });
 			const dbStatus = await dbInfos.findOne({ where: { id: 1 } });
 
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
@@ -172,6 +201,104 @@ module.exports = {
 			// Send message and reply
 			await interaction.channel.send({ embeds : [statusEmbed] });
 			await interaction.editReply('Executed command');
+		} else if (interaction.options.getSubcommand() === 'info') {
+
+			// Check user submission infos //
+
+			// Count records
+
+			const nbPendingRecords = await dbPendingRecords.count({
+				where: {
+					submitter: interaction.user.id,
+				},
+			});
+
+			const nbAcceptedRecords = await dbAcceptedRecords.count({
+				where: {
+					submitter: interaction.user.id,
+				},
+			});
+
+			const nbDeniedRecords = await dbDeniedRecords.count({
+				where: {
+					submitter: interaction.user.id,
+				},
+			});
+
+			const nbSubmittedRecords = nbPendingRecords + nbAcceptedRecords + nbDeniedRecords;
+
+			const requestedStatus = interaction.options.getString('status');
+			let strInfo = '';
+			let title = '';
+			let color = 0x005c91;
+			if (requestedStatus === 'pending') {
+
+				// Get 20 oldest pending
+
+				title = 'Pending records';
+				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Oldest pending records**:\n`;
+
+				const oldestPendingRecords = await dbPendingRecords.findAll({
+					where: {
+						submitter: interaction.user.id,
+					},
+					order: [['createdAt', 'ASC']],
+					limit: 20,
+				});
+
+				for (let i = 0; i < oldestPendingRecords.length; i++) {
+					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - Submitted on ${oldestPendingRecords[i].updatedAt.toDateString()}\n`;
+				}
+				if (nbPendingRecords > 20) strInfo += '...';
+
+			} else if (requestedStatus === 'accepted') {
+
+				// Get 20 newest accepted
+
+				title = 'Accepted records';
+				color = 0x8fce00;
+				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Newly accepted records**:\n`;
+				const newestAcceptedRecords = await dbAcceptedRecords.findAll({
+					where: {
+						submitter: interaction.user.id,
+					},
+					order: [['createdAt', 'DESC']],
+					limit: 20,
+				});
+
+				for (let i = 0; i < newestAcceptedRecords.length; i++) {
+					strInfo += `- **${newestAcceptedRecords[i].levelname}** - ${newestAcceptedRecords[i].username} - Accepted on ${newestAcceptedRecords[i].updatedAt.toDateString()}\n`;
+				}
+				if (nbAcceptedRecords > 20) strInfo += '...';
+			} else {
+
+				// Get 20 newest denied
+
+				title = 'Denied records';
+				color = 0xcc0000;
+				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Newly denied records**:\n`;
+				const newestDeniedRecords = await dbDeniedRecords.findAll({
+					where: {
+						submitter: interaction.user.id,
+					},
+					order: [['createdAt', 'DESC']],
+					limit: 20,
+				});
+
+				for (let i = 0; i < newestDeniedRecords.length; i++) {
+					const denyReason = denyReasons.get(newestDeniedRecords[i].denyReason);
+					strInfo += `- **${newestDeniedRecords[i].levelname}** - ${newestDeniedRecords[i].username} - Denied on ${newestDeniedRecords[i].updatedAt.toDateString()}\n\tReason: ${denyReason}\n`;
+				}
+				if (nbDeniedRecords > 20) strInfo += '...';
+			}
+
+			const infoEmbed = new EmbedBuilder()
+				.setColor(color)
+				.setTitle(title)
+				.setDescription(strInfo)
+				.setTimestamp();
+
+			return await interaction.editReply({ embeds: [infoEmbed] });
 		}
 	},
 };
