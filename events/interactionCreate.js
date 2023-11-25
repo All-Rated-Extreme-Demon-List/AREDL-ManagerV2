@@ -1,18 +1,20 @@
 const { Events } = require('discord.js');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Collection } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
 const { archiveRecordsID, acceptedRecordsID, deniedRecordsID, recordsID } = require('../config.json');
-const { dbRecords, staffStats } = require('../index.js');
+const { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, staffStats } = require('../index.js');
 
 // Get deny text from deny reason identifier
 const denyReasons = new Map()
-	.set('illegitimate', 'The completion was deemed to be hacked or didn\'t comply with the guidelines.')
+	.set('none', 'No reason has been selected, please contact a list moderator')
+	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
 	.set('raw', 'Please resubmit with raw footage')
 	.set('ldm', 'The LDM used in the completion does not comply with the guidelines')
 	.set('duplicate', 'The submission has been sent more than once.')
+	.set('hacked', 'The completion was deemed to be hacked')
 	.set('invalid', 'The specified level is not on the list')
 	.set('form', 'The submission was filled out incorrectly')
 	.set('joke', 'Please only submit serious submissions. The staff team does not have the time to deal with your bullshit')
@@ -77,23 +79,29 @@ module.exports = {
 				// Accepting a record //
 
 				// Check for record info corresponding to the message id
-				const record = await dbRecords.findOne({ where: { discordid: interaction.message.id } });
+				const record = await dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
 				if (!record) {
 					await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
-					await interaction.message.delete();
+					try {
+						await interaction.message.delete();
+					} catch (error) {
+						console.log(error);
+					}
 					return;
 				}
 
-				// Remove message from pending
+				// Remove messages from pending
 				try {
 					await interaction.message.delete();
-				} catch (_) {
-					await interaction.editReply(':x: The record has already been accepted/denied');
+					if (record.embedDiscordid != null) await (await interaction.message.channel.messages.fetch(record.embedDiscordid)).delete();
+				} catch (error) {
+					await interaction.editReply(':x: The record has already been accepted/denied, or something went wrong while deleting the messages from pending');
+					console.log(error);
 					return;
 				}
 
 				// Create embed to send with github code
-				const githubCode = `\`\`\`json\n{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": "${record.fps}"` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n```' : '\n}\n```');
+				const githubCode = `\`\`\`json\n{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n```' : '\n}\n```');
 				const acceptEmbed = new EmbedBuilder()
 					.setColor(0x8fce00)
 					.setTitle(`:white_check_mark: ${record.levelname}`)
@@ -104,11 +112,19 @@ module.exports = {
 					)
 					.setTimestamp();
 
+				// Create button to remove the message
+				const remove = new ButtonBuilder()
+					.setCustomId('removeMsg')
+					.setLabel('Delete message')
+					.setStyle(ButtonStyle.Danger);
+
+				const row = new ActionRowBuilder()
+					.addComponents(remove);
+
 				// Create embed to send in archive with all record info
 				const archiveEmbed = new EmbedBuilder()
 					.setColor(0x8fce00)
 					.setTitle(`:white_check_mark: ${record.levelname}`)
-					.setURL(`${record.completionlink}`)
 					.addFields(
 						{ name: 'Record submitted by', value: `<@${record.submitter}>`, inline: true },
 						{ name: 'Record holder', value: `${record.username}`, inline: true },
@@ -130,17 +146,15 @@ module.exports = {
 					.setDescription('Accepted\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800')
 					.addFields(
 						{ name: 'Record holder', value: `${record.username}`, inline: true },
-					)
-					.setTimestamp();
+						{ name: 'FPS', value: `${record.fps}`, inline: true },
+						{ name: 'Device', value: `${record.device}`, inline: true },
+					);
 
 				// Send all messages simultaneously
-				interaction.guild.channels.cache.get(acceptedRecordsID).send({ content: `<@${interaction.user.id}>`, embeds: [acceptEmbed] });
+				interaction.guild.channels.cache.get(acceptedRecordsID).send({ content: `<@${interaction.user.id}>`, embeds: [acceptEmbed], components: [row] });
 				interaction.guild.channels.cache.get(archiveRecordsID).send({ embeds: [archiveEmbed] });
 				interaction.guild.channels.cache.get(recordsID).send({ embeds: [publicEmbed] });
 				interaction.guild.channels.cache.get(recordsID).send({ content : `${record.completionlink}` });
-
-				// Remove record from db
-				await dbRecords.destroy({ where: { discordid: interaction.message.id } });
 
 				// Update moderator data (create new entry if that moderator hasn't accepted/denied records before)
 				const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
@@ -156,6 +170,29 @@ module.exports = {
 					await modInfo.increment('nbAccepted');
 				}
 
+				// Remove record from pending table
+				await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+				// Add record to accepted table
+				try {
+					await dbAcceptedRecords.create({
+						username: record.username,
+						submitter: record.submitter,
+						levelname: record.levelname,
+						fps: record.fps,
+						device: record.device,
+						completionlink: record.completionlink,
+						raw: record.raw,
+						ldm: record.ldm,
+						additionalnotes: record.additionalnotes,
+						priority: record.priority,
+						moderator: interaction.user.id,
+					});
+				} catch (error) {
+					console.log(`Couldn't add the accepted record ; something went wrong with Sequelize : ${error}`);
+					return await interaction.editReply(':x: Something went wrong while adding the accepted record to the database');
+				}
+
+				console.log(`${interaction.user.id} accepted record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
 				// Reply
 				return await interaction.editReply(':white_check_mark: The record has been accepted');
 
@@ -164,16 +201,21 @@ module.exports = {
 				// Denying a record //
 
 				// Check for record info corresponding to the message id
-				const record = await dbRecords.findOne({ where: { discordid: interaction.message.id } });
+				const record = await dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
 				if (!record) {
 					await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
-					await interaction.message.delete();
+					try {
+						await interaction.message.delete();
+					} catch (error) {
+						console.log(error);
+					}
 					return;
 				}
 
 				// Remove message from pending
 				try {
 					await interaction.message.delete();
+					if (record.embedDiscordid != null) await (await interaction.message.channel.messages.fetch(record.embedDiscordid)).delete();
 				} catch (_) {
 					await interaction.editReply(':x: The record has already been accepted/denied');
 					return;
@@ -196,7 +238,7 @@ module.exports = {
 					.addOptions(
 						new StringSelectMenuOptionBuilder()
 							.setLabel('Illegitimate')
-							.setDescription('The completion was deemed to be hacked or didn\'t comply with the guidelines.')
+							.setDescription('The completion doesn\'t comply with the guidelines.')
 							.setValue('illegitimate'),
 						new StringSelectMenuOptionBuilder()
 							.setLabel('Resubmit with raw')
@@ -214,6 +256,10 @@ module.exports = {
 							.setLabel('Invalid Level')
 							.setDescription('The specified level is not on the list.')
 							.setValue('invalid'),
+						new StringSelectMenuOptionBuilder()
+							.setLabel('Hacked')
+							.setDescription('The completion was deemed to be hacked')
+							.setValue('hacked'),
 						new StringSelectMenuOptionBuilder()
 							.setLabel('Invalid Form')
 							.setDescription('The submission was filled out incorrectly.')
@@ -238,8 +284,30 @@ module.exports = {
 				// Send in moderator dms
 				const sent = await interaction.user.send({ embeds: [denyEmbed], components: [row] });
 
-				// Change the discord message id linked to the record data, so that the next interaction, which will come from the message in dms, will be able to retrieve the data
-				await dbRecords.update({ discordid: sent.id }, { where: { discordid: interaction.message.id } });
+				// Remove record from pending table
+				await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+
+				// Add record to denied table
+				try {
+					await dbDeniedRecords.create({
+						username: record.username,
+						submitter: record.submitter,
+						levelname: record.levelname,
+						fps: record.fps,
+						device: record.device,
+						completionlink: record.completionlink,
+						raw: record.raw,
+						ldm: record.ldm,
+						additionalnotes: record.additionalnotes,
+						priority: record.priority,
+						discordid: sent.id,
+						denyReason: 'none',
+						moderator: interaction.user.id,
+					});
+				} catch (error) {
+					console.log(`Couldn't add the denied record ; something went wrong with Sequelize : ${error}`);
+					return await interaction.editReply(':x: Something went wrong while adding the denied record to the database');
+				}
 
 				// Update moderator data
 				const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
@@ -255,8 +323,21 @@ module.exports = {
 					await modInfo.increment('nbDenied');
 				}
 
+				console.log(`${interaction.user.id} denied record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
 				// Reply
 				return await interaction.editReply(':white_check_mark: The record has been denied');
+
+			} else if (interaction.customId === 'removeMsg') {
+
+				// Remove message
+
+				try {
+					await interaction.message.delete();
+					return await interaction.editReply(':white_check_mark: Message deleted');
+				} catch (error) {
+					console.log(error);
+					return await interaction.editReply(':x: Something went wrong');
+				}
 			}
 
 		} else if (interaction.isStringSelectMenu) {
@@ -265,29 +346,23 @@ module.exports = {
 
 			await interaction.deferReply({ ephemeral: true });
 
+			// Check for record info corresponding to the message id
+			const record = await dbDeniedRecords.findOne({ where: { discordid: interaction.message.id } });
+			if (!record) {
+				return await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
+			}
+
+			if (record.denyReason != 'none') {
+				return await interaction.editReply(':x: This deny reason has already been selected');
+			}
+
 			// Get reason from the menu
 			const reason = denyReasons.get(interaction.values[0]);
-
-			// Check for record info corresponding to the message id
-			const record = await dbRecords.findOne({ where: { discordid: interaction.message.id } });
-			if (!record) {
-				await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
-				await interaction.message.delete();
-				return;
-			}
-
-			// Remove the message from dms
-			try {
-				await interaction.message.delete();
-			} catch (_) {
-				return await interaction.editReply(':x: The record has already been accepted/denied');
-			}
 
 			// Create embed with all record info to send in archive
 			const denyArchiveEmbed = new EmbedBuilder()
 				.setColor(0xcc0000)
 				.setTitle(`:x: ${record.levelname}`)
-				.setURL(`${record.completionlink}`)
 				.addFields(
 					{ name: 'Record submitted by', value: `<@${record.submitter}>`, inline: true },
 					{ name: 'Record holder', value: `${record.username}`, inline: true },
@@ -326,9 +401,7 @@ module.exports = {
 				.addFields(
 					{ name: 'Record holder', value: `${record.username}` },
 					{ name: 'Deny Reason', value: `${reason}` },
-				)
-
-				.setTimestamp();
+				);
 
 			// Send all messages (notify the submitter that the record was denied, expect for group submissions and duplicates)
 			await interaction.client.channels.cache.get(archiveRecordsID).send({ embeds : [denyArchiveEmbed] });
@@ -336,10 +409,13 @@ module.exports = {
 			if (interaction.values[0] != 'group' && interaction.values[0] != 'duplicate') await interaction.client.channels.cache.get(recordsID).send({ content : `<@${record.submitter}>`, embeds : [publicDenyEmbed] });
 			else await interaction.client.channels.cache.get(recordsID).send({ embeds : [publicDenyEmbed] });
 
-			// Remove record from db
-			await dbRecords.destroy({ where: { discordid: interaction.message.id } });
+			// Update info in denied table
+			await dbDeniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
 
 			// Reply
+
+			console.log(`${interaction.user.id} selected deny reason '${interaction.values[0]}' of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
+
 			return await interaction.editReply(':white_check_mark: The deny reason has been selected');
 
 		} else { return; }

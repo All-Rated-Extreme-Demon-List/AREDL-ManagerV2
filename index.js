@@ -15,7 +15,41 @@ const sequelize = new Sequelize({
 });
 
 // Create tables models
-const dbRecords = sequelize.define('records', {
+const dbPendingRecords = sequelize.define('pendingRecords', {
+	username: Sequelize.STRING,
+	submitter: Sequelize.STRING,
+	levelname: Sequelize.STRING,
+	fps: Sequelize.INTEGER,
+	device: Sequelize.STRING,
+	completionlink: Sequelize.STRING,
+	raw: Sequelize.STRING,
+	ldm: Sequelize.INTEGER,
+	additionalnotes: Sequelize.STRING,
+	discordid: {
+		type: Sequelize.STRING,
+		unique: true,
+	},
+	embedDiscordid: {
+		type: Sequelize.STRING,
+	},
+	priority: Sequelize.BOOLEAN,
+});
+
+const dbAcceptedRecords = sequelize.define('acceptedRecords', {
+	username: Sequelize.STRING,
+	submitter: Sequelize.STRING,
+	levelname: Sequelize.STRING,
+	fps: Sequelize.INTEGER,
+	device: Sequelize.STRING,
+	completionlink: Sequelize.STRING,
+	raw: Sequelize.STRING,
+	ldm: Sequelize.INTEGER,
+	additionalnotes: Sequelize.STRING,
+	priority: Sequelize.BOOLEAN,
+	moderator: Sequelize.STRING,
+});
+
+const dbDeniedRecords = sequelize.define('deniedRecords', {
 	username: Sequelize.STRING,
 	submitter: Sequelize.STRING,
 	levelname: Sequelize.STRING,
@@ -30,9 +64,11 @@ const dbRecords = sequelize.define('records', {
 		unique: true,
 	},
 	priority: Sequelize.BOOLEAN,
+	denyReason: Sequelize.STRING,
+	moderator: Sequelize.STRING,
 });
 
-const staffStats = sequelize.define('staff', {
+const staffStats = sequelize.define('staffs', {
 	moderator: Sequelize.STRING,
 	nbRecords: Sequelize.INTEGER,
 	nbAccepted: Sequelize.INTEGER,
@@ -46,7 +82,7 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbRecords, dbInfos, staffStats };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats };
 
 // Commands
 client.commands = new Collection();
