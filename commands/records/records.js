@@ -27,10 +27,12 @@ module.exports = {
 				.addStringOption(option =>
 					option.setName('username')
 						.setDescription('The name that will show up on records and the leaderboard (KEEP CONSISTENT BETWEEN RECORDS)')
+						.setMaxLength(1024)
 						.setRequired(true))
 				.addStringOption(option =>
 					option.setName('levelname')
 						.setDescription('Name of the level you\'re submitting for (check to see if it\'s on the list first)')
+						.setMaxLength(1024)
 						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('fps')
@@ -49,16 +51,19 @@ module.exports = {
 				.addStringOption(option =>
 					option.setName('completionlink')
 						.setDescription('Link to the completion')
+						.setMaxLength(1024)
 						.setRequired(true))
 				.addStringOption(option =>
 					option.setName('raw')
-						.setDescription('Link to your raw footage (Optional, required for top 250 levels)'))
+						.setDescription('Link to your raw footage (Optional, required for top 250 levels)')
+						.setMaxLength(1024))
 				.addIntegerOption(option =>
 					option.setName('ldm')
 						.setDescription('ID for the external LDM you used (Optional)'))
 				.addStringOption(option =>
 					option.setName('additionalnotes')
-						.setDescription('Any other info you\'d like to share with us (Optional)')))
+						.setDescription('Any other info you\'d like to share with us (Optional)')
+						.setMaxLength(1024)))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('status')
@@ -165,9 +170,9 @@ module.exports = {
 			}
 
 			// Check for and add optionnal values to db
-			if (interaction.options.getString('raw') != null) await dbPendingRecords.update({ raw: interaction.options.getString('raw') }, { where: { discordid: sent.id } });
-			if (interaction.options.getInteger('ldm') != null) await dbPendingRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sent.id } });
-			if (interaction.options.getString('additionalnotes') != null) await dbPendingRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sent.id } });
+			if (interaction.options.getString('raw') != null) await dbPendingRecords.update({ raw: interaction.options.getString('raw') }, { where: { discordid: sentvideo.id } });
+			if (interaction.options.getInteger('ldm') != null) await dbPendingRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sentvideo.id } });
+			if (interaction.options.getString('additionalnotes') != null) await dbPendingRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sentvideo.id } });
 
 			console.log(`${interaction.user.id} submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
 			// Reply

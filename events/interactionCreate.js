@@ -282,7 +282,13 @@ module.exports = {
 					.addComponents(denySelect);
 
 				// Send in moderator dms
-				const sent = await interaction.user.send({ embeds: [denyEmbed], components: [row] });
+				let sent;
+				try {
+					sent = await interaction.user.send({ embeds: [denyEmbed], components: [row] });
+				} catch (_) {
+					console.log(`Failed to send in moderator ${interaction.user.id} dms, sending in denied record logs`);
+					sent = await (await interaction.client.channels.cache.get(deniedRecordsID)).send({ embeds: [denyEmbed], components: [row] });
+				}
 
 				// Remove record from pending table
 				await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
@@ -372,8 +378,8 @@ module.exports = {
 					{ name: 'Device', value: `${record.device}`, inline: true },
 					{ name: 'LDM', value: `${(record.ldm == 0 ? 'None' : record.ldm)}`, inline: true },
 					{ name: 'Completion link', value: `${record.completionlink}` },
-					{ name: 'Raw link', value: `${(record.raw == '' ? 'None' : record.raw)}` },
-					{ name: 'Additional Info', value: `${(record.additionalnotes == '' ? 'None' : record.additionalnotes)}` },
+					{ name: 'Raw link', value: `${record.raw}` },
+					{ name: 'Additional Info', value: `${record.additionalnotes}` },
 				)
 				.setTimestamp();
 
