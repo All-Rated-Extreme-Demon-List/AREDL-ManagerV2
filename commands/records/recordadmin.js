@@ -24,8 +24,16 @@ module.exports = {
 						)))
 		.addSubcommand(subcommand =>
 			subcommand
-				.setName('modinfo')
+				.setName('modleaderboard')
 				.setDescription('Shows list staff records leaderboard '))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('modinfo')
+				.setDescription('Shows a list staff activity')
+				.addUserOption(option =>
+					option.setName('moderator')
+						.setDescription('The moderator you want to check the activity of')
+						.setRequired(true)))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('pendinginfo')
@@ -50,23 +58,6 @@ module.exports = {
 			subcommand
 				.setName('check')
 				.setDescription('Checks for errored record data')),
-	/* .addStringOption(option =>
-					option.setName('type')
-						.setDescription('Which records to clear')
-						.setRequired(true)
-						.addChoices(
-							{ name: 'Denied', value: 'denied' },
-							{ name: 'All', value: 'all' },
-						))
-				.addStringOption(option =>
-					option.setName('channel')
-						.setDescription('From which channel')
-						.setRequired(true)
-						.addChoices(
-							{ name: 'Normal pending', value: 'pending' },
-							{ name: 'Priority pending', value: 'priority' },
-							{ name: 'Both', value: 'both' },
-						))*/
 	async execute(interaction) {
 
 		const { staffStats, dbAcceptedRecords, dbDeniedRecords, dbPendingRecords } = require('../../index.js');
@@ -86,14 +77,14 @@ module.exports = {
 			console.log(`Changed record status to ${interaction.options.getString('status')}`);
 			return await interaction.editReply(`:white_check_mark: Changed record status to ${interaction.options.getString('status')}`);
 
-		} else if (interaction.options.getSubcommand() === 'modinfo') {
+		} else if (interaction.options.getSubcommand() === 'modleaderboard') {
 
-			// Display staff records info //
+			// Display staff records leaderboard //
 
 			// Get number of staff
 			const nbTotal = await staffStats.count();
 			// Get sqlite data, ordered by descending number of records, limited to top 20 for now (maybe add a page system later)
-			const modInfos = await staffStats.findAll({ limit: 20, order: [ ['nbRecords', 'DESC'] ], attributes: ['moderator', 'nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'] });
+			const modInfos = await staffStats.findAll({ limit: 30, order: [ ['nbRecords', 'DESC'] ], attributes: ['moderator', 'nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'] });
 			if (!nbTotal || !modInfos) return await interaction.editReply(':x: Something went wrong while executing the command');
 
 			let strModData = '';
@@ -104,12 +95,40 @@ module.exports = {
 			// Embed displaying the data
 			const modEmbed = new EmbedBuilder()
 				.setColor(0xFFBF00)
-				.setAuthor({ name: 'Moderator data' })
+				.setAuthor({ name: 'Moderator leaderboard' })
 				.setDescription(strModData)
 				.setTimestamp();
 
 			// Send reply
 			return await interaction.editReply({ embeds: [ modEmbed ] });
+
+
+		} else if (interaction.options.getSubcommand() === 'modinfo') {
+
+			// Display a list staff activity info
+
+			const modId = interaction.options.getUser('moderator').id;
+
+			const modInfo = await staffStats.findOne({ attribute: ['nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'], where: { moderator: modId } });
+
+			if (!modInfo) {
+				return await interaction.editReply(':x: This moderator hasn\'t accepted or denied any record');
+			}
+
+			const modInfoEmbed = new EmbedBuilder()
+				.setColor(0xFFBF00)
+				.setTitle('Moderator info')
+				.setDescription(`<@${modId}>`)
+				.addFields(
+					{ name: 'Total records checked:', value: `${modInfo.nbRecords}`, inline: true },
+					{ name: 'Accepted records:', value: `${modInfo.nbAccepted}`, inline: true },
+					{ name: 'Denied records:', value: `${modInfo.nbDenied}`, inline: true },
+					{ name: 'Last activity:', value: `${modInfo.updatedAt.toDateString()}` },
+				);
+
+			return await interaction.editReply({ embeds: [ modInfoEmbed ] });
+
+
 		} else if (interaction.options.getSubcommand() === 'setmodinfo') {
 
 			// Changes moderator data //

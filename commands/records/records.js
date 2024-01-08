@@ -36,10 +36,9 @@ module.exports = {
 						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('fps')
-						.setDescription('FPS used to complete the level (360 at most)')
+						.setDescription('FPS used to complete the level')
 						.setRequired(true)
-						.setMinValue(0)
-						.setMaxValue(360))
+						.setMinValue(0))
 				.addStringOption(option =>
 					option.setName('device')
 						.setDescription('Device the level was completed on')
