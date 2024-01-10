@@ -407,6 +407,14 @@ module.exports = {
 			const nbAcceptedTotal = await dbAcceptedRecords.count();
 			const nbDeniedTotal = await dbDeniedRecords.count();
 
+			const nbAcceptedRecent = await dbAcceptedRecords.count({
+				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
+			});
+
+			const nbDeniedRecent = await dbDeniedRecords.count({
+				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
+			});
+
 			const statsEmbed = new EmbedBuilder()
 				.setColor(0xFFBF00)
 				.setTitle('All records stats')
@@ -416,9 +424,9 @@ module.exports = {
 					{ name: 'Accepted records:', value: `${nbAcceptedTotal}`, inline: true },
 					{ name: 'Denied records:', value: `${nbDeniedTotal}`, inline: true },
 					{ name: 'Past 30 days :', value: ' ' },
-					{ name: 'Records checked:', value: `${acceptedData.length + deniedData.length}`, inline: true },
-					{ name: 'Accepted records:', value: `${acceptedData.length}`, inline: true },
-					{ name: 'Denied records:', value: `${deniedData.length}`, inline: true },
+					{ name: 'Records checked:', value: `${nbAcceptedRecent + nbDeniedRecent}`, inline: true },
+					{ name: 'Accepted records:', value: `${nbAcceptedRecent}`, inline: true },
+					{ name: 'Denied records:', value: `${nbDeniedRecent}`, inline: true },
 				)
 				.setImage('attachment://recordsgraph.png');
 
