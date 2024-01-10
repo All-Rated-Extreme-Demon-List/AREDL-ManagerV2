@@ -175,7 +175,7 @@ module.exports = {
 			datasA.reverse();
 			datasD.reverse();
 
-			const renderer = new ChartJSNodeCanvas({ width: 800, height: 300, backgroundColour: 'white' });
+			const renderer = new ChartJSNodeCanvas({ width: 1600, height: 600, backgroundColour: 'white' });
 			const image = await renderer.renderToBuffer({
 				// Build your graph passing option you want
 				type: 'bar',
@@ -369,7 +369,7 @@ module.exports = {
 			datasA.reverse();
 			datasD.reverse();
 
-			const renderer = new ChartJSNodeCanvas({ width: 800, height: 300, backgroundColour: 'white' });
+			const renderer = new ChartJSNodeCanvas({ width: 1600, height: 600, backgroundColour: 'white' });
 			const image = await renderer.renderToBuffer({
 				// Build your graph passing option you want
 				type: 'bar',
