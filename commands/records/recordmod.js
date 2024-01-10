@@ -1,4 +1,6 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const Sequelize = require('sequelize');
+const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
 module.exports = {
 	cooldown: 5,
@@ -12,7 +14,7 @@ module.exports = {
 				.setDescription('Shows how many records you\'ve checked')),
 	async execute(interaction) {
 
-		const { staffStats } = require('../../index.js');
+		const { staffStats, dbAcceptedRecords, dbDeniedRecords } = require('../../index.js');
 
 		await interaction.deferReply({ ephemeral: true });
 
@@ -28,6 +30,87 @@ module.exports = {
 				return await interaction.editReply(':x: You haven\'t accepted or denied any record yet');
 			}
 
+			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
+			const modAcceptedData = await dbAcceptedRecords.findAll({
+				attributes: [
+					[Sequelize.literal('DATE("createdAt")'), 'date'],
+					[Sequelize.literal('COUNT(*)'), 'count'],
+				],
+				group: ['date'],
+				where: { moderator: modId, createdAt: { [Sequelize.Op.gte]: minDate } },
+			});
+
+			const modDeniedData = await dbDeniedRecords.findAll({
+				attributes: [
+					[Sequelize.literal('DATE("createdAt")'), 'date'],
+					[Sequelize.literal('COUNT(*)'), 'count'],
+				],
+				group: ['date'],
+				where: { moderator: modId, createdAt: { [Sequelize.Op.gte]: minDate } },
+			});
+
+			const labels = [];
+			const datasA = [];
+			const datasD = [];
+			const date = new Date();
+
+			const isRightDate = function(element) {
+				return !element.dataValues['date'].localeCompare(this);
+			};
+
+			for (let i = 0; i < 30; i++) {
+				labels.push(date.toJSON().slice(0, 10));
+				date.setDate(date.getDate() - 1);
+
+				const acceptedIndex = modAcceptedData.findIndex(isRightDate, labels[i]);
+				const deniedIndex = modDeniedData.findIndex(isRightDate, labels[i]);
+
+				if (acceptedIndex != -1) datasA.push(modAcceptedData[acceptedIndex].dataValues['count']);
+				else datasA.push(0);
+
+				if (deniedIndex != -1) datasD.push(modDeniedData[deniedIndex].dataValues['count']);
+				else datasD.push(0);
+
+			}
+
+			labels.reverse();
+			datasA.reverse();
+			datasD.reverse();
+
+			const renderer = new ChartJSNodeCanvas({ width: 800, height: 300, backgroundColour: 'white' });
+			const image = await renderer.renderToBuffer({
+				// Build your graph passing option you want
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [
+						{
+							label: 'Accepted Records',
+							backgroundColor: 'green',
+							data: datasA,
+						},
+						{
+							label: 'Denied Records',
+							backgroundColor: 'red',
+							data: datasD,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					plugins: {
+						legend: {
+							position: 'top',
+						},
+						title: {
+							display: true,
+							text: 'Moderator activity',
+						},
+					},
+				},
+			});
+
+			const attachment = await new AttachmentBuilder(image, { name: 'modgraph.png' });
 			const modInfoEmbed = new EmbedBuilder()
 				.setColor(0xFFBF00)
 				.setTitle('Moderator info')
@@ -37,9 +120,10 @@ module.exports = {
 					{ name: 'Accepted records:', value: `${modInfo.nbAccepted}`, inline: true },
 					{ name: 'Denied records:', value: `${modInfo.nbDenied}`, inline: true },
 					{ name: 'Last activity:', value: `${modInfo.updatedAt.toDateString()}` },
-				);
+				)
+				.setImage('attachment://modgraph.png');
 
-			return await interaction.editReply({ embeds: [ modInfoEmbed ] });
+			return await interaction.editReply({ embeds: [ modInfoEmbed ], files: [attachment] });
 
 
 		}
