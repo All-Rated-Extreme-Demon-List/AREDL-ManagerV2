@@ -37,7 +37,7 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('info')
-				.setDescription('Shows info on currenyly pending/accepted/denied records')
+				.setDescription('Shows info on people with the most pending/accepted/denied records')
 				.addStringOption(option =>
 					option.setName('type')
 						.setDescription('Which records you want to check')
@@ -66,7 +66,11 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('check')
-				.setDescription('Checks for errored record data')),
+				.setDescription('Checks for errored record data'))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('stats')
+				.setDescription('Shows info about all records')),
 	async execute(interaction) {
 
 		const { staffStats, dbAcceptedRecords, dbDeniedRecords, dbPendingRecords } = require('../../index.js');
@@ -314,6 +318,111 @@ module.exports = {
 			}
 			console.log(`Found a total of ${nbFound} records.`);
 			return await interaction.editReply(`:white_check_mark: ${nbFound} records missing from the pending channel were found, and removed from the database.`);
+
+
+		} else if (interaction.options.getSubcommand() === 'stats') {
+
+			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
+			const acceptedData = await dbAcceptedRecords.findAll({
+				attributes: [
+					[Sequelize.literal('DATE("createdAt")'), 'date'],
+					[Sequelize.literal('COUNT(*)'), 'count'],
+				],
+				group: ['date'],
+				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
+			});
+
+			const deniedData = await dbDeniedRecords.findAll({
+				attributes: [
+					[Sequelize.literal('DATE("createdAt")'), 'date'],
+					[Sequelize.literal('COUNT(*)'), 'count'],
+				],
+				group: ['date'],
+				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
+			});
+
+			const labels = [];
+			const datasA = [];
+			const datasD = [];
+			const date = new Date();
+
+			const isRightDate = function(element) {
+				return !element.dataValues['date'].localeCompare(this);
+			};
+
+			for (let i = 0; i < 30; i++) {
+				labels.push(date.toJSON().slice(0, 10));
+				date.setDate(date.getDate() - 1);
+
+				const acceptedIndex = acceptedData.findIndex(isRightDate, labels[i]);
+				const deniedIndex = deniedData.findIndex(isRightDate, labels[i]);
+
+				if (acceptedIndex != -1) datasA.push(acceptedData[acceptedIndex].dataValues['count']);
+				else datasA.push(0);
+
+				if (deniedIndex != -1) datasD.push(deniedData[deniedIndex].dataValues['count']);
+				else datasD.push(0);
+
+			}
+
+			labels.reverse();
+			datasA.reverse();
+			datasD.reverse();
+
+			const renderer = new ChartJSNodeCanvas({ width: 800, height: 300, backgroundColour: 'white' });
+			const image = await renderer.renderToBuffer({
+				// Build your graph passing option you want
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [
+						{
+							label: 'Accepted Records',
+							backgroundColor: 'green',
+							data: datasA,
+						},
+						{
+							label: 'Denied Records',
+							backgroundColor: 'red',
+							data: datasD,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					plugins: {
+						legend: {
+							position: 'top',
+						},
+						title: {
+							display: true,
+							text: 'All records activity',
+						},
+					},
+				},
+			});
+
+			const attachment = await new AttachmentBuilder(image, { name: 'recordsgraph.png' });
+
+			const nbAcceptedTotal = await dbAcceptedRecords.count();
+			const nbDeniedTotal = await dbDeniedRecords.count();
+
+			const statsEmbed = new EmbedBuilder()
+				.setColor(0xFFBF00)
+				.setTitle('All records stats')
+				.addFields(
+					{ name: 'All Time :', value: ' ' },
+					{ name: 'Total records checked:', value: `${nbAcceptedTotal + nbDeniedTotal}`, inline: true },
+					{ name: 'Accepted records:', value: `${nbAcceptedTotal}`, inline: true },
+					{ name: 'Denied records:', value: `${nbDeniedTotal}`, inline: true },
+					{ name: 'Past 30 days :', value: ' ' },
+					{ name: 'Records checked:', value: `${acceptedData.length + deniedData.length}`, inline: true },
+					{ name: 'Accepted records:', value: `${acceptedData.length}`, inline: true },
+					{ name: 'Denied records:', value: `${deniedData.length}`, inline: true },
+				)
+				.setImage('attachment://recordsgraph.png');
+
+			return await interaction.editReply({ embeds: [ statsEmbed ], files: [attachment] });
 		}
 	},
 };
