@@ -5,7 +5,7 @@ const { ActionRowBuilder } = require('discord.js');
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
 const { archiveRecordsID, acceptedRecordsID, deniedRecordsID, recordsID } = require('../config.json');
-const { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, staffStats } = require('../index.js');
+const { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, staffStats, staffSettings } = require('../index.js');
 
 // Get deny text from deny reason identifier
 const denyReasons = new Map()
@@ -156,6 +156,25 @@ module.exports = {
 				interaction.guild.channels.cache.get(recordsID).send({ embeds: [publicEmbed] });
 				interaction.guild.channels.cache.get(recordsID).send({ content : `${record.completionlink}` });
 
+				// Check if we need to send in dms as well
+				const settings = await staffSettings.findOne({ where: { moderator: interaction.user.id } });
+				if (!settings) {
+					await staffSettings.create({
+						moderator: interaction.user.id,
+						sendAcceptedInDM: false,
+					});
+				} else if (settings.sendAcceptedInDM) {
+					try {
+						const rawGithubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}' : '\n}');
+						const dmMessage = `Accepted record of ${record.levelname} for ${record.username}\nGithub Code:`;
+						const dmMessage2 = `${rawGithubCode}`;
+						await interaction.user.send({ content: dmMessage });
+						await interaction.user.send({ content: dmMessage2 });
+					} catch (_) {
+						console.log(`Failed to send in moderator ${interaction.user.id} dms, ignoring send in dms setting`);
+					}
+				}
+
 				// Update moderator data (create new entry if that moderator hasn't accepted/denied records before)
 				const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
 				if (!modInfo) {
@@ -169,6 +188,7 @@ module.exports = {
 					await modInfo.increment('nbRecords');
 					await modInfo.increment('nbAccepted');
 				}
+
 
 				// Remove record from pending table
 				await dbPendingRecords.destroy({ where: { discordid: record.discordid } });

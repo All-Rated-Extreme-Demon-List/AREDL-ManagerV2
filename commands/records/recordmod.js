@@ -11,7 +11,19 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('stats')
-				.setDescription('Shows how many records you\'ve checked')),
+				.setDescription('Shows how many records you\'ve checked'))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('enabledm')
+				.setDescription('Enables sending the github code to you in dms whenever you accept a record')
+				.addStringOption(option =>
+					option.setName('status')
+						.setDescription('Enable or disable this setting')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'Enabled', value: 'enabled' },
+							{ name: 'Disabled', value: 'disabled' },
+						))),
 	async execute(interaction) {
 
 		const { staffStats, dbAcceptedRecords, dbDeniedRecords } = require('../../index.js');
@@ -126,6 +138,22 @@ module.exports = {
 			return await interaction.editReply({ embeds: [ modInfoEmbed ], files: [attachment] });
 
 
+		} else if (interaction.options.getSubcommand() === 'enabledm') {
+
+			const { staffSettings } = require('../../index.js');
+
+			// Update sqlite db
+			const update = await staffSettings.update({ sendAcceptedInDM: interaction.options.getString('status') === 'enabled' }, { where: { moderator: interaction.user.id } });
+
+			if (!update) {
+				const create = await staffSettings.create({
+					moderator: interaction.user.id,
+					sendAcceptedInDM: interaction.options.getString('status') === 'enabled',
+				});
+
+				if (!create) return await interaction.editReply(':x: Something went wrong while executing the command');
+			}
+			return await interaction.editReply(`:white_check_mark: Changed setting to ${interaction.options.getString('status')}`);
 		}
 	},
 };

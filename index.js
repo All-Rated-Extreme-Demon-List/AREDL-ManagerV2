@@ -75,6 +75,14 @@ const staffStats = sequelize.define('staffs', {
 	nbDenied: Sequelize.INTEGER,
 });
 
+const staffSettings = sequelize.define('settings', {
+	moderator: Sequelize.STRING,
+	sendAcceptedInDM: {
+		type: Sequelize.BOOLEAN,
+		defaultValue: false,
+	},
+});
+
 const dbInfos = sequelize.define('infos', {
 	status: {
 		type: Sequelize.BOOLEAN,
@@ -82,7 +90,7 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings };
 
 // Commands
 client.commands = new Collection();
