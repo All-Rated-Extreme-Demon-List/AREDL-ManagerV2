@@ -5,7 +5,7 @@ const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
 // Establish DB connection
 const sequelize = new Sequelize({
@@ -98,6 +98,7 @@ client.cooldowns = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
+console.log('Loading commands');
 for (const folder of commandFolders) {
 	const commandsPath = path.join(foldersPath, folder);
 	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -106,6 +107,7 @@ for (const folder of commandFolders) {
 		const command = require(filePath);
 		// Set a new item in the Collection with the key as the command name and the value as the exported module
 		if ('data' in command && 'execute' in command) {
+			console.log(`  Loaded ${command.data.name} from ${filePath}`);
 			client.commands.set(command.data.name, command);
 		} else {
 			console.log(`data : ${'data' in command} |execute : ${'execute' in command}`);
@@ -114,7 +116,34 @@ for (const folder of commandFolders) {
 	}
 }
 
+// Buttons
+console.log('Loading buttons');
+client.buttons = new Collection();
+const buttonsPath = path.join(__dirname, 'buttons');
+const buttonsFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
+
+for (const file of buttonsFiles) {
+	const filePath = path.join(buttonsPath, file);
+	const button = require(filePath);
+	client.buttons.set(button.customId, button);
+	console.log(`  Loaded ${button.customId} from ${filePath}`);
+}
+
+// Select Menus
+console.log('Loading menus');
+client.menus = new Collection();
+const menusPath = path.join(__dirname, 'menus');
+const menusFiles = fs.readdirSync(menusPath).filter(file => file.endsWith('.js'));
+
+for (const file of menusFiles) {
+	const filePath = path.join(menusPath, file);
+	const menu = require(filePath);
+	client.menus.set(menu.customId, menu);
+	console.log(`  Loaded ${menu.customId} from ${filePath}`);
+}
+
 // Events
+console.log('Loading events');
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -126,6 +155,7 @@ for (const file of eventFiles) {
 	} else {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
+	console.log(`  Loaded ${event.name} from ${filePath}`);
 }
 
 // Log in to Discord

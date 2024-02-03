@@ -91,7 +91,7 @@ module.exports = {
 
 			// Check list banned
 			if (interaction.member.roles.cache.has(submissionLockRoleID)) {
-				await interaction.editReply(':x: Couldn\'t submit the record : You have been banned from submitting records');
+				await interaction.editReply(':x: Couldn\'t submit the record: You have been banned from submitting records');
 				return;
 			}
 
@@ -100,13 +100,13 @@ module.exports = {
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 
 			if (dbStatus.status) {
-				await interaction.editReply(':x: Couldn\'t submit the record : Submissions are closed at the moment');
+				await interaction.editReply(':x: Couldn\'t submit the record: Submissions are closed at the moment');
 				return;
 			}
 
 			// Check given URL
 			try { new URL(interaction.options.getString('completionlink')); } catch (_) {
-				await interaction.editReply(':x: Couldn\'t submit the record : The provided completion link is not a valid URL');
+				await interaction.editReply(':x: Couldn\'t submit the record: The provided completion link is not a valid URL');
 				return;
 			}
 
