@@ -49,7 +49,7 @@ module.exports = {
 
 		const attachment = new AttachmentBuilder(await canvas.encode('png'), { name: 'welcome.png' });
 
-		await (await member.client.channels.cache.get(guildMemberAddID)).send({ content: `Hey ${member}, welcome to the All Rated Extreme Demons List !`, files: [attachment] });
+		await (await member.client.channels.cache.get(guildMemberAddID)).send({ content: `Hey ${member}, welcome to the All Rated Extreme Demons List!`, files: [attachment] });
 
 	},
 };
