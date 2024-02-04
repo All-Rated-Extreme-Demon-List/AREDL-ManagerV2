@@ -6,7 +6,7 @@ const applyText = (canvas, text) => {
 	const context = canvas.getContext('2d');
 	let fontSize = 60;
 	do {
-		context.font = `${fontSize -= 5}px Microsoft Sans Serif`;
+		context.font = `${fontSize -= 5}px sans-serif`;
 	} while (context.measureText(text).width > canvas.width - 300);
 
 	return context.font;
@@ -34,7 +34,7 @@ module.exports = {
 		context.fillStyle = '#000000';
 		context.fillRect(10, 15, canvas.width - 20, canvas.height - 30);
 
-		context.font = '28px Microsoft Sans Serif';
+		context.font = '28px sans-serif';
 		context.fillStyle = '#d0d0d0';
 		context.fillText('just joined the server', canvas.width / 2.5, canvas.height / 1.8);
 
@@ -42,7 +42,7 @@ module.exports = {
 		context.fillStyle = '#ffffff';
 		context.fillText(`${member.displayName}`, canvas.width / 2.5, canvas.height / 2.5);
 
-		context.font = '28px Microsoft Sans Serif';
+		context.font = '28px sans-serif';
 		context.fillStyle = '#a0a0a0';
 		context.fillText(`Member #${(await member.client.guilds.cache.get(guildId)).memberCount}`, canvas.width / 2.5, canvas.height / 1.4);
 
