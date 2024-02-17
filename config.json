@@ -1,5 +1,11 @@
 {
 	"token": "",
+	"githubToken": "",
+
+	"githubOwner": "All-Rated-Extreme-Demon-List",
+	"githubRepo": "AREDL",
+	"githubDataPath": "data",
+	"githubBranch": "main",
 
 	"clientId": "1173179654492934225",
 	"guildId": "1173011289744871594",
@@ -13,5 +19,7 @@
 	"acceptedRecordsID" : "1173011290969604158",
 	"deniedRecordsID" : "1173011290969604157",
 	"archiveRecordsID" : "1173011290969604160",
-	"recordsID" : "1173011291829436422"
+	"recordsID" : "1173011291829436422",
+
+	"guildMemberAddID" : "1173011291661668384"
 }

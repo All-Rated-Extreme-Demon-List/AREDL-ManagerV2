@@ -50,8 +50,6 @@ module.exports = {
 		} else if (interaction.isButton()) {
 
 			// Handle button interactions //
-			await interaction.deferReply({ ephemeral: true });
-
 			const button = interaction.client.buttons.get(interaction.customId);
 			if (!button) {
 				console.error(`No button matching ${interaction.customId} was found.`);
@@ -61,6 +59,7 @@ module.exports = {
 
 			// Execute code
 			try {
+				await interaction.deferReply({ ephemeral: button.ephemeral });
 				await button.execute(interaction);
 			} catch (error) {
 				console.error(`Error executing ${interaction.customId}`);

@@ -1,8 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { token } = require('./config.json');
+const { githubToken } = require('./config.json');
 const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Octokit } = require('@octokit/rest');
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
@@ -13,6 +15,9 @@ const sequelize = new Sequelize({
 	logging: false,
 	storage: './data/database.sqlite',
 });
+
+// Establish Github connection
+const octokit = new Octokit({ auth: githubToken });
 
 // Create tables models
 const dbPendingRecords = sequelize.define('pendingRecords', {
@@ -68,6 +73,13 @@ const dbDeniedRecords = sequelize.define('deniedRecords', {
 	moderator: Sequelize.STRING,
 });
 
+const dbLevelsToPlace = sequelize.define('levelsToPlace', {
+	filename: Sequelize.STRING,
+	position: Sequelize.INTEGER,
+	githubCode: Sequelize.STRING,
+	discordid: Sequelize.STRING,
+});
+
 const staffStats = sequelize.define('staffs', {
 	moderator: Sequelize.STRING,
 	nbRecords: Sequelize.INTEGER,
@@ -90,7 +102,7 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings, dbLevelsToPlace, octokit };
 
 // Commands
 client.commands = new Collection();

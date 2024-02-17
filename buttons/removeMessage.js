@@ -1,5 +1,6 @@
 module.exports = {
 	customId: 'removeMsg',
+	ephemeral: true,
 	async execute(interaction) {
 		try {
 			await interaction.message.delete();

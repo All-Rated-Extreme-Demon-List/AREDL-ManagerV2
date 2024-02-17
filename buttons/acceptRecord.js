@@ -6,6 +6,7 @@ const { dbPendingRecords, dbAcceptedRecords, staffStats, staffSettings } = requi
 
 module.exports = {
 	customId: 'accept',
+	ephemeral: true,
 	async execute(interaction) {
 
 		// Accepting a record //
@@ -38,7 +39,7 @@ module.exports = {
 			.setColor(0x8fce00)
 			.setTitle(`:white_check_mark: ${record.levelname}`)
 			.addFields(
-				{ name: 'Record accepted by', value: `<@${interaction.user.id}>`, inline: true },
+				{ name: 'Record accepted by', value: `${interaction.user}`, inline: true },
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
 				{ name: 'Github code', value: `${githubCode}` },
 			)
@@ -60,7 +61,7 @@ module.exports = {
 			.addFields(
 				{ name: 'Record submitted by', value: `<@${record.submitter}>`, inline: true },
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
-				{ name: 'Record accepted by', value: `<@${interaction.user.id}>` },
+				{ name: 'Record accepted by', value: `${interaction.user}` },
 				{ name: 'FPS', value: `${record.fps}`, inline: true },
 				{ name: 'Device', value: `${record.device}`, inline: true },
 				{ name: 'LDM', value: `${(record.ldm == 0 ? 'None' : record.ldm)}`, inline: true },
@@ -83,7 +84,7 @@ module.exports = {
 			);
 
 		// Send all messages simultaneously
-		interaction.guild.channels.cache.get(acceptedRecordsID).send({ content: `<@${interaction.user.id}>`, embeds: [acceptEmbed], components: [row] });
+		interaction.guild.channels.cache.get(acceptedRecordsID).send({ content: `${interaction.user}`, embeds: [acceptEmbed], components: [row] });
 		interaction.guild.channels.cache.get(archiveRecordsID).send({ embeds: [archiveEmbed] });
 		interaction.guild.channels.cache.get(recordsID).send({ embeds: [publicEmbed] });
 		interaction.guild.channels.cache.get(recordsID).send({ content : `${record.completionlink}` });

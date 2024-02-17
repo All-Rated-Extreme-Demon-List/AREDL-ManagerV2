@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 
 module.exports = {
 	cooldown: 5,
@@ -12,6 +12,10 @@ module.exports = {
 				.addStringOption(option =>
 					option.setName('levelname')
 						.setDescription('The name of the level to place')
+						.setRequired(true))
+				.addIntegerOption(option =>
+					option.setName('position')
+						.setDescription('The position to place the level at')
 						.setRequired(true))
 				.addIntegerOption(option =>
 					option.setName('id')
@@ -36,11 +40,14 @@ module.exports = {
 					option.setName('password')
 						.setDescription('The GD password of the level to place'))),
 	async execute(interaction) {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply();
 
 		if (interaction.options.getSubcommand() === 'place') {
 
+			const { dbLevelsToPlace } = require('../../index.js');
+
 			const levelname = interaction.options.getString('levelname');
+			const position = interaction.options.getInteger('position');
 			const id = interaction.options.getInteger('id');
 			const uploader = interaction.options.getString('uploader');
 			const verifier = interaction.options.getString('verifier');
@@ -49,18 +56,53 @@ module.exports = {
 			const rawCreators = interaction.options.getString('creators');
 			const strCreators = (rawCreators ? JSON.stringify(rawCreators.split(',')) : '[]');
 
-			const githubCode = `\`\`\`json\n{\n\t"id": ${id},\n\t"name": "${levelname}",\n\t"author": "${uploader}",\n\t"creators": ${strCreators},\n\t"verifier": "${verifier}",\n\t"verification": "${verification}",\n\t"percentToQualify": 100,\n\t"password": "${password}",\n\t"records" : []\n}\`\`\``;
+			const githubCode = `{\n\t"id": ${id},\n\t"name": "${levelname}",\n\t"author": "${uploader}",\n\t"creators": ${strCreators},\n\t"verifier": "${verifier}",\n\t"verification": "${verification}",\n\t"percentToQualify": 100,\n\t"password": "${password}",\n\t"records" : []\n}`;
 
 			const placeEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
-				.setTitle('Place Level')
+				.setTitle(`Place Level: ${levelname}`)
 				.addFields(
-					{ name: 'Level name :', value: `${levelname}` },
-					{ name: 'Github code', value: `${githubCode}` },
+					{ name: 'ID:', value: `${id}`, inline: true },
+					{ name: 'Uploader:', value: `${uploader}`, inline: true },
+					{ name: 'Creators:', value: `${strCreators}`, inline: true },
+					{ name: 'Verifier:', value: `${verifier}`, inline: true },
+					{ name: 'Verification:', value: `${verification}`, inline: true },
+					{ name: 'Password:', value: `${password}`, inline: true },
+					{ name: 'Position:', value: `${position}`, inline: true },
+					{ name: 'Github Code:', value: `\`\`\`json\n${githubCode}\n\`\`\`` },
 				)
 				.setTimestamp();
+			// Create commit buttons
+			const commit = new ButtonBuilder()
+				.setCustomId('commitAddLevel')
+				.setLabel('Commit changes')
+				.setStyle(ButtonStyle.Success);
 
-			return await interaction.editReply({ embeds: [placeEmbed] });
+			const cancel = new ButtonBuilder()
+				.setCustomId('removeMsg')
+				.setLabel('Cancel')
+				.setStyle(ButtonStyle.Danger);
+
+			const row = new ActionRowBuilder()
+				.addComponents(commit)
+				.addComponents(cancel);
+
+			await interaction.editReply({ embeds: [placeEmbed], components: [row] });
+			const sent = await interaction.fetchReply();
+
+			try {
+				await dbLevelsToPlace.create({
+					filename: levelname.normalize('NFD').replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '_').toLowerCase(),
+					position: position,
+					githubCode: githubCode,
+					discordid: sent.id,
+				});
+			} catch (error) {
+				console.log(`Couldn't register the level ; something went wrong with Sequelize : ${error}`);
+				await sent.delete();
+				return await interaction.editReply(':x: Something went wrong while adding the level; Please try again later');
+			}
+			return;
 		}
 	},
 };

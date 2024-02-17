@@ -7,6 +7,7 @@ const { dbPendingRecords, dbDeniedRecords, staffStats } = require('../index.js')
 
 module.exports = {
 	customId: 'deny',
+	ephemeral: true,
 	async execute(interaction) {
 		// Denying a record //
 
