@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { token } = require('./config.json');
 const { githubToken } = require('./config.json');
+const { websiteDataLink } = require('./config.json');
 const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
@@ -18,6 +19,59 @@ const sequelize = new Sequelize({
 
 // Establish Github connection
 const octokit = new Octokit({ auth: githubToken });
+
+// Cache all levels names and file names every hour
+async function fetchListData() {
+	const levels_dict = {};
+
+	const list_data = await (await fetch(`${websiteDataLink}/_list.json`, {
+		method: 'GET',
+		headers: {
+			'Accept': 'application/json',
+		},
+	})).json();
+
+	for (const filename of list_data) {
+		const file_data = await (await fetch(`${websiteDataLink}/${filename}.json`, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+			},
+		})).json();
+		levels_dict[file_data.name] = filename;
+	}
+	console.log('List data updated successfully');
+	return levels_dict;
+}
+
+
+let levels_dict;
+try {
+	levels_dict = JSON.parse(fs.readFileSync('cached_list.json'));
+} catch (err) {
+	console.log('No cached list found. Fetching data...');
+	fetchListData().then(data => {
+		fs.writeFile('cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
+			if (err) {
+				console.log(err);
+			}
+		});
+		levels_dict = data;
+	});
+}
+
+const cron = require('node-cron');
+cron.schedule('0 * * * *', () => {
+	console.log('Fetching last list data...');
+	fetchListData().then(data => {
+		fs.writeFile('cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
+			if (err) {
+				console.log(err);
+			}
+		});
+		levels_dict = data;
+	});
+});
 
 // Create tables models
 const dbPendingRecords = sequelize.define('pendingRecords', {
@@ -103,7 +157,9 @@ const dbInfos = sequelize.define('infos', {
 });
 
 module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings, dbLevelsToPlace, octokit };
-
+module.exports.getLevelsDict = function() {
+	return levels_dict;
+};
 // Commands
 client.commands = new Collection();
 client.cooldowns = new Collection();

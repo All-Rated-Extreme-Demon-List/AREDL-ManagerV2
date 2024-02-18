@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID } = require('../../config.json');
-
+const isUrlHttp = require('is-url-http');
 const denyReasons = new Map()
 	.set('none', 'No reason has been selected, please contact a list moderator')
 	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
@@ -31,9 +31,10 @@ module.exports = {
 						.setRequired(true))
 				.addStringOption(option =>
 					option.setName('levelname')
-						.setDescription('Name of the level you\'re submitting for (check to see if it\'s on the list first)')
+						.setDescription('Name of the level you\'re submitting for (Be sure to select one of the available options.)')
 						.setMaxLength(1024)
-						.setRequired(true))
+						.setRequired(true)
+						.setAutocomplete(true))
 				.addIntegerOption(option =>
 					option.setName('fps')
 						.setDescription('FPS used to complete the level')
@@ -80,6 +81,22 @@ module.exports = {
 							{ name: 'Accepted', value: 'accepted' },
 							{ name: 'Denied', value: 'denied' },
 						))),
+	async autocomplete(interaction) {
+		const focusedValue = interaction.options.getFocused();
+		if (focusedValue.length < 2) {
+			return await interaction.respond([]);
+		} else {
+			const { getLevelsDict } = require('../../index.js');
+			const levelsDict = getLevelsDict();
+			let levels = Object.keys(levelsDict).filter(levelname => levelname.toLowerCase().startsWith(focusedValue.toLowerCase()));
+			if (levels.length > 25) levels = levels.slice(0, 25);
+
+			await interaction.respond(
+				levels.map(levelname => ({ name:levelname, value: levelname })),
+			);
+		}
+
+	},
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true });
 
@@ -99,16 +116,15 @@ module.exports = {
 			const dbStatus = await dbInfos.findOne({ where: { id: 1 } });
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 
-			if (dbStatus.status) {
-				await interaction.editReply(':x: Couldn\'t submit the record: Submissions are closed at the moment');
-				return;
-			}
+			if (dbStatus.status) return await interaction.editReply(':x: Couldn\'t submit the record: Submissions are closed at the moment');
 
 			// Check given URL
-			try { new URL(interaction.options.getString('completionlink')); } catch (_) {
-				await interaction.editReply(':x: Couldn\'t submit the record: The provided completion link is not a valid URL');
-				return;
-			}
+			const str = interaction.options.getString('completionlink');
+			if (/\s/g.test(str) || !isUrlHttp(str)) return await interaction.editReply(':x: Couldn\'t submit the record: The provided completion link is not a valid URL');
+
+			// Check given level name
+			const { getLevelsDict } = require('../../index.js');
+			if (!getLevelsDict()[interaction.options.getString('levelname')]) return await interaction.editReply(':x: Couldn\'t submit the record: the given level name is not on the list (please be sure to select one of the available options)');
 
 			// Create accept/deny buttons
 			const accept = new ButtonBuilder()

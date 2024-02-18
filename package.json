@@ -1,6 +1,6 @@
 {
   "name": "aredl-bot",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Discord bot for managing the All Rated Extreme Demons List",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,8 @@
     "@octokit/rest": "^20.0.2",
     "chartjs-node-canvas": "^4.1.6",
     "discord.js": "^14.13.0",
+    "is-url-http": "^2.3.8",
+    "node-cron": "^3.0.3",
     "sequelize": "^6.35.0",
     "sqlite3": "^5.1.6"
   },
