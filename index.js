@@ -47,11 +47,11 @@ async function fetchListData() {
 
 let levels_dict;
 try {
-	levels_dict = JSON.parse(fs.readFileSync('cached_list.json'));
+	levels_dict = JSON.parse(fs.readFileSync('data/cached_list.json'));
 } catch (err) {
 	console.log('No cached list found. Fetching data...');
 	fetchListData().then(data => {
-		fs.writeFile('cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
+		fs.writeFile('data/cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
 			if (err) {
 				console.log(err);
 			}
@@ -64,7 +64,7 @@ const cron = require('node-cron');
 cron.schedule('0 * * * *', () => {
 	console.log('Fetching last list data...');
 	fetchListData().then(data => {
-		fs.writeFile('cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
+		fs.writeFile('data/cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
 			if (err) {
 				console.log(err);
 			}
