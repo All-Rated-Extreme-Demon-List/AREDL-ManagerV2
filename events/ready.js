@@ -19,10 +19,17 @@ module.exports = {
 		await dbRecordsToCommit.sync({ alter: true });
 		await dbMessageLocks.sync({ alter: true });
 
-		const isInfosAvailable = await dbInfos.count();
-		if (!isInfosAvailable) {
+		if (!(await dbInfos.count({ where: { name: 'records' } }))) {
 			await dbInfos.create({
 				status: 0,
+				name: 'records',
+			});
+		}
+
+		if (!(await dbInfos.count({ where: { name: 'commitdebug' } }))) {
+			await dbInfos.create({
+				status: 0,
+				name: 'commitdebug',
 			});
 		}
 

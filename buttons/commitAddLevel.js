@@ -56,7 +56,7 @@ module.exports = {
 				},
 			];
 
-
+			let commitSha;
 			try {
 				// Get the SHA of the latest commit from the branch
 				const { data: refData } = await octokit.git.getRef({
@@ -65,7 +65,13 @@ module.exports = {
 					ref: `heads/${githubBranch}`,
 				});
 				const commitSha = refData.object.sha;
+			} catch (getRefErr) {
+				console.log(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
+				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (getRefError)');
+			}
 
+			let treeSha;
+			try {
 				// Get the commit using its SHA
 				const { data: commitData } = await octokit.git.getCommit({
 					owner: githubOwner,
@@ -73,7 +79,13 @@ module.exports = {
 					commit_sha: commitSha,
 				});
 				const treeSha = commitData.tree.sha;
+			} catch (getCommitErr) {
+				console.log(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
+				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (getCommitError)');
+			}
 
+			let newTree;
+			try {
 				// Create a new tree with the changes
 				const newTree = await octokit.git.createTree({
 					owner: githubOwner,
@@ -86,7 +98,13 @@ module.exports = {
 						content: change.content,
 					})),
 				});
+			} catch (createTreeErr) {
+				console.log(`Something went wrong while creating a new tree: \n${createTreeErr}`);
+				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (createTreeError)');
+			}
 
+			let newCommit;
+			try {
 				// Create a new commit with this tree
 				const newCommit = await octokit.git.createCommit({
 					owner: githubOwner,
@@ -95,7 +113,12 @@ module.exports = {
 					tree: newTree.data.sha,
 					parents: [commitSha],
 				});
+			} catch (createCommitErr) {
+				console.log(`Something went wrong while creating a new commit: \n${createCommitErr}`);
+				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (createCommitError)');
+			}
 
+			try {
 				// Update the branch to point to the new commit
 				await octokit.git.updateRef({
 					owner: githubOwner,
@@ -103,15 +126,19 @@ module.exports = {
 					ref: `heads/${githubBranch}`,
 					sha: newCommit.data.sha,
 				});
+			} catch (updateRefErr) {
+				console.log(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
+				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (updateRefError)');
+			}
 
+			try {
 				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}`);
 				dbLevelsToPlace.destroy({ where: { discordid: level.discordid } });
 				await interaction.message.delete();
+			} catch (cleanupErr) {
+				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}, but an error occured while cleanin up:\n${cleanupErr}`);
+			} finally {
 				return await interaction.editReply(`:white_check_mark: Successfully created file: **${level.filename}.json** (${newCommit.data.html_url})`);
-
-			} catch (error) {
-				console.error('Failed to create commit:', error);
-				return await interaction.editReply(':x: Something went wrong while creating the file on github, please try again later');
 			}
 		}
 	},

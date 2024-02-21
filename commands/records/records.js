@@ -113,7 +113,7 @@ module.exports = {
 			}
 
 			// Check record submission status
-			const dbStatus = await dbInfos.findOne({ where: { id: 1 } });
+			const dbStatus = await dbInfos.findOne({ where: { name: 'records' } });
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 
 			if (dbStatus.status) return await interaction.editReply(':x: Couldn\'t submit the record: Submissions are closed at the moment');
@@ -202,7 +202,7 @@ module.exports = {
 			// Get records info
 			const nbRecords = await dbPendingRecords.count({ where: { priority: false } });
 			const nbPriorityRecords = await dbPendingRecords.count({ where: { priority: true } });
-			const dbStatus = await dbInfos.findOne({ where: { id: 1 } });
+			const dbStatus = await dbInfos.findOne({ where: { name: 'records' } });
 
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 

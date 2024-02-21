@@ -181,6 +181,7 @@ const staffSettings = sequelize.define('settings', {
 });
 
 const dbInfos = sequelize.define('infos', {
+	name: Sequelize.STRING,
 	status: {
 		type: Sequelize.BOOLEAN,
 		defaultValue: false,

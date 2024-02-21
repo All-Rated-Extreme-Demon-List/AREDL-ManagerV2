@@ -14,8 +14,37 @@ module.exports = {
 				.setDescription('Shows how many records you\'ve checked'))
 		.addSubcommand(subcommand =>
 			subcommand
+				.setName('recordsinfo')
+				.setDescription('Shows info on people with the most pending/accepted/denied records')
+				.addStringOption(option =>
+					option.setName('type')
+						.setDescription('Which records you want to check')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'Pending', value: 'pending' },
+							{ name: 'Accepted', value: 'accepted' },
+							{ name: 'Denied', value: 'denied' },
+						)))
+		.addSubcommand(subcommand =>
+			subcommand
 				.setName('commit')
-				.setDescription('Commits all the pending accepted records to github'))
+				.setDescription('Commits all the pending accepted records to github')
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('commitdebug')
+				.setDescription('Enables or disables commiting each file individually')
+				.addStringOption(option =>
+					option.setName('status')
+						.setDescription('Enabled or Disabled')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'Enabled', value: 'enabled' },
+							{ nme: 'Disabled', value: 'disabled' },
+						))))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('commitreset')
+				.setDescription('Removes all records from the list to commit (in case there are errored records)'))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('enabledm')
@@ -141,6 +170,38 @@ module.exports = {
 			return await interaction.editReply({ embeds: [ modInfoEmbed ], files: [attachment] });
 
 
+		} else if (interaction.options.getSubcommand() === 'info') {
+
+			// Check submissions info //
+			const submissionsType = interaction.options.getString('type');
+
+			const selectedDb = (submissionsType === 'pending' ? dbPendingRecords : (submissionsType === 'accepted' ? dbAcceptedRecords : dbDeniedRecords));
+			let strInfo = `Total records : ${await dbPendingRecords.count()} pending, ${await dbAcceptedRecords.count()} accepted, ${await dbDeniedRecords.count()} denied\n\n`;
+			const users = await selectedDb.findAll({
+				attributes: [
+					'submitter',
+					[Sequelize.fn('COUNT', '*'), 'total_count'],
+				],
+				group: ['submitter'],
+				order: [[Sequelize.literal('total_count'), 'DESC']],
+				limit: 30,
+			});
+			for (let i = 0; i < users.length; i++) {
+				const pendingCount = await dbPendingRecords.count({ where: { submitter: users[i].submitter } });
+				const acceptedCount = await dbAcceptedRecords.count({ where: { submitter: users[i].submitter } });
+				const deniedCount = await dbDeniedRecords.count({ where: { submitter: users[i].submitter } });
+				const submittedCount = pendingCount + acceptedCount + deniedCount;
+				strInfo += `**${i + 1}** - <@${users[i].submitter}> - ${pendingCount} pending - (${submittedCount} submitted, ${acceptedCount} accepted, ${deniedCount} denied)\n`;
+			}
+			if (users.length > 30) strInfo += '...';
+
+			const infoEmbed = new EmbedBuilder()
+				.setColor(0xFFBF00)
+				.setTitle(`Currently ${submissionsType} records users stats`)
+				.setDescription(strInfo)
+				.setTimestamp();
+
+			return await interaction.editReply({ embeds: [infoEmbed] });
 		} else if (interaction.options.getSubcommand() === 'enabledm') {
 
 			await interaction.deferReply({ ephemeral: true });
@@ -193,6 +254,26 @@ module.exports = {
 			await interaction.editReply({ embeds: [commitEmbed], components: [row] });
 			const sent = await interaction.fetchReply();
 			await dbRecordsToCommit.update({ discordid: sent.id }, { where: { discordid: interaction.id } });
+		} else if (interaction.options.getSubcommand() === 'commitdebug') {
+			// Changes debug status
+
+			const { dbInfos } = require('../../index.js');
+
+			// Update sqlite db
+			const update = await dbInfos.update({ commitdebug: interaction.options.getString('status') === 'enabled' }, { where: { name: 'commitdebug' } });
+
+			if (!update) return await interaction.editReply(':x: Something went wrong while executing the command');
+			console.log(`Changed debug status to ${interaction.options.getString('status')}`);
+			return await interaction.editReply(`:white_check_mark: Changed debug status to ${interaction.options.getString('status')}`);
+
+		} else if (interaction.options.getSubcommand() === 'commitreset') {
+			
+			const { dbRecordsToCommit } = require('../../index.js');
+
+			const reset = await dbRecordsToCommit.destroy({ where: {} });
+
+			if (reset) return await interaction.editReply(':white_check_mark: The list was successfully reset');
+			else return await interaction.editReply(':x: Something went wrong while removing records');
 		}
 	},
 };

@@ -22,7 +22,7 @@ module.exports = {
 
 		let addedRecords = 0;
 		let duplicateRecords = 0;
-		let erroredRecords = 0;
+		let erroredRecords = [];
 
 		// Caching current file data from github
 		const previousContent = {};
@@ -65,8 +65,8 @@ module.exports = {
 			const user = record.dataValues['user'];
 
 			if (!previousContent[filename]) {
-				erroredRecords++;
-				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords} errored records...`);
+				erroredRecords.push(`${filename}.json (${user})`);
+				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 				continue;
 			}
 
@@ -75,7 +75,7 @@ module.exports = {
 				console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
 				await dbRecordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 				duplicateRecords++;
-				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords} errored records...`);
+				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 				continue;
 			}
 
@@ -84,8 +84,8 @@ module.exports = {
 				newRecord = JSON.parse(githubCode);
 			} catch (parseError) {
 				console.log(`Unable to parse data:\n${githubCode}\n${parseError}`);
-				erroredRecords++;
-				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords} errored records...`);
+				erroredRecords.push(`${filename}.json (${user})`);
+				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 				continue;
 			}
 
@@ -97,7 +97,7 @@ module.exports = {
 					console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
 					await dbRecordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 					duplicateRecords++;
-					interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords} errored records...`);
+					interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 					continue;
 				}
 				newContent[filename].push(newRecord);
@@ -129,102 +129,167 @@ module.exports = {
 		}
 
 		interaction.editReply('Building commit...');
-		let commitSha;
-		try {
-			// Get the SHA of the latest commit from the branch
-			const { data: refData } = await octokit.git.getRef({
-				owner: githubOwner,
-				repo: githubRepo,
-				ref: `heads/${githubBranch}`,
-			});
-			commitSha = refData.object.sha;
-		} catch (getRefError) {
-			console.log(`Something went wrong while fetching the latest commit SHA:\n${getRefError}`);
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
-			return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getRefError)');
-		}
-		let treeSha;
-		try {
-			// Get the commit using its SHA
-			const { data: commitData } = await octokit.git.getCommit({
-				owner: githubOwner,
-				repo: githubRepo,
-				commit_sha: commitSha,
-			});
-			treeSha = commitData.tree.sha;
-		} catch (getCommitError) {
-			console.log(`Something went wrong while fetching the latest commit:\n${getCommitError}`);
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
-			return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getCommitError)');
-		}
+		const debugStatus = await dbInfos.findOne({ where: { name: 'commitdebug'}});
 
-		let newTree;
-		try {
-			// Create a new tree with the changes
-			newTree = await octokit.git.createTree({
-				owner: githubOwner,
-				repo: githubRepo,
-				base_tree: treeSha,
-				tree: changes.map(change => ({
-					path: change.path,
-					mode: '100644',
-					type: 'blob',
-					content: change.content,
-				})),
-			});
-		} catch (createTreeError) {
-			console.log(`Something went wrong while creating a new tree:\n${createTreeError}`);
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
-			return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createTreeError)');
-		}
+		if (!debugStatus || !debugStatus.status) {
+			let commitSha;
+			try {
+				// Get the SHA of the latest commit from the branch
+				const { data: refData } = await octokit.git.getRef({
+					owner: githubOwner,
+					repo: githubRepo,
+					ref: `heads/${githubBranch}`,
+				});
+				commitSha = refData.object.sha;
+			} catch (getRefError) {
+				console.log(`Something went wrong while fetching the latest commit SHA:\n${getRefError}`);
+				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getRefError)');
+			}
+			let treeSha;
+			try {
+				// Get the commit using its SHA
+				const { data: commitData } = await octokit.git.getCommit({
+					owner: githubOwner,
+					repo: githubRepo,
+					commit_sha: commitSha,
+				});
+				treeSha = commitData.tree.sha;
+			} catch (getCommitError) {
+				console.log(`Something went wrong while fetching the latest commit:\n${getCommitError}`);
+				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getCommitError)');
+			}
 
-		let newCommit;
-		try {
-			// Create a new commit with this tree
-			newCommit = await octokit.git.createCommit({
-				owner: githubOwner,
-				repo: githubRepo,
-				message: `Added ${addedRecords} records (${interaction.user.tag})`,
-				tree: newTree.data.sha,
-				parents: [commitSha],
-			});
-		} catch (createCommitError) {
-			console.log(`Something went wrong while creating a new commit:\n${createCommitError}`);
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
-			return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createCommitError)');
-		}
+			let newTree;
+			try {
+				// Create a new tree with the changes
+				newTree = await octokit.git.createTree({
+					owner: githubOwner,
+					repo: githubRepo,
+					base_tree: treeSha,
+					tree: changes.map(change => ({
+						path: change.path,
+						mode: '100644',
+						type: 'blob',
+						content: change.content,
+					})),
+				});
+			} catch (createTreeError) {
+				console.log(`Something went wrong while creating a new tree:\n${createTreeError}`);
+				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createTreeError)');
+			}
 
-		try {
-			// Update the branch to point to the new commit
-			await octokit.git.updateRef({
-				owner: githubOwner,
-				repo: githubRepo,
-				ref: `heads/${githubBranch}`,
-				sha: newCommit.data.sha,
-			});
-		} catch (updateRefError) {
-			console.log(`Something went wrong while updating the branch :\n${updateRefError}`);
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
-			return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (updateRefError)');
+			let newCommit;
+			try {
+				// Create a new commit with this tree
+				newCommit = await octokit.git.createCommit({
+					owner: githubOwner,
+					repo: githubRepo,
+					message: `Added ${addedRecords} records (${interaction.user.tag})`,
+					tree: newTree.data.sha,
+					parents: [commitSha],
+				});
+			} catch (createCommitError) {
+				console.log(`Something went wrong while creating a new commit:\n${createCommitError}`);
+				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createCommitError)');
+			}
+
+			try {
+				// Update the branch to point to the new commit
+				await octokit.git.updateRef({
+					owner: githubOwner,
+					repo: githubRepo,
+					ref: `heads/${githubBranch}`,
+					sha: newCommit.data.sha,
+				});
+			} catch (updateRefError) {
+				console.log(`Something went wrong while updating the branch :\n${updateRefError}`);
+				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (updateRefError)');
+			}
+			console.log(`Successfully created commit on ${githubBranch} (record addition): ${newCommit.data.sha}`);
+			try {
+				await dbRecordsToCommit.destroy({ where: { discordid: interaction.message.id } });
+				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await interaction.message.delete();
+			} catch (cleanupError) {
+				console.log(`Something went wrong while cleaning up the commit database & discord message:\n${cleanupError}`);
+			}
+			
+			let detailedErrors = '';
+			for (const err of erroredRecords) detailedErrors += `\n${err}`;
+
+			const replyEmbed = new EmbedBuilder()
+				.setColor(0x8fce00)
+				.setTitle(':white_check_mark: Commit successful')
+				.setDescription(`Successfully commited ${addedRecords}/${recordsToCommit.length} records`)
+				.addFields(
+					{ name: 'Commit link:', value: `${newCommit.data.html_url}` },
+					{ name: 'Duplicates found:', value: `**${duplicateRecords}**`, inline: true },
+					{ name: 'Errors:', value: `${erroredRecords}`, inline: true },
+					{ name: `Detailed Errors:`, value: detailedErrors},
+				)
+				.setTimestamp();
+			return await interaction.editReply({ content: '', embeds: [ replyEmbed ] });
+		} else {
+			let updatedFiles = 0;
+			for (const change of changes) {
+				interaction.editReply(`Updating ${change.path} (${i}/${changes.length})...`);
+				// Get file SHA
+				let fileSha;
+				try {
+					const response = await octokit.repos.getContent({
+					  owner: githubOwner,
+					  repo: githubRepo,
+					  path: change.path,
+					});
+					fileSha = response.data.sha;
+				} catch (error) {
+					console.log(`Error fetching ${change.path} SHA:\n${error}`);
+					erroredRecords.push(`All from ${change.path}`);
+					await interaction.editReply(`:x: Couldn't fetch data from ${change.path}, skipping...`);
+					i++;
+					continue;
+				}
+
+				// Update data
+				let i = 0;
+				try {
+					const response = await octokit.repos.createOrUpdateFileContents({
+					  owner: githubOwner,
+					  repo: githubRepo,
+					  path: change.path,
+					  message: `Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag})`,
+					  content: change.content,
+					 fileSha,
+					});
+					console.log(`Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag}`);
+				  } catch (error) {
+					console.log(`Failed to update ${change.path} (${i}/${changes.length}) (${interaction.user.tag}):\n${error}`);
+					erroredRecords.push(`All from ${change.path}`);
+					await interaction.editReply(`:x: Couldn't update the file ${change.path}, skipping...`);
+				  }
+				updatedFiles++;
+				i++;
+			}
+			
+			let detailedErrors = '';
+			for (const err of erroredRecords) detailedErrors += `\n${err}`;
+
+			const replyEmbed = new EmbedBuilder()
+				.setColor(0x8fce00)
+				.setTitle(':white_check_mark: Commit successful')
+				.setDescription(`Successfully updated ${updatedFiles}/${changes.length} files`)
+				.addFields(
+					{ name: 'Duplicates found:', value: `**${duplicateRecords}**`, inline: true },
+					{ name: 'Errors:', value: `${erroredRecords.length}`, inline: true },
+					{ name: `Detailed Errors:`, value: detailedErrors},
+				)
+				.setTimestamp();
+			return await interaction.editReply({ content: '', embeds: [ replyEmbed ] });
 		}
-		console.log(`Successfully created commit on ${githubBranch} (record addition): ${newCommit.data.sha}`);
-		try {
-			await dbRecordsToCommit.destroy({ where: { discordid: interaction.message.id } });
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
-			await interaction.message.delete();
-		} catch (cleanupError) {
-			console.log(`Something went wrong while cleaning up the commit database & discord message:\n${cleanupError}`);
-		}
-		const replyEmbed = new EmbedBuilder()
-			.setColor(0x8fce00)
-			.setTitle(':white_check_mark: Commit successful')
-			.setDescription(`Successfully commited ${addedRecords}/${recordsToCommit.length} records`)
-			.addFields(
-				{ name: 'Commit link:', value: `${newCommit.data.html_url}` },
-				{ name: 'Duplicates found:', value: `**${duplicateRecords}**`, inline: true },
-				{ name: 'Errors:', value: `${erroredRecords}`, inline: true },
-			)
-			.setTimestamp();
-		return await interaction.editReply({ content: '', embeds: [ replyEmbed ] });
 	},
 };
