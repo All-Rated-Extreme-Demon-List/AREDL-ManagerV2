@@ -7,6 +7,8 @@ const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
 
+require('log-timestamp');
+
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
@@ -23,13 +25,18 @@ const octokit = new Octokit({ auth: githubToken });
 // Cache all levels names and file names every hour
 async function fetchListData() {
 	const levels_dict = {};
-
-	const list_data = await (await fetch(`${websiteDataLink}/_list.json`, {
-		method: 'GET',
-		headers: {
-			'Accept': 'application/json',
-		},
-	})).json();
+	let list_data;
+	try {
+		list_data = await (await fetch(`${websiteDataLink}/_list.json`, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+			},
+		})).json();
+	} catch (fetchError) {
+		console.log(`Failed to fetch list data: \n${fetchError}`);
+		return -1;
+	}
 
 	for (const filename of list_data) {
 		const file_data = await (await fetch(`${websiteDataLink}/${filename}.json`, {
@@ -51,6 +58,7 @@ try {
 } catch (err) {
 	console.log('No cached list found. Fetching data...');
 	fetchListData().then(data => {
+		if (data === -1) return;
 		fs.writeFile('data/cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
 			if (err) {
 				console.log(err);
@@ -64,6 +72,7 @@ const cron = require('node-cron');
 cron.schedule('0 * * * *', () => {
 	console.log('Fetching last list data...');
 	fetchListData().then(data => {
+		if (data === -1) return;
 		fs.writeFile('data/cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
 			if (err) {
 				console.log(err);
@@ -134,11 +143,33 @@ const dbLevelsToPlace = sequelize.define('levelsToPlace', {
 	discordid: Sequelize.STRING,
 });
 
+const dbRecordsToCommit = sequelize.define('recordsToCommit', {
+	filename: Sequelize.STRING,
+	githubCode: Sequelize.STRING,
+	discordid: Sequelize.STRING,
+	user: Sequelize.STRING,
+});
+
+const dbMessageLocks = sequelize.define('messageLocks', {
+	discordid: Sequelize.STRING,
+	locked: Sequelize.BOOLEAN,
+	userdiscordid: Sequelize.STRING,
+});
+
 const staffStats = sequelize.define('staffs', {
 	moderator: Sequelize.STRING,
 	nbRecords: Sequelize.INTEGER,
 	nbAccepted: Sequelize.INTEGER,
 	nbDenied: Sequelize.INTEGER,
+});
+
+const dailyStats = sequelize.define('dailystats', {
+	date: Sequelize.DATEONLY,
+	nbRecordsSubmitted: Sequelize.NUMBER,
+	nbRecordsAccepted: Sequelize.NUMBER,
+	nbRecordsDenied: Sequelize.NUMBER,
+	nbMembersJoined: Sequelize.NUMBER,
+	nbMembersLeft: Sequelize.NUMBER,
 });
 
 const staffSettings = sequelize.define('settings', {
@@ -156,10 +187,11 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings, dbLevelsToPlace, octokit };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit };
 module.exports.getLevelsDict = function() {
 	return levels_dict;
 };
+
 // Commands
 client.commands = new Collection();
 client.cooldowns = new Collection();

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const Sequelize = require('sequelize');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
@@ -12,6 +12,10 @@ module.exports = {
 			subcommand
 				.setName('stats')
 				.setDescription('Shows how many records you\'ve checked'))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('commit')
+				.setDescription('Commits all the pending accepted records to github'))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('enabledm')
@@ -28,10 +32,9 @@ module.exports = {
 
 		const { staffStats, dbAcceptedRecords, dbDeniedRecords } = require('../../index.js');
 
-		await interaction.deferReply({ ephemeral: true });
-
 		if (interaction.options.getSubcommand() === 'stats') {
 
+			await interaction.deferReply({ ephemeral: true });
 			// Shows mod stats
 
 			const modId = interaction.user.id;
@@ -140,6 +143,8 @@ module.exports = {
 
 		} else if (interaction.options.getSubcommand() === 'enabledm') {
 
+			await interaction.deferReply({ ephemeral: true });
+
 			const { staffSettings } = require('../../index.js');
 
 			// Update sqlite db
@@ -154,6 +159,40 @@ module.exports = {
 				if (!create) return await interaction.editReply(':x: Something went wrong while executing the command');
 			}
 			return await interaction.editReply(`:white_check_mark: Changed setting to ${interaction.options.getString('status')}`);
+		} else if (interaction.options.getSubcommand() === 'commit') {
+
+			await interaction.deferReply();
+			const { dbRecordsToCommit } = require('../../index.js');
+
+			await dbRecordsToCommit.update({ discordid: interaction.id }, { where: {} });
+
+			if (await dbRecordsToCommit.count({ where: { discordid: interaction.id } }) == 0) return await interaction.editReply(':x: There are no pending accepted record to be commited');
+			const commitEmbed = new EmbedBuilder()
+				.setColor(0x8fce00)
+				.setTitle('Commiting records')
+				.addFields(
+					{ name: 'Number of records:', value: `${await dbRecordsToCommit.count({ where: { discordid: interaction.id } })}`, inline: true },
+					{ name: 'Affected files:', value: `${(await dbRecordsToCommit.findAll({ where: { discordid: interaction.id }, group: 'filename' })).length}`, inline: true },
+				)
+				.setTimestamp();
+			// Create commit buttons
+			const commit = new ButtonBuilder()
+				.setCustomId('commitRecords')
+				.setLabel('Commit changes')
+				.setStyle(ButtonStyle.Success);
+
+			const cancel = new ButtonBuilder()
+				.setCustomId('removeMsg')
+				.setLabel('Cancel')
+				.setStyle(ButtonStyle.Danger);
+
+			const row = new ActionRowBuilder()
+				.addComponents(commit)
+				.addComponents(cancel);
+
+			await interaction.editReply({ embeds: [commitEmbed], components: [row] });
+			const sent = await interaction.fetchReply();
+			await dbRecordsToCommit.update({ discordid: sent.id }, { where: { discordid: interaction.id } });
 		}
 	},
 };

@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
 
 const { archiveRecordsID, acceptedRecordsID, recordsID } = require('../config.json');
-const { dbPendingRecords, dbAcceptedRecords, staffStats, staffSettings } = require('../index.js');
+const { dbPendingRecords, dbAcceptedRecords, staffStats, staffSettings, dbRecordsToCommit } = require('../index.js');
 
 module.exports = {
 	customId: 'accept',
@@ -23,27 +23,32 @@ module.exports = {
 			return;
 		}
 
-		// Remove messages from pending
+		// Create embed to send with github code
+		const githubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');
+		const { getLevelsDict } = require('../index.js');
 		try {
-			await interaction.message.delete();
-			if (record.embedDiscordid != null) await (await interaction.message.channel.messages.fetch(record.embedDiscordid)).delete();
-		} catch (error) {
-			await interaction.editReply(':x: The record has already been accepted/denied, or something went wrong while deleting the messages from pending');
-			console.log(error);
-			return;
+			await dbRecordsToCommit.create({
+				filename: getLevelsDict()[record.levelname],
+				user: record.username,
+				githubCode: githubCode,
+				discordid: '',
+			});
+		}
+		catch (error) {
+			console.log(`Couldn't add record to the commit db :\n${error}`);
+			return await interaction.reply(':x: Something went wrong while accepting the record');
 		}
 
-		// Create embed to send with github code
-		const githubCode = `\`\`\`json\n{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n```' : '\n}\n```');
 		const acceptEmbed = new EmbedBuilder()
 			.setColor(0x8fce00)
 			.setTitle(`:white_check_mark: ${record.levelname}`)
 			.addFields(
 				{ name: 'Record accepted by', value: `${interaction.user}`, inline: true },
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
-				{ name: 'Github code', value: `${githubCode}` },
+				{ name: 'Github code', value: `\`\`\`json\n${githubCode}\n\`\`\`` },
 			)
-			.setTimestamp();
+			.setTimestamp()
+			.setFooter({ text: `Added to the commit list (currently ${await dbRecordsToCommit.count()} pending accepted records to commit)` });
 
 		// Create button to remove the message
 		const remove = new ButtonBuilder()
@@ -53,6 +58,16 @@ module.exports = {
 
 		const row = new ActionRowBuilder()
 			.addComponents(remove);
+
+		// Remove messages from pending
+		try {
+			await interaction.message.delete();
+			if (record.embedDiscordid != null) await (await interaction.message.channel.messages.fetch(record.embedDiscordid)).delete();
+		} catch (error) {
+			await interaction.editReply(':x: The record has already been accepted/denied, or something went wrong while deleting the messages from pending');
+			console.log(error);
+			return;
+		}
 
 		// Create embed to send in archive with all record info
 		const archiveEmbed = new EmbedBuilder()
@@ -98,7 +113,15 @@ module.exports = {
 			});
 		} else if (settings.sendAcceptedInDM) {
 			try {
-				const rawGithubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}' : '\n}');
+				const rawGithubCode = JSON.stringify({
+					user: record.username,
+					link: record.completionlink,
+					percent: 100,
+					hz: record.fps,
+					...(record.device === 'Mobile' && { mobile: true }),
+				}, null, '\t');
+
+				// const rawGithubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}' : '\n}');
 				const dmMessage = `Accepted record of ${record.levelname} for ${record.username}\nGithub Code:`;
 				const dmMessage2 = `${rawGithubCode}`;
 				await interaction.user.send({ content: dmMessage });
