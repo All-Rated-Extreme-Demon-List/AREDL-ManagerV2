@@ -28,7 +28,7 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('commit')
-				.setDescription('Commits all the pending accepted records to github')
+				.setDescription('Commits all the pending accepted records to github'))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('commitdebug')
@@ -39,8 +39,8 @@ module.exports = {
 						.setRequired(true)
 						.addChoices(
 							{ name: 'Enabled', value: 'enabled' },
-							{ nme: 'Disabled', value: 'disabled' },
-						))))
+							{ name: 'Disabled', value: 'disabled' },
+						)))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('commitreset')
@@ -170,7 +170,11 @@ module.exports = {
 			return await interaction.editReply({ embeds: [ modInfoEmbed ], files: [attachment] });
 
 
-		} else if (interaction.options.getSubcommand() === 'info') {
+		} else if (interaction.options.getSubcommand() === 'recordsinfo') {
+
+			await interaction.deferReply({ ephemeral: true });
+
+			const { dbPendingRecords } = require('../../index.js');
 
 			// Check submissions info //
 			const submissionsType = interaction.options.getString('type');
@@ -257,22 +261,24 @@ module.exports = {
 		} else if (interaction.options.getSubcommand() === 'commitdebug') {
 			// Changes debug status
 
+			await interaction.deferReply({ ephemeral: true });
+
 			const { dbInfos } = require('../../index.js');
 
 			// Update sqlite db
-			const update = await dbInfos.update({ commitdebug: interaction.options.getString('status') === 'enabled' }, { where: { name: 'commitdebug' } });
-
+			const update = await dbInfos.update({ status: (interaction.options.getString('status') === 'enabled') }, { where: { name: 'commitdebug' } });
 			if (!update) return await interaction.editReply(':x: Something went wrong while executing the command');
 			console.log(`Changed debug status to ${interaction.options.getString('status')}`);
 			return await interaction.editReply(`:white_check_mark: Changed debug status to ${interaction.options.getString('status')}`);
 
 		} else if (interaction.options.getSubcommand() === 'commitreset') {
-			
+
+			await interaction.deferReply({ ephemeral: true });
+
 			const { dbRecordsToCommit } = require('../../index.js');
 
-			const reset = await dbRecordsToCommit.destroy({ where: {} });
-
-			if (reset) return await interaction.editReply(':white_check_mark: The list was successfully reset');
+			await dbRecordsToCommit.destroy({ where: {} });
+			if (await dbRecordsToCommit.count() == 0) return await interaction.editReply(':white_check_mark: The list was successfully reset');
 			else return await interaction.editReply(':x: Something went wrong while removing records');
 		}
 	},

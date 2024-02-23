@@ -36,22 +36,6 @@ module.exports = {
 						.setRequired(true)))
 		.addSubcommand(subcommand =>
 			subcommand
-				.setName('setmodinfo')
-				.setDescription('Changes a moderator records data')
-				.addUserOption(option =>
-					option.setName('moderator')
-						.setDescription('The moderator you want to change the data of')
-						.setRequired(true))
-				.addIntegerOption(option =>
-					option.setName('nbaccepted')
-						.setDescription('The number of accepted records to set')
-						.setRequired(true))
-				.addIntegerOption(option =>
-					option.setName('nbdenied')
-						.setDescription('The number of denied records to set')
-						.setRequired(true)))
-		.addSubcommand(subcommand =>
-			subcommand
 				.setName('check')
 				.setDescription('Checks for errored record data'))
 		.addSubcommand(subcommand =>
@@ -210,39 +194,6 @@ module.exports = {
 
 			return await interaction.editReply({ embeds: [ modInfoEmbed ], files: [attachment] });
 
-
-		} else if (interaction.options.getSubcommand() === 'setmodinfo') {
-
-			// Changes moderator data //
-
-			// Get mod id
-			const modId = interaction.options.getUser('moderator').id;
-			const modInfo = await staffStats.findOne({ where: { moderator: modId } });
-
-			console.log(`${modId}'s mod data has been changed`);
-			if (!modInfo) {
-
-				// If mod info does not exist, create it
-				await staffStats.create({
-					moderator: modId,
-					nbRecords: interaction.options.getInteger('nbaccepted') + interaction.options.getInteger('nbdenied'),
-					nbDenied: interaction.options.getInteger('nbdenied'),
-					nbAccepted: interaction.options.getInteger('nbaccepted'),
-				});
-
-				return await interaction.editReply(':white_check_mark: Successfuly added moderator data');
-
-			} else {
-
-				// Or else update it
-				await staffStats.update({
-					nbRecords: interaction.options.getInteger('nbaccepted') + interaction.options.getInteger('nbdenied'),
-					nbDenied: interaction.options.getInteger('nbdenied'),
-					nbAccepted: interaction.options.getInteger('nbaccepted'),
-				}, { where: { moderator: modId } });
-
-				return await interaction.editReply(':white_check_mark: Successfuly updated moderator data');
-			}
 		} else if (interaction.options.getSubcommand() === 'check') {
 
 			// Clears errored records //

@@ -4,7 +4,19 @@ module.exports = {
 	customId: 'commitAddLevel',
 	ephemeral: true,
 	async execute(interaction) {
-		const { octokit, dbLevelsToPlace } = require('../index.js');
+		const { octokit, dbLevelsToPlace, dbMessageLocks } = require('../index.js');
+
+		const lock = await dbMessageLocks.findOne({ where: { discordid: interaction.message.id } });
+		if (!lock) {
+			await dbMessageLocks.create({
+				discordid: interaction.message.id,
+				locked: true,
+				userdiscordid: interaction.user.id,
+			});
+		} else {
+			return await interaction.editReply(`:x: This interaction is being used by <@${lock.userdiscordid}>`);
+		}
+
 		// Check for level info corresponding to the message id
 		const level = await dbLevelsToPlace.findOne({ where: { discordid: interaction.message.id } });
 
@@ -64,7 +76,7 @@ module.exports = {
 					repo: githubRepo,
 					ref: `heads/${githubBranch}`,
 				});
-				const commitSha = refData.object.sha;
+				commitSha = refData.object.sha;
 			} catch (getRefErr) {
 				console.log(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (getRefError)');
@@ -78,7 +90,7 @@ module.exports = {
 					repo: githubRepo,
 					commit_sha: commitSha,
 				});
-				const treeSha = commitData.tree.sha;
+				treeSha = commitData.tree.sha;
 			} catch (getCommitErr) {
 				console.log(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (getCommitError)');
@@ -87,7 +99,7 @@ module.exports = {
 			let newTree;
 			try {
 				// Create a new tree with the changes
-				const newTree = await octokit.git.createTree({
+				newTree = await octokit.git.createTree({
 					owner: githubOwner,
 					repo: githubRepo,
 					base_tree: treeSha,
@@ -106,7 +118,7 @@ module.exports = {
 			let newCommit;
 			try {
 				// Create a new commit with this tree
-				const newCommit = await octokit.git.createCommit({
+				newCommit = await octokit.git.createCommit({
 					owner: githubOwner,
 					repo: githubRepo,
 					message: `Placed ${level.filename} at ${level.position} (${interaction.user.tag})`,
@@ -137,9 +149,9 @@ module.exports = {
 				await interaction.message.delete();
 			} catch (cleanupErr) {
 				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}, but an error occured while cleanin up:\n${cleanupErr}`);
-			} finally {
-				return await interaction.editReply(`:white_check_mark: Successfully created file: **${level.filename}.json** (${newCommit.data.html_url})`);
 			}
+
+			return await interaction.editReply(`:white_check_mark: Successfully created file: **${level.filename}.json** (${newCommit.data.html_url})`);
 		}
 	},
 };

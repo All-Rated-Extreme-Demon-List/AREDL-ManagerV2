@@ -168,6 +168,11 @@ module.exports = {
 			return await interaction.editReply(':x: Something went wrong while adding the accepted record to the database');
 		}
 
+		const { dailyStats } = require('../index.js');
+
+		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await dbPendingRecords.count() });
+		else await dailyStats.update({ nbRecordsAccepted: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsAccepted + 1 }, { where: { date: Date.now() } });
+
 		console.log(`${interaction.user.id} accepted record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been accepted');

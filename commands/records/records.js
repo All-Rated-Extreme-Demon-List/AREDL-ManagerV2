@@ -191,6 +191,11 @@ module.exports = {
 			if (interaction.options.getInteger('ldm') != null) await dbPendingRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sentvideo.id } });
 			if (interaction.options.getString('additionalnotes') != null) await dbPendingRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sentvideo.id } });
 
+			const { dailyStats } = require('../../index.js');
+
+			if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsSubmitted: 1, nbRecordsPending: await dbPendingRecords.count() });
+			else await dailyStats.update({ nbRecordsSubmitted: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsSubmitted + 1 }, { where: { date: Date.now() } });
+
 			console.log(`${interaction.user.id} submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
 			// Reply
 			await interaction.editReply((interaction.member.roles.cache.has(priorityRoleID) ? ':white_check_mark: The priority record has been submitted successfully' : ':white_check_mark: The record has been submitted successfully'));

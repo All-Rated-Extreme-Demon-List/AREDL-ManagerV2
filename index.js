@@ -165,11 +165,12 @@ const staffStats = sequelize.define('staffs', {
 
 const dailyStats = sequelize.define('dailystats', {
 	date: Sequelize.DATEONLY,
-	nbRecordsSubmitted: Sequelize.NUMBER,
-	nbRecordsAccepted: Sequelize.NUMBER,
-	nbRecordsDenied: Sequelize.NUMBER,
-	nbMembersJoined: Sequelize.NUMBER,
-	nbMembersLeft: Sequelize.NUMBER,
+	nbRecordsSubmitted: { type: Sequelize.NUMBER, defaultValue: 0 },
+	nbRecordsPending: { type: Sequelize.NUMBER, defaultValue: 0 },
+	nbRecordsAccepted: { type: Sequelize.NUMBER, defaultValue: 0 },
+	nbRecordsDenied: { type: Sequelize.NUMBER, defaultValue: 0 },
+	nbMembersJoined: { type: Sequelize.NUMBER, defaultValue: 0 },
+	nbMembersLeft: { type: Sequelize.NUMBER, defaultValue: 0 },
 });
 
 const staffSettings = sequelize.define('settings', {

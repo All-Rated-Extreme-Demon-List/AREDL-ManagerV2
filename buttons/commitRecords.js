@@ -22,7 +22,7 @@ module.exports = {
 
 		let addedRecords = 0;
 		let duplicateRecords = 0;
-		let erroredRecords = [];
+		const erroredRecords = [];
 
 		// Caching current file data from github
 		const previousContent = {};
@@ -128,9 +128,10 @@ module.exports = {
 			return await interaction.editReply(':x: No changes to commit after removing duplicates and handling errors.');
 		}
 
-		interaction.editReply('Building commit...');
-		const debugStatus = await dbInfos.findOne({ where: { name: 'commitdebug'}});
+		const { dbInfos } = require('../index.js');
 
+		interaction.editReply('Building commit...');
+		const debugStatus = await dbInfos.findOne({ where: { name: 'commitdebug' } });
 		if (!debugStatus || !debugStatus.status) {
 			let commitSha;
 			try {
@@ -218,10 +219,9 @@ module.exports = {
 			} catch (cleanupError) {
 				console.log(`Something went wrong while cleaning up the commit database & discord message:\n${cleanupError}`);
 			}
-			
+
 			let detailedErrors = '';
 			for (const err of erroredRecords) detailedErrors += `\n${err}`;
-
 			const replyEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
 				.setTitle(':white_check_mark: Commit successful')
@@ -229,22 +229,24 @@ module.exports = {
 				.addFields(
 					{ name: 'Commit link:', value: `${newCommit.data.html_url}` },
 					{ name: 'Duplicates found:', value: `**${duplicateRecords}**`, inline: true },
-					{ name: 'Errors:', value: `${erroredRecords}`, inline: true },
-					{ name: `Detailed Errors:`, value: detailedErrors},
+					{ name: 'Errors:', value: `${erroredRecords.length}`, inline: true },
+					{ name: 'Detailed Errors:', value: (detailedErrors.length == 0 ? 'None' : detailedErrors) },
 				)
 				.setTimestamp();
-			return await interaction.editReply({ content: '', embeds: [ replyEmbed ] });
+			return await interaction.editReply({ content: ' ', embeds: [ replyEmbed ] });
 		} else {
 			let updatedFiles = 0;
+			let i = 1;
+
 			for (const change of changes) {
 				interaction.editReply(`Updating ${change.path} (${i}/${changes.length})...`);
 				// Get file SHA
 				let fileSha;
 				try {
 					const response = await octokit.repos.getContent({
-					  owner: githubOwner,
-					  repo: githubRepo,
-					  path: change.path,
+						owner: githubOwner,
+						repo: githubRepo,
+						path: change.path,
 					});
 					fileSha = response.data.sha;
 				} catch (error) {
@@ -255,27 +257,25 @@ module.exports = {
 					continue;
 				}
 
-				// Update data
-				let i = 0;
 				try {
-					const response = await octokit.repos.createOrUpdateFileContents({
-					  owner: githubOwner,
-					  repo: githubRepo,
-					  path: change.path,
-					  message: `Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag})`,
-					  content: change.content,
-					 fileSha,
+					await octokit.repos.createOrUpdateFileContents({
+						owner: githubOwner,
+						repo: githubRepo,
+						path: change.path,
+						message: `Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag})`,
+						content: Buffer.from(change.content).toString('base64'),
+						sha: fileSha,
 					});
 					console.log(`Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag}`);
-				  } catch (error) {
+				} catch (error) {
 					console.log(`Failed to update ${change.path} (${i}/${changes.length}) (${interaction.user.tag}):\n${error}`);
 					erroredRecords.push(`All from ${change.path}`);
 					await interaction.editReply(`:x: Couldn't update the file ${change.path}, skipping...`);
-				  }
+				}
 				updatedFiles++;
 				i++;
 			}
-			
+
 			let detailedErrors = '';
 			for (const err of erroredRecords) detailedErrors += `\n${err}`;
 
@@ -286,10 +286,11 @@ module.exports = {
 				.addFields(
 					{ name: 'Duplicates found:', value: `**${duplicateRecords}**`, inline: true },
 					{ name: 'Errors:', value: `${erroredRecords.length}`, inline: true },
-					{ name: `Detailed Errors:`, value: detailedErrors},
+					{ name: 'Detailed Errors:', value: (detailedErrors.length == 0 ? 'None' : detailedErrors) },
 				)
 				.setTimestamp();
-			return await interaction.editReply({ content: '', embeds: [ replyEmbed ] });
+			await interaction.message.delete();
+			return await interaction.editReply({ content: ' ', embeds: [ replyEmbed ] });
 		}
 	},
 };

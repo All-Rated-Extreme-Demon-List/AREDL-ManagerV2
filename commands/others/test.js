@@ -17,7 +17,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('test')
 		.setDescription('Test')
-    .setDefaultMemberPermissions(0)
+		.setDefaultMemberPermissions(0)
 		.addUserOption(option =>
 			option.setName('member')
 				.setDescription('Member')),

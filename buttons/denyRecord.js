@@ -140,6 +140,11 @@ module.exports = {
 			await modInfo.increment('nbDenied');
 		}
 
+		const { dailyStats } = require('../index.js');
+
+		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await dbPendingRecords.count() });
+		else await dailyStats.update({ nbRecordsDenied: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
+
 		console.log(`${interaction.user.id} denied record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been denied');
