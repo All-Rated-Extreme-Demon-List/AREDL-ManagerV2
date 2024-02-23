@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const { dbInfos, staffStats, dbPendingRecords, dbDeniedRecords, dbAcceptedRecords, staffSettings, dbLevelsToPlace } = require('../index.js');
+const { dbInfos, staffStats, dbPendingRecords, dbDeniedRecords, dbAcceptedRecords, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats } = require('../index.js');
 const { guildId, pendingRecordsID, priorityRecordsID } = require('../config.json');
 
 module.exports = {
@@ -16,11 +16,21 @@ module.exports = {
 		await staffStats.sync({ alter: true });
 		await staffSettings.sync({ alter: true });
 		await dbLevelsToPlace.sync({ alter: true });
+		await dbRecordsToCommit.sync({ alter: true });
+		await dbMessageLocks.sync({ alter: true });
+		await dailyStats.sync({ alter: true });
 
-		const isInfosAvailable = await dbInfos.count();
-		if (!isInfosAvailable) {
+		if (!(await dbInfos.count({ where: { name: 'records' } }))) {
 			await dbInfos.create({
 				status: 0,
+				name: 'records',
+			});
+		}
+
+		if (!(await dbInfos.count({ where: { name: 'commitdebug' } }))) {
+			await dbInfos.create({
+				status: 0,
+				name: 'commitdebug',
 			});
 		}
 

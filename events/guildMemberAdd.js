@@ -18,6 +18,11 @@ module.exports = {
 	once: false,
 	async execute(member) {
 
+		const { dailyStats, dbPendingRecords } = require('../index.js');
+
+		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbMembersJoined: 1, nbRecordsPending: await dbPendingRecords.count() });
+		else await dailyStats.update({ nbMembersJoined: (await dailyStats.findOne({ where: { date: Date.now() } })).nbMembersJoined + 1 }, { where: { date: Date.now() } });
+
 		const avatar = await Canvas.loadImage(member.displayAvatarURL({ extension: 'jpg' }));
 
 		const canvas = Canvas.createCanvas(700, 250);
