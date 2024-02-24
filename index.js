@@ -163,6 +163,12 @@ const staffStats = sequelize.define('staffs', {
 	nbDenied: Sequelize.INTEGER,
 });
 
+const dbShifts = sequelize.define('shifts', {
+	moderator: Sequelize.STRING,
+	day: Sequelize.STRING,
+});
+
+
 const dailyStats = sequelize.define('dailystats', {
 	date: Sequelize.DATEONLY,
 	nbRecordsSubmitted: { type: Sequelize.NUMBER, defaultValue: 0 },
@@ -189,7 +195,7 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbShifts, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit };
 module.exports.getLevelsDict = function() {
 	return levels_dict;
 };
