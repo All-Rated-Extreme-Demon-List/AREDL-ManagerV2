@@ -8,6 +8,8 @@ module.exports = {
 		.setDescription('Test')
 		.setDefaultMemberPermissions(0),
 	async execute(interaction) {
+
+		await interaction.deferReply({ ephemeral: true });
 		const { dbShifts, dbPendingRecords } = require('../index.js');
 		const day = new Date().toLocaleString('en-us', { weekday: 'long' });
 
