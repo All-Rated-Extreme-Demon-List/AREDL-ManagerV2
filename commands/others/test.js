@@ -1,61 +1,74 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
-const { guildId } = require('../../config.json');
-const Canvas = require('@napi-rs/canvas');
-
-const applyText = (canvas, text) => {
-	const context = canvas.getContext('2d');
-	let fontSize = 60;
-	do {
-		context.font = `${fontSize -= 5}px Open Sans`;
-	} while (context.measureText(text).width > canvas.width - 300);
-
-	return context.font;
-};
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { guildId, recordsPerWeek, pendingRecordsID } = require('../../config.json');
 
 module.exports = {
 	cooldown: 5,
 	data: new SlashCommandBuilder()
 		.setName('test')
 		.setDescription('Test')
-		.setDefaultMemberPermissions(0)
-		.addUserOption(option =>
-			option.setName('member')
-				.setDescription('Member')),
+		.setDefaultMemberPermissions(0),
 	async execute(interaction) {
-		const user = interaction.options.getUser('member');
-		const member = (user ?? interaction.member);
-		const avatar = await Canvas.loadImage(member.displayAvatarURL({ extension: 'jpg' }));
+		const { dbShifts, dbPendingRecords } = require('../index.js');
+		const day = new Date().toLocaleString('en-us', { weekday: 'long' });
 
-		const canvas = Canvas.createCanvas(700, 250);
-		const context = canvas.getContext('2d');
+		const shiftData = await dbShifts.findAll({ where: { day: day } });
+		const pendingRecords = await dbPendingRecords.findAll({ where: {} });
+		const nbPendingRecords = pendingRecords.length();
 
-		context.fillStyle = '#101010';
-		context.fillRect(0, 0, canvas.width, canvas.height);
-		context.fillStyle = '#000000';
-		context.fillRect(10, 15, canvas.width - 20, canvas.height - 30);
+		let totalShiftRecords = 0;
+		const shifts = {};
 
-		context.font = '28px Open Sans';
-		context.fillStyle = '#d0d0d0';
-		context.fillText('just joined the server', canvas.width / 2.5, canvas.height / 1.8);
+		for (const shift of shiftData) {
+			const nbRecords = Math.floor(recordsPerWeek / (await dbShifts.count({ where: { moderator: shift.moderator } })));
+			shifts[shift.moderator] = {
+				'records': nbRecords,
+			};
+			totalShiftRecords += nbRecords;
+		}
 
-		context.font = applyText(canvas, `${member.displayName}`);
-		context.fillStyle = '#ffffff';
-		context.fillText(`${member.displayName}`, canvas.width / 2.5, canvas.height / 2.5);
+		if (totalShiftRecords > nbPendingRecords) {
+			let assignedRecords = 0;
+			for (const moderator of Object.keys(shifts)) {
+				if (assignedRecords >= nbPendingRecords) {
+					shifts[moderator].records = 0;
+					continue;
+				}
+				let nbRecords = Math.floor((shifts[moderator].records / totalShiftRecords) * nbPendingRecords);
+				if (assignedRecords + nbRecords > nbPendingRecords) nbRecords = nbPendingRecords - assignedRecords;
 
-		context.font = '28px Open Sans';
-		context.fillStyle = '#a0a0a0';
-		context.fillText(`Member #${(await member.client.guilds.cache.get(guildId)).memberCount}`, canvas.width / 2.5, canvas.height / 1.4);
+				shifts[moderator].records = nbRecords;
+				assignedRecords += nbRecords;
+			}
+		}
 
-		context.beginPath();
-		context.arc(125, 125, 100, 0, Math.PI * 2, true);
-		context.closePath();
-		context.clip();
+		let shiftStr = '';
+		let pingStr = '';
+		let currentRecord = 0;
 
-		context.drawImage(avatar, 25, 25, 200, 200);
+		for (const moderator of Object.keys(shifts)) {
+			const startRecord = {
+				'discordid': pendingRecords[currentRecord].discordid,
+				'levelname': pendingRecords[currentRecord].levelname,
+				'username': pendingRecords[currentRecord].username,
+			};
+			currentRecord += shifts[moderator].records - 1;
+			const endRecord = {
+				'discordid': pendingRecords[currentRecord].discordid,
+				'levelname': pendingRecords[currentRecord].levelname,
+				'username': pendingRecords[currentRecord].username,
+			};
+			currentRecord++;
+			pingStr += `<@${moderator}> `;
+			shiftStr += `<@${moderator}>: From https://discord.com/channels/${guildId}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username}) to https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username}) (${shifts[moderator].records} records)\n`;
+		}
 
-		const attachment = new AttachmentBuilder(await canvas.encode('png'), { name: 'welcome.png' });
+		const shiftsEmbed = new EmbedBuilder()
+			.setColor(0x005c91)
+			.setTitle(`${new Date().toLocaleString('en-us', { weekday: 'long' })} Shift`)
+			.setDescription(shiftStr)
+			.setTimestamp();
 
-		await interaction.reply({ ephemeral: true, content: `Hey ${member}, welcome to the All Rated Extreme Demons List!`, files: [attachment] });
+		await interaction.editReply({ content: pingStr, embeds: [shiftsEmbed] });
 
 	},
 };
