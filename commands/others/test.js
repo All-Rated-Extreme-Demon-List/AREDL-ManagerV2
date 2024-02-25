@@ -26,7 +26,7 @@ module.exports = {
 			};
 			totalShiftRecords += nbRecords;
 		}
-		console.log(shifts);
+
 		let assignedRecords = 0;
 		if (totalShiftRecords > nbPendingRecords) {
 			for (const moderator of Object.keys(shifts)) {
@@ -58,7 +58,7 @@ module.exports = {
 				'username': pendingRecords[currentRecord].username,
 			};
 			currentRecord++;
-			shiftStr += `\n> \n> <@${moderator}>:\n> From https://discord.com/channels/${guildId}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n> \t\tto https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
+			shiftStr += `\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${guildId}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
 		}
 
 		await interaction.editReply(`> # ${new Date().toLocaleString('en-us', { weekday: 'long' })} Shifts\n> \n> Total pending records: ${nbPendingRecords}\n> Total assigned records: ${totalShiftRecords > nbPendingRecords ? assignedRecords : totalShiftRecords}\n\n> ## Assigned Records:${shiftStr}`);
