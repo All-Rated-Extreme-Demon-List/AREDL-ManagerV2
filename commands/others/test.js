@@ -15,7 +15,7 @@ module.exports = {
 
 		const shiftData = await dbShifts.findAll({ where: { day: day } });
 		const pendingRecords = await dbPendingRecords.findAll({ where: {} });
-		const nbPendingRecords = pendingRecords.length();
+		const nbPendingRecords = pendingRecords.length;
 
 		let totalShiftRecords = 0;
 		const shifts = {};
