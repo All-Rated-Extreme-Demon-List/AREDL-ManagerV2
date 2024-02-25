@@ -2,10 +2,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { token } = require('./config.json');
 const { githubToken } = require('./config.json');
-const { websiteDataLink } = require('./config.json');
 const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
+const { fetchListData } = require('./utils.js');
+const cron = require('node-cron');
 
 require('log-timestamp');
 
@@ -22,36 +23,7 @@ const sequelize = new Sequelize({
 // Establish Github connection
 const octokit = new Octokit({ auth: githubToken });
 
-// Cache all levels names and file names every hour
-async function fetchListData() {
-	const levels_dict = {};
-	let list_data;
-	try {
-		list_data = await (await fetch(`${websiteDataLink}/_list.json`, {
-			method: 'GET',
-			headers: {
-				'Accept': 'application/json',
-			},
-		})).json();
-	} catch (fetchError) {
-		console.log(`Failed to fetch list data: \n${fetchError}`);
-		return -1;
-	}
-
-	for (const filename of list_data) {
-		const file_data = await (await fetch(`${websiteDataLink}/${filename}.json`, {
-			method: 'GET',
-			headers: {
-				'Accept': 'application/json',
-			},
-		})).json();
-		levels_dict[file_data.name] = filename;
-	}
-	console.log('List data updated successfully');
-	return levels_dict;
-}
-
-
+// Cache all levels names and file names
 let levels_dict;
 try {
 	levels_dict = JSON.parse(fs.readFileSync('data/cached_list.json'));
@@ -67,20 +39,6 @@ try {
 		levels_dict = data;
 	});
 }
-
-const cron = require('node-cron');
-cron.schedule('0 * * * *', () => {
-	console.log('Fetching last list data...');
-	fetchListData().then(data => {
-		if (data === -1) return;
-		fs.writeFile('data/cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
-			if (err) {
-				console.log(err);
-			}
-		});
-		levels_dict = data;
-	});
-});
 
 // Create tables models
 const dbPendingRecords = sequelize.define('pendingRecords', {
@@ -195,10 +153,28 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbShifts, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbShifts, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit, client };
 module.exports.getLevelsDict = function() {
 	return levels_dict;
 };
+module.exports.setLevelsDict = function(new_levels_dict) {
+	levels_dict = new_levels_dict;
+};
+
+
+// Scheduled cron tasks
+console.log('Loading scheduled tasks');
+const scheduledPath = path.join(__dirname, 'scheduled');
+const scheduledFiles = fs.readdirSync(scheduledPath).filter(file => file.endsWith('.js'));
+
+for (const file of scheduledFiles) {
+	const filePath = path.join(scheduledPath, file);
+	const task = require(filePath);
+
+	cron.schedule(task.cron, task.execute);
+
+	console.log(`  Loaded ${task.name}(${task.cron}) from ${filePath}`);
+}
 
 // Commands
 client.commands = new Collection();
