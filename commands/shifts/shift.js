@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { dbShifts } = require('../../index.js');
 
 module.exports = {
 	cooldown: 5,
@@ -56,6 +55,7 @@ module.exports = {
 	async execute(interaction) {
 
 		await interaction.deferReply({ ephemeral: true });
+		const { dbShifts } = require('../../index.js');
 
 		if (interaction.options.getSubcommand() === 'add') {
 
