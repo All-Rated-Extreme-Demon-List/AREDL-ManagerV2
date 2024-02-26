@@ -11,7 +11,7 @@ const cron = require('node-cron');
 require('log-timestamp');
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences] });
 
 // Establish DB connection
 const sequelize = new Sequelize({

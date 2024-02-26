@@ -5,7 +5,7 @@ module.exports = {
 	once: false,
 	async execute(member) {
 
-		console.log(`Member left: ${member.tag} (${member.id})`);
+		console.log(`Member left: ${member.id}`);
 
 		const { dailyStats, dbPendingRecords } = require('../index.js');
 

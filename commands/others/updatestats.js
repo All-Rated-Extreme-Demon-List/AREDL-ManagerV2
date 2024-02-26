@@ -34,7 +34,7 @@ module.exports = {
 
 		for (const date of deniedData) {
 			if ((!await dailyStats.findOne({ where: { date: date.dataValues['date'] } }))) await dailyStats.create({ date: date.dataValues['date'], nbRecordsDenied: date.dataValues['count'] });
-			else await dailyStats.update({ nbRecordsAccepted: date.dataValues['count'] }, { where: { date: date.dataValues['date'] } });
+			else await dailyStats.update({ nbRecordsDenied: date.dataValues['count'] }, { where: { date: date.dataValues['date'] } });
 		}
 
 		await interaction.editReply(':white_check_mark: Successfully updated internal daily stats database');
