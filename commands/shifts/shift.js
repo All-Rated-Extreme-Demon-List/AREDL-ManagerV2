@@ -54,8 +54,9 @@ module.exports = {
 				.setDescription('Shows all assigned shifts')),
 	async execute(interaction) {
 
-		await interaction.deferReply({ ephemeral: true });
 		const { dbShifts } = require('../../index.js');
+
+		await interaction.deferReply({ ephemeral: true });
 
 		if (interaction.options.getSubcommand() === 'add') {
 

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { guildId, pendingRecordsID, priorityRecordsID } = require('../../config.json');
+const { guildId, staffGuildId, enableSeparateStaffServer, pendingRecordsID, priorityRecordsID } = require('../../config.json');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const Sequelize = require('sequelize');
 
@@ -197,7 +197,7 @@ module.exports = {
 			console.log('Looking for errored records...');
 			const pendingRecords = await dbPendingRecords.findAll();
 			let nbFound = 0;
-			const guild = await interaction.client.guilds.fetch(guildId);
+			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 			const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
 			const priorityChannel = await guild.channels.cache.get(priorityRecordsID);
 			for (let i = 0; i < pendingRecords.length; i++) {

@@ -1,4 +1,4 @@
-const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId } = require('../config.json');
+const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId, enableSeparateStaffServer, staffGuildId } = require('../config.json');
 
 module.exports = {
 	name: 'shiftsReminder',
@@ -22,7 +22,6 @@ module.exports = {
 			};
 			totalShiftRecords += nbRecords;
 		}
-		
 		let assignedRecords = 0;
 		if (totalShiftRecords > nbPendingRecords) {
 			for (const moderator of Object.keys(shifts)) {
@@ -42,6 +41,10 @@ module.exports = {
 		let currentRecord = 0;
 
 		for (const moderator of Object.keys(shifts)) {
+			if (shifts[moderator].records == 0) {
+				shiftStr += `\n> \n> <@${moderator}>:\n> No records assigned`;
+				continue;
+			}
 			const startRecord = {
 				'discordid': pendingRecords[currentRecord].discordid,
 				'levelname': pendingRecords[currentRecord].levelname,
@@ -54,7 +57,7 @@ module.exports = {
 				'username': pendingRecords[currentRecord].username,
 			};
 			currentRecord++;
-			shiftStr += `\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${guildId}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
+			shiftStr += `\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${(enableSeparateStaffServer ? staffGuildId : guildId)}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
 		}
 
 		await (await client.channels.fetch(shiftsReminderID)).send(`> # ${new Date().toLocaleString('en-us', { weekday: 'long' })} Shifts\n> \n> Total pending records: ${nbPendingRecords}\n> Total assigned records: ${totalShiftRecords > nbPendingRecords ? assignedRecords : totalShiftRecords}\n\n> ## Assigned Records:${shiftStr}\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID } = require('../../config.json');
+const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID, enableSeparateStaffServer, staffGuildId, guildId } = require('../../config.json');
 const isUrlHttp = require('is-url-http');
 const denyReasons = new Map()
 	.set('none', 'No reason has been selected, please contact a list moderator')
@@ -160,8 +160,9 @@ module.exports = {
 				.setTimestamp();
 
 			// Send message
-			const sent = await interaction.guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ embeds: [recordEmbed] });
-			const sentvideo = await interaction.guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ content : `${interaction.options.getString('completionlink')}`, components: [row] });
+			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
+			const sent = await guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ embeds: [recordEmbed] });
+			const sentvideo = await guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ content : `${interaction.options.getString('completionlink')}`, components: [row] });
 
 			// Add record to sqlite db
 			try {

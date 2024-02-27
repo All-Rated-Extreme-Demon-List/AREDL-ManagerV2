@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { archiveRecordsID, deniedRecordsID, recordsID } = require('../config.json');
+const { archiveRecordsID, deniedRecordsID, recordsID, guildId, staffGuildId, enableSeparateStaffServer } = require('../config.json');
 const { dbDeniedRecords } = require('../index.js');
 
 // Get deny text from deny reason identifier
@@ -76,11 +76,13 @@ module.exports = {
 				{ name: 'Deny Reason', value: `${reason}` },
 			);
 
+		const guild = await interaction.client.guilds.fetch(guildId);
+		const staffGuild = (enableSeparateStaffServer ? await interaction.client.guilds.fetch(staffGuildId) : guild);
 		// Send all messages (notify the submitter that the record was denied, expect for group submissions and duplicates)
-		await interaction.client.channels.cache.get(archiveRecordsID).send({ embeds : [denyArchiveEmbed] });
-		await interaction.client.channels.cache.get(deniedRecordsID).send({ embeds : [denyEmbed] });
-		if (interaction.values[0] != 'group' && interaction.values[0] != 'duplicate') await interaction.client.channels.cache.get(recordsID).send({ content : `<@${record.submitter}>`, embeds : [publicDenyEmbed] });
-		else await interaction.client.channels.cache.get(recordsID).send({ embeds : [publicDenyEmbed] });
+		await staffGuild.channels.cache.get(archiveRecordsID).send({ embeds : [denyArchiveEmbed] });
+		await staffGuild.channels.cache.get(deniedRecordsID).send({ embeds : [denyEmbed] });
+		if (interaction.values[0] != 'group' && interaction.values[0] != 'duplicate') await guild.channels.cache.get(recordsID).send({ content : `<@${record.submitter}>`, embeds : [publicDenyEmbed] });
+		else await guild.channels.cache.get(recordsID).send({ embeds : [publicDenyEmbed] });
 
 		// Update info in denied table
 		await dbDeniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
