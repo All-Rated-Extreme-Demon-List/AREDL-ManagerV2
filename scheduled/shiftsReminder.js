@@ -2,7 +2,7 @@ const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId } = require(
 
 module.exports = {
 	name: 'shiftsReminder',
-	cron: '0 13 * * *',
+	cron: '0 0 * * *',
 	async execute() {
 
 		const { dbShifts, dbPendingRecords, client } = require('../index.js');
@@ -22,6 +22,7 @@ module.exports = {
 			};
 			totalShiftRecords += nbRecords;
 		}
+		
 		let assignedRecords = 0;
 		if (totalShiftRecords > nbPendingRecords) {
 			for (const moderator of Object.keys(shifts)) {
