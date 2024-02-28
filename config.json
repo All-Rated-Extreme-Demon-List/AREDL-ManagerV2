@@ -1,4 +1,9 @@
 {
+	"enableSeparateStaffServer": true,
+	"enableShifts": true,
+	"enbablePriorityRole": true,
+	"enableWelcomeMessage": true,
+
 	"token": "",
 	"githubToken": "",
 
@@ -8,9 +13,10 @@
 	"githubBranch": "main",
 
 	"websiteDataLink": "https://aredl.net/data",
-
-	"clientId": "1173179654492934225",
+	
+	"clientId": "1175495600456872066",
 	"guildId": "1173011289744871594",
+	"staffGuildId": "1212116091451609088",
 
 	"priorityRoleID" : "1173011289874911419",
 	"submissionLockRoleID" : "1173011289891672126",
@@ -23,5 +29,8 @@
 	"archiveRecordsID" : "1173011290969604160",
 	"recordsID" : "1173011291829436422",
 
-	"guildMemberAddID" : "1173011291661668384"
+	"guildMemberAddID" : "1173011291661668384",
+
+	"shiftsReminderID": "1211456917709393920",
+	"recordsPerWeek": 45 
 }

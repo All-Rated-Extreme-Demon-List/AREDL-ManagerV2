@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID, enableSeparateStaffServer, staffGuildId, guildId } = require('../../config.json');
+const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID, enableSeparateStaffServer, enablePriorityRole, staffGuildId, guildId } = require('../../config.json');
 const isUrlHttp = require('is-url-http');
 const denyReasons = new Map()
 	.set('none', 'No reason has been selected, please contact a list moderator')
@@ -16,6 +16,7 @@ const denyReasons = new Map()
 
 module.exports = {
 	cooldown: 5,
+	enabled: true,
 	data: new SlashCommandBuilder()
 		.setName('record')
 		.setDescription('Record handling')
@@ -161,8 +162,8 @@ module.exports = {
 
 			// Send message
 			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
-			const sent = await guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ embeds: [recordEmbed] });
-			const sentvideo = await guild.channels.cache.get((interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ content : `${interaction.options.getString('completionlink')}`, components: [row] });
+			const sent = await guild.channels.cache.get((enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ embeds: [recordEmbed] });
+			const sentvideo = await guild.channels.cache.get((enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID) ? priorityRecordsID : pendingRecordsID)).send({ content : `${interaction.options.getString('completionlink')}`, components: [row] });
 
 			// Add record to sqlite db
 			try {
@@ -178,7 +179,7 @@ module.exports = {
 					additionalnotes: 'None',
 					discordid: sentvideo.id,
 					embedDiscordid: sent.id,
-					priority: interaction.member.roles.cache.has(priorityRoleID),
+					priority: enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID),
 				});
 			} catch (error) {
 				console.log(`Couldn't register the record ; something went wrong with Sequelize : ${error}`);
@@ -199,7 +200,7 @@ module.exports = {
 
 			console.log(`${interaction.user.id} submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
 			// Reply
-			await interaction.editReply((interaction.member.roles.cache.has(priorityRoleID) ? ':white_check_mark: The priority record has been submitted successfully' : ':white_check_mark: The record has been submitted successfully'));
+			await interaction.editReply((enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID) ? ':white_check_mark: The priority record has been submitted successfully' : ':white_check_mark: The record has been submitted successfully'));
 
 		} else if (interaction.options.getSubcommand() === 'status') {
 
@@ -207,7 +208,7 @@ module.exports = {
 
 			// Get records info
 			const nbRecords = await dbPendingRecords.count({ where: { priority: false } });
-			const nbPriorityRecords = await dbPendingRecords.count({ where: { priority: true } });
+			const nbPriorityRecords = (enablePriorityRole ? await dbPendingRecords.count({ where: { priority: true } }) : 0);
 			const dbStatus = await dbInfos.findOne({ where: { name: 'records' } });
 
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
@@ -220,7 +221,7 @@ module.exports = {
 				.setTitle((dbStatus.status ? ':x:' : ':white_check_mark:') + ' Record Status')
 				.addFields(
 					{ name: 'Pending records:', value: `**${nbRecords}**`, inline: true },
-					{ name: 'Pending Priority Records:', value: `**${nbPriorityRecords}**`, inline: true },
+					(enablePriorityRole ? { name: 'Pending Priority Records:', value: `**${nbPriorityRecords}**`, inline: true } : { name: ' ', value: ' ', inline: true }),
 					{ name: 'Status:', value: `${(dbStatus.status ? '**CLOSED**' : '**OPENED**')}`, inline: true },
 					{ name: '\u200B', value: `${statusMsg}`, inline: true },
 				)

@@ -1,6 +1,6 @@
 const { Events } = require('discord.js');
 const { dbInfos, staffStats, dbPendingRecords, dbDeniedRecords, dbAcceptedRecords, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, dbShifts } = require('../index.js');
-const { guildId, pendingRecordsID, priorityRecordsID } = require('../config.json');
+const { guildId, enableSeparateStaffServer, staffGuildId, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../config.json');
 
 module.exports = {
 	name: Events.ClientReady,
@@ -20,6 +20,7 @@ module.exports = {
 		await dbMessageLocks.sync({ alter: true });
 		await dailyStats.sync({ alter: true });
 		await dbShifts.sync({ alter: true });
+
 		if (!(await dbInfos.count({ where: { name: 'records' } }))) {
 			await dbInfos.create({
 				status: 0,
@@ -38,12 +39,12 @@ module.exports = {
 
 		const pendingRecords = await dbPendingRecords.findAll();
 		let nbFound = 0;
-		const guild = await client.guilds.fetch(guildId);
+		const guild = await client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 		const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
-		const priorityChannel = await guild.channels.cache.get(priorityRecordsID);
+		const priorityChannel = (enablePriorityRole ? await guild.channels.cache.get(priorityRecordsID) : pendingChannel);
 		for (let i = 0; i < pendingRecords.length; i++) {
 			try {
-				if (pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
+				if (enablePriorityRole && pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
 				else await pendingChannel.messages.fetch(pendingRecords[i].discordid);
 			} catch (_) {
 				await dbPendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
@@ -52,7 +53,7 @@ module.exports = {
 
 				// Try deleting the other message as well in case only the first one is missing smh
 				try {
-					if (pendingRecords[i].priority) await (await priorityChannel.messages.fetch(pendingRecordsID[i].embedDiscordid)).delete();
+					if (enablePriorityRole && pendingRecords[i].priority) await (await priorityChannel.messages.fetch(pendingRecordsID[i].embedDiscordid)).delete();
 					else await (await pendingChannel.messages.fetch(pendingRecords[i].embedDiscordid)).delete();
 				} catch (__) {
 					// Nothing to do

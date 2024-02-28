@@ -171,9 +171,12 @@ for (const file of scheduledFiles) {
 	const filePath = path.join(scheduledPath, file);
 	const task = require(filePath);
 
-	cron.schedule(task.cron, task.execute);
-
-	console.log(`  Loaded ${task.name}(${task.cron}) from ${filePath}`);
+	if (task.enabled) {
+		cron.schedule(task.cron, task.execute);
+		console.log(`  Loaded ${task.name}(${task.cron}) from ${filePath}`);
+	} else {
+		console.log(`  Ignored disabled ${task.name}(${task.cron}) from ${filePath}`);
+	}
 }
 
 // Commands
@@ -190,12 +193,15 @@ for (const folder of commandFolders) {
 		const filePath = path.join(commandsPath, file);
 		const command = require(filePath);
 		// Set a new item in the Collection with the key as the command name and the value as the exported module
-		if ('data' in command && 'execute' in command) {
-			console.log(`  Loaded ${command.data.name} from ${filePath}`);
-			client.commands.set(command.data.name, command);
+		if ('data' in command && 'execute' in command && 'enabled' in command) {
+			if (command.enabled) {
+				client.commands.set(command.data.name, command);
+				console.log(`  Loaded ${command.data.name} from ${filePath}`);
+			} else {
+				console.log(`  Ignored disabled command ${filePath}`);
+			}
 		} else {
-			console.log(`data : ${'data' in command} |execute : ${'execute' in command}`);
-			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data", "execute" or "enabled" property.`);
 		}
 	}
 }

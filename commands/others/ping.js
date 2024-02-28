@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
+	enabled: true,
 	data: new SlashCommandBuilder()
 		.setName('botping')
 		.setDefaultMemberPermissions(0)

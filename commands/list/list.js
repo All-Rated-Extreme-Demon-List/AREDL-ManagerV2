@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRow
 
 module.exports = {
 	cooldown: 5,
+	enabled: true,
 	data: new SlashCommandBuilder()
 		.setName('list')
 		.setDescription('Staff list management')

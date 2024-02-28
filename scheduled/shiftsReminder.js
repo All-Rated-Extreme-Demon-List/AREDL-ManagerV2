@@ -1,8 +1,9 @@
-const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId, enableSeparateStaffServer, staffGuildId } = require('../config.json');
+const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId, enableSeparateStaffServer, staffGuildId, enableShifts } = require('../config.json');
 
 module.exports = {
 	name: 'shiftsReminder',
 	cron: '0 0 * * *',
+	enabled: enableShifts,
 	async execute() {
 
 		const { dbShifts, dbPendingRecords, client } = require('../index.js');

@@ -3,6 +3,7 @@ const Sequelize = require('sequelize');
 
 module.exports = {
 	cooldown: 5,
+	enabled: false,
 	data: new SlashCommandBuilder()
 		.setName('updatestats')
 		.setDescription('Update the daily stats from the records database')

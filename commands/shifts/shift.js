@@ -1,7 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { enableShifts } = require('../../config.json');
 
 module.exports = {
 	cooldown: 5,
+	enabled: enableShifts,
 	data: new SlashCommandBuilder()
 		.setName('shift')
 		.setDescription('List staff shifts management commands')

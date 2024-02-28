@@ -4,6 +4,7 @@ const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
 module.exports = {
 	cooldown: 5,
+	enabled: true,
 	data: new SlashCommandBuilder()
 		.setName('stats')
 		.setDescription('Statistics about the server')

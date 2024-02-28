@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { guildId, staffGuildId, enableSeparateStaffServer, pendingRecordsID, priorityRecordsID } = require('../../config.json');
+const { guildId, staffGuildId, enableSeparateStaffServer, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../../config.json');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const Sequelize = require('sequelize');
 
 module.exports = {
 	cooldown: 5,
+	enabled: true,
 	data: new SlashCommandBuilder()
 		.setName('recordadmin')
 		.setDescription('Staff record administration commands')
@@ -199,10 +200,10 @@ module.exports = {
 			let nbFound = 0;
 			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 			const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
-			const priorityChannel = await guild.channels.cache.get(priorityRecordsID);
+			const priorityChannel = (enablePriorityRole ? await guild.channels.cache.get(priorityRecordsID) : pendingChannel);
 			for (let i = 0; i < pendingRecords.length; i++) {
 				try {
-					if (pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
+					if (enablePriorityRole && pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
 					else await pendingChannel.messages.fetch(pendingRecords[i].discordid);
 				} catch (_) {
 					await dbPendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
@@ -211,7 +212,7 @@ module.exports = {
 
 					// Try deleting the other message as well in case only the first one is missing smh
 					try {
-						if (pendingRecords[i].priority) await (await priorityChannel.messages.fetch(pendingRecordsID[i].embedDiscordid)).delete();
+						if (enablePriorityRole && pendingRecords[i].priority) await (await priorityChannel.messages.fetch(pendingRecordsID[i].embedDiscordid)).delete();
 						else await (await pendingChannel.messages.fetch(pendingRecords[i].embedDiscordid)).delete();
 					} catch (__) {
 						// Nothing to do

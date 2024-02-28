@@ -1,5 +1,5 @@
 const { Events, AttachmentBuilder } = require('discord.js');
-const { guildMemberAddID, guildId } = require('../config.json');
+const { guildMemberAddID, guildId, enableWelcomeMessage } = require('../config.json');
 const Canvas = require('@napi-rs/canvas');
 
 const applyText = (canvas, text) => {
@@ -24,6 +24,8 @@ module.exports = {
 
 		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbMembersJoined: 1, nbRecordsPending: await dbPendingRecords.count() });
 		else await dailyStats.update({ nbMembersJoined: (await dailyStats.findOne({ where: { date: Date.now() } })).nbMembersJoined + 1 }, { where: { date: Date.now() } });
+
+		if (!enableWelcomeMessage) return;
 
 		const avatar = await Canvas.loadImage(member.displayAvatarURL({ extension: 'jpg' }));
 

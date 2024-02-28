@@ -4,6 +4,7 @@ const fs = require('node:fs');
 module.exports = {
 	name: 'updateListData',
 	cron: '0 * * * *',
+	enabled: true,
 	async execute() {
 		const { setLevelsDict } = require('../index.js');
 		console.log('Fetching last list data...');
