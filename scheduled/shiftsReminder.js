@@ -2,7 +2,7 @@ const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId, enableSepar
 
 module.exports = {
 	name: 'shiftsReminder',
-	cron: '0 0 * * *',
+	cron: '5 0 * * *',
 	enabled: enableShifts,
 	async execute() {
 
