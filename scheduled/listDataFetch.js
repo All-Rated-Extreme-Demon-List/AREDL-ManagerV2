@@ -3,7 +3,7 @@ const fs = require('node:fs');
 
 module.exports = {
 	name: 'updateListData',
-	cron: '0 * * * *',
+	cron: '29 * * * *',
 	enabled: true,
 	async execute() {
 		const { setLevelsDict } = require('../index.js');
