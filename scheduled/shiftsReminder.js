@@ -2,10 +2,10 @@ const { recordsPerWeek, pendingRecordsID, shiftsReminderID, guildId, enableSepar
 
 module.exports = {
 	name: 'shiftsReminder',
-	cron: '5 0 * * *',
+	cron: '50 11 * * *',
 	enabled: enableShifts,
 	async execute() {
-
+		console.log('[DEBUG] Running shift reminder');
 		const { dbShifts, dbPendingRecords, client } = require('../index.js');
 		const day = new Date().toLocaleString('en-us', { weekday: 'long' });
 
@@ -23,6 +23,8 @@ module.exports = {
 			};
 			totalShiftRecords += nbRecords;
 		}
+
+		console.log(`[DEBUG] Shifts 1: \n${shifts}`);
 		let assignedRecords = 0;
 		if (totalShiftRecords > nbPendingRecords) {
 			for (const moderator of Object.keys(shifts)) {
@@ -37,6 +39,8 @@ module.exports = {
 				assignedRecords += nbRecords;
 			}
 		}
+
+		console.log(`[DEBUG] Shifts 2: \n${shifts}`);
 
 		let shiftStr = '';
 		let currentRecord = 0;
@@ -60,6 +64,8 @@ module.exports = {
 			currentRecord++;
 			shiftStr += `\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${(enableSeparateStaffServer ? staffGuildId : guildId)}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
 		}
+
+		console.log(`[DEBUG] shiftStr: \n{shiftStr}`);
 
 		await (await client.channels.fetch(shiftsReminderID)).send(`> # ${new Date().toLocaleString('en-us', { weekday: 'long' })} Shifts\n> \n> Total pending records: ${nbPendingRecords}\n> Total assigned records: ${totalShiftRecords > nbPendingRecords ? assignedRecords : totalShiftRecords}\n\n> ## Assigned Records:${shiftStr}\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
 
