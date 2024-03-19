@@ -148,6 +148,7 @@ module.exports = {
 			const recordEmbed = new EmbedBuilder()
 				.setColor(0x005c91)
 				.setTitle(`${interaction.options.getString('levelname')}`)
+				.setDescription('Unassigned')
 				.addFields(
 					{ name: 'Record submitted by', value: `<@${interaction.user.id}>` },
 					{ name: 'Record holder', value: `${interaction.options.getString('username')}` },
@@ -180,6 +181,7 @@ module.exports = {
 					discordid: sentvideo.id,
 					embedDiscordid: sent.id,
 					priority: enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID),
+					assigned: 'None',
 				});
 			} catch (error) {
 				console.log(`Couldn't register the record ; something went wrong with Sequelize : ${error}`);

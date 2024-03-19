@@ -59,6 +59,7 @@ const dbPendingRecords = sequelize.define('pendingRecords', {
 		type: Sequelize.STRING,
 	},
 	priority: Sequelize.BOOLEAN,
+	assigned: Sequelize.STRING,
 });
 
 const dbAcceptedRecords = sequelize.define('acceptedRecords', {
