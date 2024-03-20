@@ -11,6 +11,7 @@ module.exports = {
 		const { dbShifts, dbPendingRecords, client } = require('../index.js');
 
 		// Past shift recap
+		console.log('Checking last shifts undone records..');
 		const uncheckedAssignedRecords = await dbPendingRecords.findAll({
 			attributes: [
 				[Sequelize.literal('COUNT(*)'), 'count'],
@@ -32,7 +33,7 @@ module.exports = {
 		}
 
 		await (await client.channels.fetch(shiftsLogsID)).send(recapStr);
-
+		console.log('Clearing unchecked assigned records..');
 		// Reset other assigned records
 		const rawUncheckedAssignedRecords = await dbPendingRecords.findAll({
 			attributes: [
@@ -41,16 +42,16 @@ module.exports = {
 			],
 			where: { assigned: { [Sequelize.Op.ne]: 'None' } },
 		});
-		console.log(rawUncheckedAssignedRecords);
 		for (record of rawUncheckedAssignedRecords) {
 			const recordId = record.dataValues['embedDiscordid'];
 			const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
 			const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Unassigned`);
-			embedMessage.edit({ embeds: [newEmbed]});
+			await embedMessage.edit({ embeds: [newEmbed]});
 		}
 		dbPendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
 
 		// Assign new records
+		console.log('Assigning new records..');
 		const day = new Date().toLocaleString('en-us', { weekday: 'long' });
 
 		const shiftData = await dbShifts.findAll({ where: { day: day } });
@@ -97,7 +98,7 @@ module.exports = {
 					const recordId = pendingRecords[record].embedDiscordid;
 					const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
 					const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Assigned to: <@${moderator}>`);
-					embedMessage.edit({ embeds: [newEmbed]});
+					await embedMessage.edit({ embeds: [newEmbed]});
 					dbPendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
 				}
 
@@ -115,7 +116,7 @@ module.exports = {
 				currentRecord++;
 				shiftStr += `\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${(enableSeparateStaffServer ? staffGuildId : guildId)}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
 			}
-
+			console.log('New shift assigned successfully');
 			await (await client.channels.fetch(shiftsReminderID)).send(`> # ${new Date().toLocaleString('en-us', { weekday: 'long' })} Shifts\n> \n> Total pending records: ${nbPendingRecords}\n> Total assigned records: ${totalShiftRecords > nbPendingRecords ? assignedRecords : totalShiftRecords}\n\n> ## Assigned Records:${shiftStr}\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
 		} catch (err) {
 			console.log(`Something went wrong while assigning records:\n${err}`);
