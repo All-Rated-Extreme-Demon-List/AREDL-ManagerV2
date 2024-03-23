@@ -24,7 +24,7 @@ module.exports = {
 		}
 
 		// Create embed to send with github code
-		const githubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');
+		const githubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": 360` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');
 		const { getLevelsDict } = require('../index.js');
 		try {
 			await dbRecordsToCommit.create({
@@ -77,7 +77,6 @@ module.exports = {
 				{ name: 'Record submitted by', value: `<@${record.submitter}>`, inline: true },
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
 				{ name: 'Record accepted by', value: `${interaction.user}` },
-				{ name: 'FPS', value: `${record.fps}`, inline: true },
 				{ name: 'Device', value: `${record.device}`, inline: true },
 				{ name: 'LDM', value: `${(record.ldm == 0 ? 'None' : record.ldm)}`, inline: true },
 				{ name: 'Completion link', value: `${record.completionlink}` },
@@ -94,7 +93,6 @@ module.exports = {
 			.setDescription('Accepted\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800\u2800')
 			.addFields(
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
-				{ name: 'FPS', value: `${record.fps}`, inline: true },
 				{ name: 'Device', value: `${record.device}`, inline: true },
 			);
 
@@ -120,11 +118,10 @@ module.exports = {
 					user: record.username,
 					link: record.completionlink,
 					percent: 100,
-					hz: record.fps,
+					hz: 360,
 					...(record.device === 'Mobile' && { mobile: true }),
 				}, null, '\t');
 
-				// const rawGithubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": ${record.fps}` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}' : '\n}');
 				const dmMessage = `Accepted record of ${record.levelname} for ${record.username}\nGithub Code:`;
 				const dmMessage2 = `${rawGithubCode}`;
 				await interaction.user.send({ content: dmMessage });
@@ -157,7 +154,6 @@ module.exports = {
 				username: record.username,
 				submitter: record.submitter,
 				levelname: record.levelname,
-				fps: record.fps,
 				device: record.device,
 				completionlink: record.completionlink,
 				raw: record.raw,
