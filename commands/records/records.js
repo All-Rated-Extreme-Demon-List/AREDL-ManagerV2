@@ -36,11 +36,6 @@ module.exports = {
 						.setMaxLength(1024)
 						.setRequired(true)
 						.setAutocomplete(true))
-				.addIntegerOption(option =>
-					option.setName('fps')
-						.setDescription('FPS used to complete the level')
-						.setRequired(true)
-						.setMinValue(0))
 				.addStringOption(option =>
 					option.setName('device')
 						.setDescription('Device the level was completed on')
@@ -152,7 +147,6 @@ module.exports = {
 				.addFields(
 					{ name: 'Record submitted by', value: `<@${interaction.user.id}>` },
 					{ name: 'Record holder', value: `${interaction.options.getString('username')}` },
-					{ name: 'FPS', value: `${interaction.options.getInteger('fps')}`, inline: true },
 					{ name: 'Device', value: `${interaction.options.getString('device')}`, inline: true },
 					{ name: 'LDM', value: `${(interaction.options.getInteger('ldm') == null ? 'None' : interaction.options.getInteger('ldm'))}`, inline: true },
 					{ name: 'Completion link', value: `${interaction.options.getString('completionlink')}` },
@@ -172,7 +166,6 @@ module.exports = {
 					username: interaction.options.getString('username'),
 					submitter: interaction.user.id,
 					levelname: interaction.options.getString('levelname'),
-					fps: interaction.options.getInteger('fps'),
 					device: interaction.options.getString('device'),
 					completionlink: interaction.options.getString('completionlink'),
 					raw: 'None',

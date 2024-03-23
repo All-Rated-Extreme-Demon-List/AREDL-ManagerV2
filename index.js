@@ -23,6 +23,7 @@ const sequelize = new Sequelize({
 // Establish Github connection
 const octokit = new Octokit({ auth: githubToken });
 
+module.exports = { octokit };
 // Cache all levels names and file names
 let levels_dict;
 try {
@@ -45,7 +46,6 @@ const dbPendingRecords = sequelize.define('pendingRecords', {
 	username: Sequelize.STRING,
 	submitter: Sequelize.STRING,
 	levelname: Sequelize.STRING,
-	fps: Sequelize.INTEGER,
 	device: Sequelize.STRING,
 	completionlink: Sequelize.STRING,
 	raw: Sequelize.STRING,
@@ -66,7 +66,6 @@ const dbAcceptedRecords = sequelize.define('acceptedRecords', {
 	username: Sequelize.STRING,
 	submitter: Sequelize.STRING,
 	levelname: Sequelize.STRING,
-	fps: Sequelize.INTEGER,
 	device: Sequelize.STRING,
 	completionlink: Sequelize.STRING,
 	raw: Sequelize.STRING,
@@ -80,7 +79,6 @@ const dbDeniedRecords = sequelize.define('deniedRecords', {
 	username: Sequelize.STRING,
 	submitter: Sequelize.STRING,
 	levelname: Sequelize.STRING,
-	fps: Sequelize.INTEGER,
 	device: Sequelize.STRING,
 	completionlink: Sequelize.STRING,
 	raw: Sequelize.STRING,

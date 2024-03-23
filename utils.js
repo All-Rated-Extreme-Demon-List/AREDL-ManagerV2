@@ -39,14 +39,14 @@ module.exports = {
 				});
 			} catch (fetchError) {
 				console.log(`Couldn't fetch ${filename}.json: \n${fetchError}`);
-				return -1;
+				continue;
 			}
 			let parsedData;
 			try {
 				parsedData = JSON.parse(Buffer.from(fileResponse.data.content, 'base64').toString('utf-8'));
 			} catch (parseError) {
 				console.log(`Unable to parse data fetched from ${filename}.json:\n${parseError}`);
-				return -1;
+				continue;
 			}
 			levels_dict[parsedData.name] = filename;
 		}

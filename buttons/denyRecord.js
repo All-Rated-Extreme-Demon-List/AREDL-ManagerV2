@@ -110,7 +110,6 @@ module.exports = {
 				username: record.username,
 				submitter: record.submitter,
 				levelname: record.levelname,
-				fps: record.fps,
 				device: record.device,
 				completionlink: record.completionlink,
 				raw: record.raw,
