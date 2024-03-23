@@ -43,12 +43,16 @@ module.exports = {
 			where: { assigned: { [Sequelize.Op.ne]: 'None' } },
 		});
 		for (record of rawUncheckedAssignedRecords) {
-			const recordId = record.dataValues['embedDiscordid'];
-			const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
-			const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Unassigned`);
-			await new Promise(r => setTimeout(r, 1000));
-			console.log(`Clearing ${recordId} (${record.dataValues['assigned']})`)
-			embedMessage.edit({ embeds: [newEmbed]});
+			try {
+				const recordId = record.dataValues['embedDiscordid'];
+				const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
+				const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Unassigned`);
+				await new Promise(r => setTimeout(r, 5000));
+				console.log(`Clearing ${recordId} (${record.dataValues['assigned']})`)
+				embedMessage.edit({ embeds: [newEmbed]});
+			} catch (err) {
+				console.log(`Couldn't clear ${recordId} (${record.dataValues['assigned']})`)
+			}
 		}
 		dbPendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
 
@@ -100,8 +104,8 @@ module.exports = {
 					const recordId = pendingRecords[record].embedDiscordid;
 					const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
 					const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Assigned to: <@${moderator}>`);
-					await new Promise(r => setTimeout(r, 1000));
-					console.log(`(${record}/${totalAssignedRecords})Assigning ${recordId} (${moderator})`)
+					await new Promise(r => setTimeout(r, 5000));
+					console.log(`(${record+1}/${totalAssignedRecords}) Assigning ${recordId} (${moderator})`)
 					embedMessage.edit({ embeds: [newEmbed]});
 					dbPendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
 				}
