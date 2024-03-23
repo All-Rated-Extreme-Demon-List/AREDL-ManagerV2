@@ -16,6 +16,7 @@
     "is-url-http": "^2.3.8",
     "log-timestamp": "^0.3.0",
     "node-cron": "^3.0.3",
+    "pocketbase": "^0.21.1",
     "sequelize": "^6.35.0",
     "sqlite3": "^5.1.7"
   },

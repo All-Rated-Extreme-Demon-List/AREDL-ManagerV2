@@ -5,6 +5,7 @@ const { githubToken } = require('./config.json');
 const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
+const PocketBase = require('pocketbase/cjs')
 const { fetchListData } = require('./utils.js');
 const cron = require('node-cron');
 
@@ -12,6 +13,9 @@ require('log-timestamp');
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences] });
+
+// Create PB
+const pb = new PocketBase('https://api.aredl.net/');
 
 // Establish DB connection
 const sequelize = new Sequelize({
@@ -144,6 +148,10 @@ const staffSettings = sequelize.define('settings', {
 		type: Sequelize.BOOLEAN,
 		defaultValue: false,
 	},
+	pbToken: {
+		type: Sequelize.STRING,
+		defaultValue: '',
+	}
 });
 
 const dbInfos = sequelize.define('infos', {
@@ -154,7 +162,7 @@ const dbInfos = sequelize.define('infos', {
 	},
 });
 
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbShifts, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit, client };
+module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbShifts, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit, pb, client };
 module.exports.getLevelsDict = function() {
 	return levels_dict;
 };
