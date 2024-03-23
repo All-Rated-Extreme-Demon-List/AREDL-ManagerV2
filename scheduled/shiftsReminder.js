@@ -85,9 +85,9 @@ module.exports = {
 				assignedRecords += nbRecords;
 			}
 		}
+		const totalAssignedRecords = totalShiftRecords > nbPendingRecords ? assignedRecords : totalShiftRecords;
+		await (await client.channels.fetch(shiftsReminderID)).send(`> # ${new Date().toLocaleString('en-us', { weekday: 'long' })} Shifts\n> \n> Total pending records: ${nbPendingRecords}\n> Total assigned records: ${totalAssignedRecords}`);
 
-
-		let shiftStr = '';
 		let currentRecord = 0;
 		try {
 			for (const moderator of Object.keys(shifts)) {
@@ -96,12 +96,12 @@ module.exports = {
 					continue;
 				}
 
-				for (let record = currentRecord; record < shifts[moderator].records; record++) {
+				for (let record = currentRecord; record < currentRecord + shifts[moderator].records; record++) {
 					const recordId = pendingRecords[record].embedDiscordid;
 					const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
 					const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Assigned to: <@${moderator}>`);
 					await new Promise(r => setTimeout(r, 1000));
-					console.log(`(${record}/${assignedRecords})Assigning ${recordId} (${moderator})`)
+					console.log(`(${record}/${totalAssignedRecords})Assigning ${recordId} (${moderator})`)
 					embedMessage.edit({ embeds: [newEmbed]});
 					dbPendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
 				}
@@ -118,10 +118,10 @@ module.exports = {
 					'username': pendingRecords[currentRecord].username,
 				};
 				currentRecord++;
-				shiftStr += `\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${(enableSeparateStaffServer ? staffGuildId : guildId)}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`;
+				await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${(enableSeparateStaffServer ? staffGuildId : guildId)}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`);
 			}
 			console.log('New shift assigned successfully');
-			await (await client.channels.fetch(shiftsReminderID)).send(`> # ${new Date().toLocaleString('en-us', { weekday: 'long' })} Shifts\n> \n> Total pending records: ${nbPendingRecords}\n> Total assigned records: ${totalShiftRecords > nbPendingRecords ? assignedRecords : totalShiftRecords}\n\n> ## Assigned Records:${shiftStr}\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
+			await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
 		} catch (err) {
 			console.log(`Something went wrong while assigning records:\n${err}`);
 			await (await client.channels.fetch(shiftsReminderID)).send('> :x: Something went wrong while assigning shifts, check error logs');
