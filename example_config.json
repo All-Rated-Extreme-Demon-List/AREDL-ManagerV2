@@ -1,16 +1,12 @@
 {
 	"token": "",
-	"githubToken": "",
-	
+	"botPbUser": "",
+	"botPbPasswd" : "",
+
 	"enableSeparateStaffServer": false,
 	"enableShifts": false,
 	"enbablePriorityRole": false,
 	"enableWelcomeMessage": false,
-	
-	"githubOwner": "All-Rated-Extreme-Demons-List",
-	"githubRepo": "AREDL",
-	"githubDataPath": "data",
-	"githubBranch": "main",
 	
 	"clientId": "1175495600456872066",
 	"guildId": "1173011289744871594",

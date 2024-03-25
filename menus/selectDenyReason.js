@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { archiveRecordsID, deniedRecordsID, recordsID, guildId, staffGuildId, enableSeparateStaffServer } = require('../config.json');
-const { dbDeniedRecords } = require('../index.js');
+const { db, pb } = require('../index.js');
+const { getRegisteredKey } = require('../utils.js');
 
 // Get deny text from deny reason identifier
 const denyReasons = new Map()
@@ -20,7 +21,7 @@ module.exports = {
 	customId: 'denySelect',
 	async execute(interaction) {
 		// Check for record info corresponding to the message id
-		const record = await dbDeniedRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.dbDeniedRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			return await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 		}
@@ -32,12 +33,31 @@ module.exports = {
 		// Get reason from the menu
 		const reason = denyReasons.get(interaction.values[0]);
 
+		const key = await getRegisteredKey(interaction);
+		if (!key) return;
+
+		try {
+			await pb.send('/api/aredl/mod/submission/reject', {
+				method: 'POST',
+				query: {
+					'id': record.pocketbaseId,
+					'rejection_reason': reason
+				},
+				headers: {
+					'api-key': key
+				}
+			});
+		} catch (error) {
+			console.log(error);
+			if (error.status == 403) return await interaction.editReply(':x: You do not have the permission to deny submissions');
+			else return await interaction.editReply(`:x: Something went wrong while rejecting this record :\n${JSON.stringify(error.response)}`);
+		}
+
 		// Create embed with all record info to send in archive
 		const denyArchiveEmbed = new EmbedBuilder()
 			.setColor(0xcc0000)
 			.setTitle(`:x: ${record.levelname}`)
 			.addFields(
-				{ name: 'Record submitted by', value: `<@${record.submitter}>`, inline: true },
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
 				{ name: 'Record denied by', value: `<@${interaction.user.id}>` },
 				{ name: 'Deny Reason', value: `${reason}` },
@@ -54,7 +74,6 @@ module.exports = {
 			.setColor(0xcc0000)
 			.setTitle(`:x: ${record.levelname}`)
 			.addFields(
-				{ name: 'Record submitted by', value: `<@${record.submitter}>`, inline: true },
 				{ name: 'Record holder', value: `${record.username}`, inline: true },
 				{ name: 'Record denied by', value: `<@${interaction.user.id}>` },
 				{ name: 'Deny Reason', value: `${reason}` },
@@ -79,16 +98,14 @@ module.exports = {
 		// Send all messages (notify the submitter that the record was denied, expect for group submissions and duplicates)
 		await staffGuild.channels.cache.get(archiveRecordsID).send({ embeds : [denyArchiveEmbed] });
 		await staffGuild.channels.cache.get(deniedRecordsID).send({ embeds : [denyEmbed] });
-		if (interaction.values[0] != 'group' && interaction.values[0] != 'duplicate') await guild.channels.cache.get(recordsID).send({ content : `<@${record.submitter}>`, embeds : [publicDenyEmbed] });
+		if (interaction.values[0] != 'group' && interaction.values[0] != 'duplicate') await guild.channels.cache.get(recordsID).send({ embeds : [publicDenyEmbed] });
 		else await guild.channels.cache.get(recordsID).send({ embeds : [publicDenyEmbed] });
 
 		// Update info in denied table
-		await dbDeniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
+		await db.dbDeniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
 
 		// Reply
-
-		console.log(`${interaction.user.id} selected deny reason '${interaction.values[0]}' of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
-
+		console.log(`${interaction.user.id} selected deny reason '${interaction.values[0]}' of ${record.levelname} for ${record.username}`);
 		return await interaction.editReply(':white_check_mark: The deny reason has been selected');
 	},
 };

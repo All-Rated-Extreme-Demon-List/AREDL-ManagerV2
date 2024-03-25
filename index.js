@@ -1,21 +1,16 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { token } = require('./config.json');
-const { githubToken } = require('./config.json');
 const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { Octokit } = require('@octokit/rest');
-const PocketBase = require('pocketbase/cjs')
 const { fetchListData } = require('./utils.js');
+const PocketBase = require('pocketbase/cjs');
 const cron = require('node-cron');
-
+const { createDbSchema } =  require('./others/dbSchema.js')
 require('log-timestamp');
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences] });
-
-// Create PB
-const pb = new PocketBase('https://api.aredl.net/');
 
 // Establish DB connection
 const sequelize = new Sequelize({
@@ -24,149 +19,9 @@ const sequelize = new Sequelize({
 	storage: './data/database.sqlite',
 });
 
-// Establish Github connection
-const octokit = new Octokit({ auth: githubToken });
-module.exports = { octokit };
-// Cache all levels names and file names
-let levels_dict;
-try {
-	levels_dict = JSON.parse(fs.readFileSync('data/cached_list.json'));
-} catch (err) {
-	console.log('No cached list found. Fetching data...');
-	fetchListData().then(data => {
-		if (data === -1) return;
-		fs.writeFile('data/cached_list.json', JSON.stringify(data, null, '\t'), function(err) {
-			if (err) {
-				console.log(err);
-			}
-		});
-		levels_dict = data;
-	});
-}
-
-// Create tables models
-const dbPendingRecords = sequelize.define('pendingRecords', {
-	username: Sequelize.STRING,
-	submitter: Sequelize.STRING,
-	levelname: Sequelize.STRING,
-	device: Sequelize.STRING,
-	completionlink: Sequelize.STRING,
-	raw: Sequelize.STRING,
-	ldm: Sequelize.INTEGER,
-	additionalnotes: Sequelize.STRING,
-	discordid: {
-		type: Sequelize.STRING,
-		unique: true,
-	},
-	embedDiscordid: {
-		type: Sequelize.STRING,
-	},
-	priority: Sequelize.BOOLEAN,
-	assigned: Sequelize.STRING,
-});
-
-const dbAcceptedRecords = sequelize.define('acceptedRecords', {
-	username: Sequelize.STRING,
-	submitter: Sequelize.STRING,
-	levelname: Sequelize.STRING,
-	device: Sequelize.STRING,
-	completionlink: Sequelize.STRING,
-	raw: Sequelize.STRING,
-	ldm: Sequelize.INTEGER,
-	additionalnotes: Sequelize.STRING,
-	priority: Sequelize.BOOLEAN,
-	moderator: Sequelize.STRING,
-});
-
-const dbDeniedRecords = sequelize.define('deniedRecords', {
-	username: Sequelize.STRING,
-	submitter: Sequelize.STRING,
-	levelname: Sequelize.STRING,
-	device: Sequelize.STRING,
-	completionlink: Sequelize.STRING,
-	raw: Sequelize.STRING,
-	ldm: Sequelize.INTEGER,
-	additionalnotes: Sequelize.STRING,
-	discordid: {
-		type: Sequelize.STRING,
-		unique: true,
-	},
-	priority: Sequelize.BOOLEAN,
-	denyReason: Sequelize.STRING,
-	moderator: Sequelize.STRING,
-});
-
-const dbLevelsToPlace = sequelize.define('levelsToPlace', {
-	filename: Sequelize.STRING,
-	position: Sequelize.INTEGER,
-	githubCode: Sequelize.STRING,
-	discordid: Sequelize.STRING,
-});
-
-const dbRecordsToCommit = sequelize.define('recordsToCommit', {
-	filename: Sequelize.STRING,
-	githubCode: Sequelize.STRING,
-	discordid: Sequelize.STRING,
-	user: Sequelize.STRING,
-});
-
-const dbMessageLocks = sequelize.define('messageLocks', {
-	discordid: Sequelize.STRING,
-	locked: Sequelize.BOOLEAN,
-	userdiscordid: Sequelize.STRING,
-});
-
-const staffStats = sequelize.define('staffs', {
-	moderator: Sequelize.STRING,
-	nbRecords: Sequelize.INTEGER,
-	nbAccepted: Sequelize.INTEGER,
-	nbDenied: Sequelize.INTEGER,
-});
-
-const dbShifts = sequelize.define('shifts', {
-	moderator: Sequelize.STRING,
-	day: Sequelize.STRING,
-});
-
-
-const dailyStats = sequelize.define('dailystats', {
-	date: Sequelize.DATEONLY,
-	nbRecordsSubmitted: { type: Sequelize.NUMBER, defaultValue: 0 },
-	nbRecordsPending: { type: Sequelize.NUMBER, defaultValue: 0 },
-	nbRecordsAccepted: { type: Sequelize.NUMBER, defaultValue: 0 },
-	nbRecordsDenied: { type: Sequelize.NUMBER, defaultValue: 0 },
-	nbMembersJoined: { type: Sequelize.NUMBER, defaultValue: 0 },
-	nbMembersLeft: { type: Sequelize.NUMBER, defaultValue: 0 },
-});
-
-const staffSettings = sequelize.define('settings', {
-	moderator: Sequelize.STRING,
-	sendAcceptedInDM: {
-		type: Sequelize.BOOLEAN,
-		defaultValue: false,
-	},
-	pbToken: {
-		type: Sequelize.STRING,
-		defaultValue: '',
-	}
-});
-
-const dbInfos = sequelize.define('infos', {
-	name: Sequelize.STRING,
-	status: {
-		type: Sequelize.BOOLEAN,
-		defaultValue: false,
-	},
-});
-
-module.exports = { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbShifts, dbInfos, staffStats, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, octokit, pb, client };
-module.exports.getLevelsDict = function() {
-	return levels_dict;
-};
-module.exports.setLevelsDict = function(new_levels_dict) {
-	levels_dict = new_levels_dict;
-};
-
+const db = createDbSchema(sequelize);
+const pb = new PocketBase('https://api.aredl.net/');
+module.exports = { db, client, pb };
 
 // Scheduled cron tasks
 console.log('Loading scheduled tasks');

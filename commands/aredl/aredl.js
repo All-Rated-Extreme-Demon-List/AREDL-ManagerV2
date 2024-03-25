@@ -21,39 +21,51 @@ module.exports = {
 				.setDescription('Check your AREDL permissions')),
 	async execute(interaction) {
 
-		const { pb, staffSettings } = require('../../index.js');
+		const { pb, db } = require('../../index.js');
 
 		if (interaction.options.getSubcommand() == 'login') {
 
-			const token = interaction.options.getString('token');
+			const key = interaction.options.getString('key');
 
-			const user_perms = await pb.send('/api/user/permissions', {
-				headers: {
-					'api-key': token
-				},
-			});		
+			let user_perms;
+			try {
+				user_perms = await pb.send('/api/user/permissions', {
+					headers: {
+						'api-key': key
+					},
+				});	
+			} catch (error)	{
+				return await interaction.reply({ content: `:x: The provided key is invalid\nError:\n${JSON.stringify(error.response)}`, ephemeral: true})
+			}
 
-			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: The provided token is invalid or you do not have enough permissions on the website', ephemeral: true})
+			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: You do not have enough permissions on the website', ephemeral: true})
+
 			let perms = '';
 			for (const permission of Object.keys(user_perms)) perms += `\n> - ${permission}`;
 
-			const tokenUpdate = (!(await staffSettings.findOne({ where: { moderator: interaction.user.id }})) ? await staffSettings.create({ moderator: interaction.user.id, pbToken: token}) : await staffSettings.update({ pbToken: token}, { where:{ moderator: interaction.user.id }}));
-			if (!tokenUpdate) return await interaction.reply({ content: ':x: The provided token is valid but something went wrong while registering it, please try again', ephemeral: true});
+			const keyUpdate = (!(await db.staffSettings.findOne({ where: { moderator: interaction.user.id }})) ? await db.staffSettings.create({ moderator: interaction.user.id, pbKey: key}) : await db.staffSettings.update({ pbKey: key}, { where:{ moderator: interaction.user.id }}));
+			if (!keyUpdate) return await interaction.reply({ content: ':x: The provided key is valid but something went wrong while registering it, please try again', ephemeral: true});
 			
 			else return await interaction.reply({ content: `> :white_check_mark: You were successfully authenticated with the following permissions :${perms}`, ephemeral: true});
 
 		} else if (interaction.options.getSubcommand() == 'perms') {
 			
-			const modData = (await staffSettings.findOne({ where: {moderator: interaction.user.id }}));
-			if (!modData || modData.pbToken === '') return await interaction.reply({ content: ':x: You did not register an auth token, please do so using /aredl login', ephemeral: true});
+			const { getRegisteredKey } = require('../../utils.js');
 
-			const user_perms = await pb.send('/api/user/permissions', {
-				headers: {
-					'api-key': modData.pbToken
-				},
-			});		
+			const key = await getRegisteredKey(interaction);
+			if (!key) return;
+			let user_perms;
+			try {
+				user_perms = await pb.send('/api/user/permissions', {
+					headers: {
+						'api-key': key
+					},
+				});	
+			} catch (error)	{
+				return await interaction.reply({ content: `:x: Your API key is invalid, please register a new one with /aredl login\nError:\n${JSON.stringify(error.response)}`, ephemeral: true})
+			}
 
-			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: Your auth token is invalid or you do not have enough permissions on the website', ephemeral: true})
+			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: You do not have any permission on the website', ephemeral: true})
 			else {
 				let perms = '';
 				for (const permission of Object.keys(user_perms)) perms += `\n> - ${permission}`;

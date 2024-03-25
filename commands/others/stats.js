@@ -28,10 +28,10 @@ module.exports = {
 
 		if (interaction.options.getSubcommand() === 'checkedrecords') {
 
-			const { dailyStats, dbAcceptedRecords, dbDeniedRecords } = require('../../index.js');
+			const { db } = require('../../index.js');
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
 
-			const statsData = await dailyStats.findAll({ where: { date: { [Sequelize.Op.gte]: minDate } }, order:[['date', 'ASC']] });
+			const statsData = await db.dailyStats.findAll({ where: { date: { [Sequelize.Op.gte]: minDate } }, order:[['date', 'ASC']] });
 
 			const labels = [];
 			const datasAccepted = [];
@@ -62,14 +62,14 @@ module.exports = {
 
 			const modsAttachment = await new AttachmentBuilder(modsImage, { name: 'modsgraph.png' });
 
-			const nbAcceptedTotal = await dbAcceptedRecords.count();
-			const nbDeniedTotal = await dbDeniedRecords.count();
+			const nbAcceptedTotal = await db.dbAcceptedRecords.count();
+			const nbDeniedTotal = await db.dbDeniedRecords.count();
 
-			const nbAcceptedRecent = await dbAcceptedRecords.count({
+			const nbAcceptedRecent = await db.dbAcceptedRecords.count({
 				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
-			const nbDeniedRecent = await dbDeniedRecords.count({
+			const nbDeniedRecent = await db.dbDeniedRecords.count({
 				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
@@ -91,10 +91,10 @@ module.exports = {
 			return await interaction.editReply({ embeds: [modsStatsEmbed], files: [modsAttachment] });
 
 		} else if (interaction.options.getSubcommand() === 'pendingrecords') {
-			const { dailyStats } = require('../../index.js');
+			const { db } = require('../../index.js');
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
 
-			const statsData = await dailyStats.findAll({ where: { date: { [Sequelize.Op.gte]: minDate } }, order:[['date', 'ASC']] });
+			const statsData = await db.dailyStats.findAll({ where: { date: { [Sequelize.Op.gte]: minDate } }, order:[['date', 'ASC']] });
 
 			const labels = [];
 			const datasPending = [];
@@ -142,10 +142,10 @@ module.exports = {
 
 		} else if (interaction.options.getSubcommand() === 'servertraffic') {
 
-			const { dailyStats } = require('../../index.js');
+			const { db } = require('../../index.js');
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
 
-			const statsData = await dailyStats.findAll({ where: { date: { [Sequelize.Op.gte]: minDate } }, order:[['date', 'ASC']] });
+			const statsData = await db.dailyStats.findAll({ where: { date: { [Sequelize.Op.gte]: minDate } }, order:[['date', 'ASC']] });
 
 			const labels = [];
 			const datasJoined = [];

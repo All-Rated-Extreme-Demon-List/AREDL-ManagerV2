@@ -8,11 +8,11 @@ module.exports = {
 	enabled: enableShifts,
 	async execute() {
 		console.log('Running shift reminder');
-		const { dbShifts, dbPendingRecords, client } = require('../index.js');
+		const { db, client } = require('../index.js');
 
 		// Past shift recap
 		console.log('Checking last shifts undone records..');
-		const uncheckedAssignedRecords = await dbPendingRecords.findAll({
+		const uncheckedAssignedRecords = await db.dbPendingRecords.findAll({
 			attributes: [
 				[Sequelize.literal('COUNT(*)'), 'count'],
 				'assigned',
@@ -35,7 +35,7 @@ module.exports = {
 		await (await client.channels.fetch(shiftsLogsID)).send(recapStr);
 		console.log('Clearing unchecked assigned records..');
 		// Reset other assigned records
-		const rawUncheckedAssignedRecords = await dbPendingRecords.findAll({
+		const rawUncheckedAssignedRecords = await db.dbPendingRecords.findAll({
 			attributes: [
 				'embedDiscordid',
 				'assigned',
@@ -54,21 +54,21 @@ module.exports = {
 				console.log(`Couldn't clear ${recordId} (${record.dataValues['assigned']})`)
 			}
 		}
-		dbPendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
+		db.dbPendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
 
 		// Assign new records
 		console.log('Assigning new records..');
 		const day = new Date().toLocaleString('en-us', { weekday: 'long' });
 
-		const shiftData = await dbShifts.findAll({ where: { day: day } });
-		const pendingRecords = await dbPendingRecords.findAll({ where: {}, order:[['createdAt', 'ASC']] });
+		const shiftData = await db.dbShifts.findAll({ where: { day: day } });
+		const pendingRecords = await db.dbPendingRecords.findAll({ where: {}, order:[['createdAt', 'ASC']] });
 		const nbPendingRecords = pendingRecords.length;
 
 		let totalShiftRecords = 0;
 		const shifts = {};
 
 		for (const shift of shiftData) {
-			const nbRecords = Math.floor(recordsPerWeek / (await dbShifts.count({ where: { moderator: shift.moderator } })));
+			const nbRecords = Math.floor(recordsPerWeek / (await db.dbShifts.count({ where: { moderator: shift.moderator } })));
 			shifts[shift.moderator] = {
 				'records': nbRecords,
 			};

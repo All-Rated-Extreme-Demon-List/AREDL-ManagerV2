@@ -45,7 +45,7 @@ module.exports = {
 
 		if (interaction.options.getSubcommand() === 'place') {
 
-			const { dbLevelsToPlace } = require('../../index.js');
+			const { db } = require('../../index.js');
 
 			const levelname = interaction.options.getString('levelname');
 			const position = interaction.options.getInteger('position');
@@ -57,11 +57,9 @@ module.exports = {
 			const rawCreators = interaction.options.getString('creators');
 			const strCreators = (rawCreators ? JSON.stringify(rawCreators.split(',')) : '[]');
 
-			const githubCode = `{\n\t"id": ${id},\n\t"name": "${levelname}",\n\t"author": "${uploader}",\n\t"creators": ${strCreators},\n\t"verifier": "${verifier}",\n\t"verification": "${verification}",\n\t"percentToQualify": 100,\n\t"password": "${password}",\n\t"records" : []\n}`;
-
 			const placeEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
-				.setTitle(`Place Level: ${levelname}`)
+				.setTitle(`:white_check_mark: ${levelname} was placed at ${position}`)
 				.addFields(
 					{ name: 'ID:', value: `${id}`, inline: true },
 					{ name: 'Uploader:', value: `${uploader}`, inline: true },
@@ -70,39 +68,10 @@ module.exports = {
 					{ name: 'Verification:', value: `${verification}`, inline: true },
 					{ name: 'Password:', value: `${password}`, inline: true },
 					{ name: 'Position:', value: `${position}`, inline: true },
-					{ name: 'Github Code:', value: `\`\`\`json\n${githubCode}\n\`\`\`` },
 				)
 				.setTimestamp();
-			// Create commit buttons
-			const commit = new ButtonBuilder()
-				.setCustomId('commitAddLevel')
-				.setLabel('Commit changes')
-				.setStyle(ButtonStyle.Success);
-
-			const cancel = new ButtonBuilder()
-				.setCustomId('removeMsg')
-				.setLabel('Cancel')
-				.setStyle(ButtonStyle.Danger);
-
-			const row = new ActionRowBuilder()
-				.addComponents(commit)
-				.addComponents(cancel);
-
-			await interaction.editReply({ embeds: [placeEmbed], components: [row] });
-			const sent = await interaction.fetchReply();
-
-			try {
-				await dbLevelsToPlace.create({
-					filename: levelname.normalize('NFD').replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '_').toLowerCase(),
-					position: position,
-					githubCode: githubCode,
-					discordid: sent.id,
-				});
-			} catch (error) {
-				console.log(`Couldn't register the level ; something went wrong with Sequelize : ${error}`);
-				await sent.delete();
-				return await interaction.editReply(':x: Something went wrong while adding the level; Please try again later');
-			}
+			
+			
 			return;
 		}
 	},

@@ -3,7 +3,8 @@ const { ActionRowBuilder } = require('discord.js');
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
 const { deniedRecordsID } = require('../config.json');
-const { dbPendingRecords, dbDeniedRecords, staffStats } = require('../index.js');
+const { db, pb } = require('../index.js');
+const { getRegisteredKey } = require('../utils.js');
 
 module.exports = {
 	customId: 'deny',
@@ -12,7 +13,7 @@ module.exports = {
 		// Denying a record //
 
 		// Check for record info corresponding to the message id
-		const record = await dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 			try {
@@ -22,6 +23,22 @@ module.exports = {
 			}
 			return;
 		}
+
+		const key = await getRegisteredKey(interaction);
+		if (!key) return;
+
+		let user_perms;
+		try {
+			user_perms = await pb.send('/api/user/permissions', {
+				headers: {
+					'api-key': key
+				}
+			});
+		} catch (error) {
+			if (error.status == 403) return await interaction.editReply(':x: Your API key is invalid, please register it again with /aredl login');
+			else return await interaction.editReply(`:x: Something went wrong while rejecting this record :\n${JSON.stringify(error.response)}`);
+		}
+		if (!Object.hasOwn(user_perms, 'aredl.submission_review')) return await interaction.editReply(':x: You do not have the permission to deny submissions');
 
 		// Remove message from pending
 		try {
@@ -102,13 +119,12 @@ module.exports = {
 		}
 
 		// Remove record from pending table
-		await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+		await db.dbPendingRecords.destroy({ where: { discordid: record.discordid } });
 
 		// Add record to denied table
 		try {
-			await dbDeniedRecords.create({
+			await db.dbDeniedRecords.create({
 				username: record.username,
-				submitter: record.submitter,
 				levelname: record.levelname,
 				device: record.device,
 				completionlink: record.completionlink,
@@ -119,6 +135,7 @@ module.exports = {
 				discordid: sent.id,
 				denyReason: 'none',
 				moderator: interaction.user.id,
+				pocketbaseId: record.pocketbaseId,
 			});
 		} catch (error) {
 			console.log(`Couldn't add the denied record ; something went wrong with Sequelize : ${error}`);
@@ -126,9 +143,9 @@ module.exports = {
 		}
 
 		// Update moderator data
-		const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
+		const modInfo = await db.staffStats.findOne({ where: { moderator: interaction.user.id } });
 		if (!modInfo) {
-			await staffStats.create({
+			await db.staffStats.create({
 				moderator: interaction.user.id,
 				nbRecords: 1,
 				nbDenied: 1,
@@ -139,12 +156,10 @@ module.exports = {
 			await modInfo.increment('nbDenied');
 		}
 
-		const { dailyStats } = require('../index.js');
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await db.dbPendingRecords.count() });
+		else await db.dailyStats.update({ nbRecordsDenied: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
 
-		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await dbPendingRecords.count() });
-		else await dailyStats.update({ nbRecordsDenied: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
-
-		console.log(`${interaction.user.id} denied record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
+		console.log(`${interaction.user.id} denied record of ${record.levelname} for ${record.username}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been denied');
 	},

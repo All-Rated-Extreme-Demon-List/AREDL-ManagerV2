@@ -9,10 +9,10 @@ module.exports = {
 		if (member.guild.id != guildId) return;
 		console.log(`Member left: ${member.id}`);
 
-		const { dailyStats, dbPendingRecords } = require('../index.js');
+		const { db } = require('../index.js');
 
-		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbMembersLeft: 1, nbRecordsPending: await dbPendingRecords.count() });
-		else await dailyStats.update({ nbMembersLeft: (await dailyStats.findOne({ where: { date: Date.now() } })).nbMembersLeft + 1 }, { where: { date: Date.now() } });
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbMembersLeft: 1, nbRecordsPending: await db.dbPendingRecords.count() });
+		else await db.dailyStats.update({ nbMembersLeft: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbMembersLeft + 1 }, { where: { date: Date.now() } });
 
 	},
 };
