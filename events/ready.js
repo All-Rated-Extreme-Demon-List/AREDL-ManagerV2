@@ -10,20 +10,25 @@ module.exports = {
 	name: Events.ClientReady,
 	once: true,
 	async execute(client) {
-		const { db, pb } = require('../index.js');
+		const { db, cache, pb } = require('../index.js');
 		console.log('Syncing database data...');
 		for (const table of Object.keys(db)) {
 			await db[table].sync({ alter: true});
 		}
-		if (!(await db.dbInfos.count({ where: { name: 'records' } }))) {
-			await db.dbInfos.create({
+
+		for (const table of Object.keys(cache)) {
+			await cache[table].sync({ alter: true});
+		}
+
+		if (!(await db.infos.count({ where: { name: 'records' } }))) {
+			await db.infos.create({
 				status: 0,
 				name: 'records',
 			});
 		}
 
-		if (!(await db.dbInfos.count({ where: { name: 'commitdebug' } }))) {
-			await db.dbInfos.create({
+		if (!(await db.infos.count({ where: { name: 'commitdebug' } }))) {
+			await db.infos.create({
 				status: 0,
 				name: 'commitdebug',
 			});
@@ -35,7 +40,7 @@ module.exports = {
 
 		console.log('Checking pending record data...');
 
-		const pendingRecords = await db.dbPendingRecords.findAll();
+		const pendingRecords = await db.pendingRecords.findAll();
 		let nbFound = 0;
 		const guild = await client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 		const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
@@ -46,7 +51,7 @@ module.exports = {
 				if (enablePriorityRole && pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
 				else await pendingChannel.messages.fetch(pendingRecords[i].discordid);
 			} catch (_) {
-				await db.dbPendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
+				await db.pendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
 				nbFound++;
 				console.log(`Found an errored record : ${pendingRecords[i].discordid}`);
 
@@ -59,6 +64,9 @@ module.exports = {
 				}
 			}
 		}
+		const cacheUpdate = require('../scheduled/cacheUpdate.js');
+		cacheUpdate.execute();
+
 		console.log(`Found a total of ${nbFound} errored records.`);
 		console.log(`Ready! Logged in as ${client.user.tag}`);
 

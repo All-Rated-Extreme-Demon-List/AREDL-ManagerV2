@@ -22,7 +22,7 @@ module.exports = {
 
 		const { db } = require('../index.js');
 
-		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbMembersJoined: 1, nbRecordsPending: await db.dbPendingRecords.count() });
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbMembersJoined: 1, nbRecordsPending: await db.pendingRecords.count() });
 		else await db.dailyStats.update({ nbMembersJoined: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbMembersJoined + 1 }, { where: { date: Date.now() } });
 
 		if (!enableWelcomeMessage) return;

@@ -21,7 +21,7 @@ module.exports = {
 	customId: 'denySelect',
 	async execute(interaction) {
 		// Check for record info corresponding to the message id
-		const record = await db.dbDeniedRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.deniedRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			return await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 		}
@@ -34,7 +34,7 @@ module.exports = {
 		const reason = denyReasons.get(interaction.values[0]);
 
 		const key = await getRegisteredKey(interaction);
-		if (!key) return;
+		if (key==-1) return;
 
 		try {
 			await pb.send('/api/aredl/mod/submission/reject', {
@@ -48,7 +48,7 @@ module.exports = {
 				}
 			});
 		} catch (error) {
-			console.log(error);
+			console.log(`Couldn't select the deny reason: ${error}`);
 			if (error.status == 403) return await interaction.editReply(':x: You do not have the permission to deny submissions');
 			else return await interaction.editReply(`:x: Something went wrong while rejecting this record :\n${JSON.stringify(error.response)}`);
 		}
@@ -102,7 +102,7 @@ module.exports = {
 		else await guild.channels.cache.get(recordsID).send({ embeds : [publicDenyEmbed] });
 
 		// Update info in denied table
-		await db.dbDeniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
+		await db.deniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
 
 		// Reply
 		console.log(`${interaction.user.id} selected deny reason '${interaction.values[0]}' of ${record.levelname} for ${record.username}`);

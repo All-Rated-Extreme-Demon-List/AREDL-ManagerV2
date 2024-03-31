@@ -44,7 +44,7 @@ module.exports = {
 			}
 
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
-			const modAcceptedData = await db.dbAcceptedRecords.findAll({
+			const modAcceptedData = await db.acceptedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -53,7 +53,7 @@ module.exports = {
 				where: { moderator: modId, createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
-			const modDeniedData = await db.dbDeniedRecords.findAll({
+			const modDeniedData = await db.deniedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -147,8 +147,8 @@ module.exports = {
 			// Check submissions info //
 			const submissionsType = interaction.options.getString('type');
 
-			const selectedDb = (submissionsType === 'pending' ? db.dbPendingRecords : (submissionsType === 'accepted' ? db.dbAcceptedRecords : db.dbDeniedRecords));
-			let strInfo = `Total records : ${await db.dbPendingRecords.count()} pending, ${await db.dbAcceptedRecords.count()} accepted, ${await db.dbDeniedRecords.count()} denied\n\n`;
+			const selectedDb = (submissionsType === 'pending' ? db.pendingRecords : (submissionsType === 'accepted' ? db.acceptedRecords : db.deniedRecords));
+			let strInfo = `Total records : ${await db.pendingRecords.count()} pending, ${await db.acceptedRecords.count()} accepted, ${await db.deniedRecords.count()} denied\n\n`;
 			const users = await selectedDb.findAll({
 				attributes: [
 					'submitter',
@@ -159,9 +159,9 @@ module.exports = {
 				limit: 30,
 			});
 			for (let i = 0; i < users.length; i++) {
-				const pendingCount = await db.dbPendingRecords.count({ where: { submitter: users[i].submitter } });
-				const acceptedCount = await db.dbAcceptedRecords.count({ where: { submitter: users[i].submitter } });
-				const deniedCount = await db.dbDeniedRecords.count({ where: { submitter: users[i].submitter } });
+				const pendingCount = await db.pendingRecords.count({ where: { submitter: users[i].submitter } });
+				const acceptedCount = await db.acceptedRecords.count({ where: { submitter: users[i].submitter } });
+				const deniedCount = await db.deniedRecords.count({ where: { submitter: users[i].submitter } });
 				const submittedCount = pendingCount + acceptedCount + deniedCount;
 				strInfo += `**${i + 1}** - <@${users[i].submitter}> - ${pendingCount} pending - (${submittedCount} submitted, ${acceptedCount} accepted, ${deniedCount} denied)\n`;
 			}

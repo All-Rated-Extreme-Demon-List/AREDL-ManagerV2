@@ -11,9 +11,8 @@ module.exports = {
 	ephemeral: true,
 	async execute(interaction) {
 		// Denying a record //
-
 		// Check for record info corresponding to the message id
-		const record = await db.dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.pendingRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 			try {
@@ -25,7 +24,7 @@ module.exports = {
 		}
 
 		const key = await getRegisteredKey(interaction);
-		if (!key) return;
+		if (key==-1) return;
 
 		let user_perms;
 		try {
@@ -119,11 +118,11 @@ module.exports = {
 		}
 
 		// Remove record from pending table
-		await db.dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+		await db.pendingRecords.destroy({ where: { discordid: record.discordid } });
 
 		// Add record to denied table
 		try {
-			await db.dbDeniedRecords.create({
+			await db.deniedRecords.create({
 				username: record.username,
 				levelname: record.levelname,
 				device: record.device,
@@ -156,7 +155,7 @@ module.exports = {
 			await modInfo.increment('nbDenied');
 		}
 
-		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await db.dbPendingRecords.count() });
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await db.pendingRecords.count() });
 		else await db.dailyStats.update({ nbRecordsDenied: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
 
 		console.log(`${interaction.user.id} denied record of ${record.levelname} for ${record.username}`);

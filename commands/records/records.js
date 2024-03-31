@@ -106,9 +106,9 @@ module.exports = {
 			// Check record submissions status //
 
 			// Get records info
-			const nbRecords = await db.dbPendingRecords.count({ where: { priority: false } });
-			const nbPriorityRecords = (enablePriorityRole ? await db.dbPendingRecords.count({ where: { priority: true } }) : 0);
-			const dbStatus = await db.dbInfos.findOne({ where: { name: 'records' } });
+			const nbRecords = await db.pendingRecords.count({ where: { priority: false } });
+			const nbPriorityRecords = (enablePriorityRole ? await db.pendingRecords.count({ where: { priority: true } }) : 0);
+			const dbStatus = await db.infos.findOne({ where: { name: 'records' } });
 
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 
@@ -135,19 +135,19 @@ module.exports = {
 
 			// Count records
 
-			const nbPendingRecords = await db.dbPendingRecords.count({
+			const nbPendingRecords = await db.pendingRecords.count({
 				where: {
 					submitter: interaction.user.id,
 				},
 			});
 
-			const nbAcceptedRecords = await db.dbAcceptedRecords.count({
+			const nbAcceptedRecords = await db.acceptedRecords.count({
 				where: {
 					submitter: interaction.user.id,
 				},
 			});
 
-			const nbDeniedRecords = await db.dbDeniedRecords.count({
+			const nbDeniedRecords = await db.deniedRecords.count({
 				where: {
 					submitter: interaction.user.id,
 				},
@@ -166,7 +166,7 @@ module.exports = {
 				title = 'Pending records';
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Oldest pending records**:\n`;
 
-				const oldestPendingRecords = await db.dbPendingRecords.findAll({
+				const oldestPendingRecords = await db.pendingRecords.findAll({
 					where: {
 						submitter: interaction.user.id,
 					},
@@ -186,7 +186,7 @@ module.exports = {
 				title = 'Accepted records';
 				color = 0x8fce00;
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Newly accepted records**:\n`;
-				const newestAcceptedRecords = await db.dbAcceptedRecords.findAll({
+				const newestAcceptedRecords = await db.acceptedRecords.findAll({
 					where: {
 						submitter: interaction.user.id,
 					},
@@ -205,7 +205,7 @@ module.exports = {
 				title = 'Denied records';
 				color = 0xcc0000;
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Newly denied records**:\n`;
-				const newestDeniedRecords = await db.dbDeniedRecords.findAll({
+				const newestDeniedRecords = await db.deniedRecords.findAll({
 					where: {
 						submitter: interaction.user.id,
 					},

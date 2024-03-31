@@ -1,12 +1,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { token } = require('./config.json');
+const { token, pb_instance } = require('./config.json');
 const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { fetchListData } = require('./utils.js');
 const PocketBase = require('pocketbase/cjs');
 const cron = require('node-cron');
-const { createDbSchema } =  require('./others/dbSchema.js')
+const { createDbSchema, createCacheDbSchema } =  require('./others/dbSchema.js')
 require('log-timestamp');
 
 // Create a new client instance
@@ -19,9 +18,19 @@ const sequelize = new Sequelize({
 	storage: './data/database.sqlite',
 });
 
+const sequelize_cache = new Sequelize({
+	dialect: 'sqlite',
+	logging: false,
+	storage: './data/cache.sqlite',
+});
+
 const db = createDbSchema(sequelize);
-const pb = new PocketBase('https://api.aredl.net/');
-module.exports = { db, client, pb };
+const cache = createCacheDbSchema(sequelize_cache);
+const pb = new PocketBase(pb_instance);
+
+module.exports = { db, cache, client, pb };
+
+
 
 // Scheduled cron tasks
 console.log('Loading scheduled tasks');

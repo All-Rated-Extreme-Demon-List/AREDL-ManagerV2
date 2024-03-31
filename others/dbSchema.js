@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 module.exports = {
 	createDbSchema(sequelize) {
 		const db = {};
-		db.dbPendingRecords = sequelize.define('pendingRecords', {
+		db.pendingRecords = sequelize.define('pendingRecords', {
 			username: Sequelize.STRING,
 			levelname: Sequelize.STRING,
 			device: Sequelize.STRING,
@@ -22,7 +22,7 @@ module.exports = {
 			assigned: Sequelize.STRING,
 		});
 		
-		db.dbAcceptedRecords = sequelize.define('acceptedRecords', {
+		db.acceptedRecords = sequelize.define('acceptedRecords', {
 			username: Sequelize.STRING,
 			levelname: Sequelize.STRING,
 			device: Sequelize.STRING,
@@ -34,7 +34,7 @@ module.exports = {
 			moderator: Sequelize.STRING,
 		});
 		
-		db.dbDeniedRecords = sequelize.define('deniedRecords', {
+		db.deniedRecords = sequelize.define('deniedRecords', {
 			username: Sequelize.STRING,
 			levelname: Sequelize.STRING,
 			device: Sequelize.STRING,
@@ -52,14 +52,7 @@ module.exports = {
 			moderator: Sequelize.STRING,
 		});
 		
-		db.staffStats = sequelize.define('staffs', {
-			moderator: Sequelize.STRING,
-			nbRecords: Sequelize.INTEGER,
-			nbAccepted: Sequelize.INTEGER,
-			nbDenied: Sequelize.INTEGER,
-		});
-		
-		db.dbShifts = sequelize.define('shifts', {
+		db.shifts = sequelize.define('shifts', {
 			moderator: Sequelize.STRING,
 			day: Sequelize.STRING,
 		});
@@ -84,7 +77,14 @@ module.exports = {
 			pbKey: Sequelize.STRING,
 		});
 		
-		db.dbInfos = sequelize.define('infos', {
+		db.staffStats = sequelize.define('staffs', {
+			moderator: Sequelize.STRING,
+			nbRecords: Sequelize.INTEGER,
+			nbAccepted: Sequelize.INTEGER,
+			nbDenied: Sequelize.INTEGER,
+		});
+
+		db.infos = sequelize.define('infos', {
 			name: Sequelize.STRING,
 			status: {
 				type: Sequelize.BOOLEAN,
@@ -92,6 +92,36 @@ module.exports = {
 			},
 		});
 		
+		db.levelsToPlace = sequelize.define('levelsToPlace', {
+			levelname: Sequelize.STRING,
+			position: Sequelize.INTEGER,
+			levelid: Sequelize.INTEGER,
+			uploader: Sequelize.STRING,
+			verifier: Sequelize.STRING,
+			creator: Sequelize.STRING,
+			verification: Sequelize.STRING,
+			password: Sequelize.STRING,
+			discordid: Sequelize.STRING,
+			mobile: { type:Sequelize.BOOLEAN, defaultValue: false },
+			legacy: { type:Sequelize.BOOLEAN, defaultValue: false },
+		});
+
 		return db;
+	},
+	
+	createCacheDbSchema(sequelize_cache) {
+		const cache = {};
+
+		cache.levels = sequelize_cache.define('levels', {
+			name: Sequelize.STRING,
+			pb_id: Sequelize.STRING,
+		});
+
+		cache.packs = sequelize_cache.define('packs', {
+			name: Sequelize.STRING,
+			pb_id: Sequelize.STRING,
+		});
+
+		return cache;
 	}
 }

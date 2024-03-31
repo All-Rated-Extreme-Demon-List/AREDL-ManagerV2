@@ -72,7 +72,7 @@ module.exports = {
 			}
 
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
-			const modAcceptedData = await db.dbAcceptedRecords.findAll({
+			const modAcceptedData = await db.acceptedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -81,7 +81,7 @@ module.exports = {
 				where: { moderator: modId, createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
-			const modDeniedData = await db.dbDeniedRecords.findAll({
+			const modDeniedData = await db.deniedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -173,7 +173,7 @@ module.exports = {
 			// TODO Add PB check as well
 			
 			console.log('Looking for errored records...');
-			const pendingRecords = await db.dbPendingRecords.findAll();
+			const pendingRecords = await db.pendingRecords.findAll();
 			let nbFound = 0;
 			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 			const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
@@ -183,7 +183,7 @@ module.exports = {
 					if (enablePriorityRole && pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
 					else await pendingChannel.messages.fetch(pendingRecords[i].discordid);
 				} catch (_) {
-					await db.dbPendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
+					await db.pendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
 					nbFound++;
 					console.log(`Found an errored record : ${pendingRecords[i].discordid}`);
 

@@ -1,5 +1,4 @@
-const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { ActionRowBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 const { archiveRecordsID, acceptedRecordsID, recordsID, enableSeparateStaffServer, guildId, staffGuildId } = require('../config.json');
 const { db, pb } = require('../index.js');
@@ -9,11 +8,10 @@ module.exports = {
 	customId: 'accept',
 	ephemeral: true,
 	async execute(interaction) {
-
 		// Accepting a record //
 
 		// Check for record info corresponding to the message id
-		const record = await db.dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.pendingRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 			try {
@@ -25,10 +23,10 @@ module.exports = {
 		}
 		
 		const key = await getRegisteredKey(interaction);
-		if (!key) return;
+		if (key==-1) return;
 
 		try {
-			console.log(await pb.send('/api/aredl/mod/submission/accept', {
+			await pb.send('/api/aredl/mod/submission/accept', {
 				method: 'POST',
 				query: {
 					'id': record.pocketbaseId
@@ -36,7 +34,7 @@ module.exports = {
 				headers: {
 					'api-key': key
 				}
-			}));
+			});
 		} catch (error) {
 			if (error.status == 403) return await interaction.editReply(':x: You do not have the permission to accept submissions');
 			else return await interaction.editReply(`:x: Something went wrong while accepting this record :\n${JSON.stringify(error.response)}`);
@@ -111,10 +109,10 @@ module.exports = {
 
 
 		// Remove record from pending table
-		await db.dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+		await db.pendingRecords.destroy({ where: { discordid: record.discordid } });
 		// Add record to accepted table
 		try {
-			await db.dbAcceptedRecords.create({
+			await db.acceptedRecords.create({
 				username: record.username,
 				levelname: record.levelname,
 				device: record.device,
@@ -130,7 +128,7 @@ module.exports = {
 			return await interaction.editReply(':x: Something went wrong while adding the accepted record to the database');
 		}
 
-		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await db.dbPendingRecords.count() });
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await db.pendingRecords.count() });
 		else await db.dailyStats.update({ nbRecordsAccepted: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsAccepted + 1 }, { where: { date: Date.now() } });
 
 		console.log(`${interaction.user.id} accepted record of ${record.levelname} for ${record.username}`);

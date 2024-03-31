@@ -62,14 +62,14 @@ module.exports = {
 
 			const modsAttachment = await new AttachmentBuilder(modsImage, { name: 'modsgraph.png' });
 
-			const nbAcceptedTotal = await db.dbAcceptedRecords.count();
-			const nbDeniedTotal = await db.dbDeniedRecords.count();
+			const nbAcceptedTotal = await db.acceptedRecords.count();
+			const nbDeniedTotal = await db.deniedRecords.count();
 
-			const nbAcceptedRecent = await db.dbAcceptedRecords.count({
+			const nbAcceptedRecent = await db.acceptedRecords.count({
 				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
-			const nbDeniedRecent = await db.dbDeniedRecords.count({
+			const nbDeniedRecent = await db.deniedRecords.count({
 				where: { createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 

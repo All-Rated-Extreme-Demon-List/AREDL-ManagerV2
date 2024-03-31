@@ -53,7 +53,7 @@ module.exports = {
 			const { getRegisteredKey } = require('../../utils.js');
 
 			const key = await getRegisteredKey(interaction);
-			if (!key) return;
+			if (key==-1) return;
 			let user_perms;
 			try {
 				user_perms = await pb.send('/api/user/permissions', {

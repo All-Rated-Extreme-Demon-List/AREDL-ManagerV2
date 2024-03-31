@@ -13,14 +13,14 @@ module.exports = {
 		await interaction.deferReply({ ephemeral: true });
 		const { db } = require('../../index.js');
 
-		const acceptedData = await db.dbAcceptedRecords.findAll({
+		const acceptedData = await db.acceptedRecords.findAll({
 			attributes: [
 				[Sequelize.literal('DATE("createdAt")'), 'date'],
 				[Sequelize.literal('COUNT(*)'), 'count'],
 			],
 			group: ['date'] },
 		);
-		const deniedData = await db.dbDeniedRecords.findAll({
+		const deniedData = await db.deniedRecords.findAll({
 			attributes: [
 				[Sequelize.literal('DATE("createdAt")'), 'date'],
 				[Sequelize.literal('COUNT(*)'), 'count'],
