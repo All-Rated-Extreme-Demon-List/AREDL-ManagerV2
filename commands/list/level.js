@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
 	cooldown: 5,
@@ -176,15 +176,9 @@ module.exports = {
 				creator_id = placeduser.id;
 			}
 
-			let creators;
-			try {
-				const result = await pb.send('/api/aredl/level', {
-					query: {'id': level.pb_id, 'creators': true}, headers: {'api-key': key}
-				});
-				creators = result.creators.map(creator => creator.id);
-			} catch(err) {
-				return await interaction.editReply(`:x: Couldn't fetch this level's creators list: ${JSON.stringify(err.response)}`);
-			}
+			let creators = JSON.parse(level.creators);
+			if (creators.includes(creator_id)) return await interaction.editReply(':x: This user is already a creator of this level');
+			
 			creators.push(creator_id);
 
 			try {
@@ -230,17 +224,8 @@ module.exports = {
 				creator_id = placeduser.id;
 			}
 
-			let creators;
-			try {
-				const result = await pb.send('/api/aredl/level', {
-					query: {'id': level.pb_id, 'creators': true}, headers: {'api-key': key}
-				});
-				creators = result.creators.map(creator => creator.id);
-			} catch(err) {
-				return await interaction.editReply(`:x: Couldn't fetch this level's creators list: ${JSON.stringify(err.response)}`);
-			}
-			console.log(creators);
-			console.log(creator_id);
+			let creators = JSON.parse(level.creators);
+
 			if (creators.length == 1) return await interaction.editReply(':x: This level only has 1 creator, the creators list can not be empty');
 			if (!(creators.includes(creator_id))) return await interaction.editReply(':x: This creator is not in this level\'s creators list');
 			creators = creators.filter(current_creator => current_creator !== creator_id);

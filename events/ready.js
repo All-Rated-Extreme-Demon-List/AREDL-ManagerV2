@@ -22,21 +22,32 @@ module.exports = {
 
 		if (!(await db.infos.count({ where: { name: 'records' } }))) {
 			await db.infos.create({
-				status: 0,
+				status: false,
 				name: 'records',
 			});
 		}
 
 		if (!(await db.infos.count({ where: { name: 'commitdebug' } }))) {
 			await db.infos.create({
-				status: 0,
+				status: false,
 				name: 'commitdebug',
 			});
 		}
 
+		if (!(await db.infos.count({ where: { name: 'shifts' } }))) {
+			await db.infos.create({
+				status: false,
+				name: 'shifts',
+			});
+		} else await db.infos.update({status: false}, {where:{name:'shifts'}});
+
 		console.log(`Logging in to pocketbase...`);
-		await pb.admins.authWithPassword(botPbUser, botPbPasswd);
-		pb.collection('record_submissions').subscribe('*', submitRecord, { expand:  'submitted_by, level' });
+		try {
+			await pb.admins.authWithPassword(botPbUser, botPbPasswd);
+			pb.collection('record_submissions').subscribe('*', submitRecord, { expand:  'submitted_by, level' });
+		} catch(err) {
+			console.log(`Failed to login: ${err}`);
+		}
 
 		console.log('Checking pending record data...');
 

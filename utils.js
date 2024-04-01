@@ -33,7 +33,7 @@ module.exports = {
 		}
 	},
 	async fetchListData() {
-		const levels_dict = {};
+		const levels = {};
 		const { pb } = require('./index.js');
 		let list_data;
 		try {
@@ -43,11 +43,16 @@ module.exports = {
 			return -1;
 		}
 		for (const level of list_data) {
-			levels_dict[level.name] = level.id;
+			let level_data;
+			try {
+				level_data = await pb.send('/api/aredl/level', {query: {'id': level.id, creators:true}});
+			} catch (fetchError) {
+				console.log(`Couldn't fetch level data: \n${fetchError}`);
+				return -1;
+			}
+			levels[level.name] = { 'id': level.id, 'creators':level_data.creators.map(creator => creator.id)};
 		}
-		
-		console.log(`Successfully fetched ${list_data.length} levels `);
-		return levels_dict;
+		return levels;
 	},
 	async fetchPackData() {
 		const packs_dict = {};
@@ -60,10 +65,8 @@ module.exports = {
 			return -1;
 		}
 		for (const pack of packs_data) {
-			packs_dict[pack.name] = pack.id;
+			packs_dict[pack.name] = { 'id': pack.id, 'levels': pack.levels.map(level => level.id) };
 		}
-		
-		console.log(`Successfully fetched ${packs_data.length} packs `);
 		return packs_dict;
 	}
 };

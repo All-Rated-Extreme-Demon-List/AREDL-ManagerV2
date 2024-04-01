@@ -23,6 +23,9 @@ module.exports = {
 			return;
 		}
 
+		const shiftsLock = await db.infos.findOne({where:{name:'shifts'}});
+		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: Records are disabled because the bot is currently assigning shifts, please try again later');
+
 		const key = await getRegisteredKey(interaction);
 		if (key==-1) return;
 

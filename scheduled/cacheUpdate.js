@@ -16,8 +16,8 @@ module.exports = {
 		const levels_array = [];
 		const packs_array = [];
 	
-		for (const levelname of Object.keys(levels_data)) levels_array.push({ name: levelname, pb_id: levels_data[levelname]});
-		for (const packname of Object.keys(packs_data)) packs_array.push({ name: packname, pb_id: packs_data[packname]});
+		for (const levelname of Object.keys(levels_data)) levels_array.push({ name: levelname, pb_id: levels_data[levelname].id, creators: JSON.stringify(levels_data[levelname].creators)});
+		for (const packname of Object.keys(packs_data)) packs_array.push({ name: packname, pb_id: packs_data[packname].id, levels: JSON.stringify(packs_data[packname].levels)});
 
 		cache.levels.destroy({ where: {} });
 		cache.packs.destroy({ where: {} });
@@ -29,6 +29,6 @@ module.exports = {
 			console.log(`Couldn't update cached data, something went wrong with sequelize: ${error}`);
 		}
 
-		console.log('Successfully updated cache data');
+		console.log(`Successfully updated cache data (${levels_array.length} levels and ${packs_array.length} packs)`);
 	},
 };

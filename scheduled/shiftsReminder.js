@@ -10,6 +10,8 @@ module.exports = {
 		console.log('Running shift reminder');
 		const { db, client } = require('../index.js');
 
+		await db.infos.update({status: true}, {where:{name:'shifts'}});
+
 		// Past shift recap
 		console.log('Checking last shifts undone records..');
 		const uncheckedAssignedRecords = await db.pendingRecords.findAll({
@@ -130,5 +132,7 @@ module.exports = {
 			console.log(`Something went wrong while assigning records:\n${err}`);
 			await (await client.channels.fetch(shiftsReminderID)).send('> :x: Something went wrong while assigning shifts, check error logs');
 		}
+
+		await db.infos.update({status: false}, {where:{name:'shifts'}});
 	},
 };

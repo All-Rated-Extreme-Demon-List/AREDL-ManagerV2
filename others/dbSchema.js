@@ -115,11 +115,13 @@ module.exports = {
 		cache.levels = sequelize_cache.define('levels', {
 			name: Sequelize.STRING,
 			pb_id: Sequelize.STRING,
+			creators: Sequelize.STRING,
 		});
 
 		cache.packs = sequelize_cache.define('packs', {
 			name: Sequelize.STRING,
 			pb_id: Sequelize.STRING,
+			levels: Sequelize.STRING,
 		});
 
 		return cache;
