@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
 
 const { archiveRecordsID, acceptedRecordsID, recordsID, enableSeparateStaffServer, guildId, staffGuildId } = require('../config.json');
-const { dbPendingRecords, dbAcceptedRecords, staffStats, staffSettings, dbRecordsToCommit } = require('../index.js');
+const { dbPendingRecords, dbAcceptedRecords, staffStats, staffSettings, dbRecordsToCommit, dbInfos } = require('../index.js');
 
 module.exports = {
 	customId: 'accept',
@@ -22,6 +22,9 @@ module.exports = {
 			}
 			return;
 		}
+
+		const shiftsLock = await dbInfos.findOne({ where: { name: 'shifts' } });
+		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: The bot is currently assigning shifts, please wait a few minutes before checking records.');
 
 		// Create embed to send with github code
 		const githubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": 360` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');

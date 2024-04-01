@@ -3,7 +3,7 @@ const { ActionRowBuilder } = require('discord.js');
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
 const { deniedRecordsID } = require('../config.json');
-const { dbPendingRecords, dbDeniedRecords, staffStats } = require('../index.js');
+const { dbPendingRecords, dbDeniedRecords, staffStats, dbInfos } = require('../index.js');
 
 module.exports = {
 	customId: 'deny',
@@ -22,6 +22,9 @@ module.exports = {
 			}
 			return;
 		}
+
+		const shiftsLock = await dbInfos.findOne({ where: { name: 'shifts' } });
+		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: The bot is currently assigning shifts, please wait a few minutes before checking records.');
 
 		// Remove message from pending
 		try {
