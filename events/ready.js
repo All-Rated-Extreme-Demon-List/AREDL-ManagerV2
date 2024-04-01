@@ -27,12 +27,12 @@ module.exports = {
 				name: 'records',
 			});
 		}
-		if (!(await dbInfos.count({ where: { name: 'shiftsLock' } }))) {
+		if (!(await dbInfos.count({ where: { name: 'shifts' } }))) {
 			await dbInfos.create({
 				status: false,
-				name: 'shiftsLock',
+				name: 'shifts',
 			});
-		} else await dbInfos.update({status:false}, {where:{name:'shiftsLock'}});
+		} else await dbInfos.update({status:false}, {where:{name:'shifts'}});
 
 		if (!(await dbInfos.count({ where: { name: 'commitdebug' } }))) {
 			await dbInfos.create({
