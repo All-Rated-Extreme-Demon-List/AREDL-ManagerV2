@@ -6,6 +6,7 @@ const { dbDeniedRecords } = require('../index.js');
 const denyReasons = new Map()
 	.set('none', 'No reason has been selected, please contact a list moderator')
 	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
+	.set('physicsbypass', 'The usage of physics bypass in 2.2 is not allowed, please make sure to check our guidelines on the website before submitting a record.')
 	.set('raw', 'Please resubmit with raw footage')
 	.set('ldm', 'The LDM used in the completion does not comply with the guidelines')
 	.set('duplicate', 'The submission has been sent more than once.')

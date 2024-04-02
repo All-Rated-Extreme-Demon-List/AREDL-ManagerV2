@@ -59,6 +59,10 @@ module.exports = {
 					.setDescription('Please resubmit with raw footage')
 					.setValue('raw'),
 				new StringSelectMenuOptionBuilder()
+					.setLabel('Physics Bypass')
+					.setDescription('The usage of physics bypass in 2.2 is not allowed')
+					.setValue('physicsbypass'),
+				new StringSelectMenuOptionBuilder()
 					.setLabel('Invalid LDM')
 					.setDescription('The LDM used in the completion does not comply with the guidelines')
 					.setValue('ldm'),
