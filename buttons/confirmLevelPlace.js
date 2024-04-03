@@ -28,11 +28,12 @@ module.exports = {
 		const legacy = levelData.legacy;
 		const mobile = levelData.mobile;
 		
+		if (verifier_id == -2 || creator_id == -2 || uploader_id == -2) return;
 
 		if (verifier_id == -1) {
 			let placeduser;
 			try {
-				placeduser = await pb.send('/api/mod/user/create-placeholder', {
+				placeduser = await pb.send('/users/placeholder', {
 					method: 'POST', query: {'username': verifier}, headers: {'api-key': key}
 				});
 			} catch (err) {
@@ -44,7 +45,7 @@ module.exports = {
 		if (creator_id == -1) {
 			let placeduser;
 			try {
-				placeduser = await pb.send('/api/mod/user/create-placeholder', {
+				placeduser = await pb.send('/users/placeholder', {
 					method: 'POST', query: {'username': creator}, headers: {'api-key': key}
 				});
 			} catch (err) {
@@ -57,7 +58,7 @@ module.exports = {
 		if (uploader_id == -1) {
 			let placeduser;
 			try {
-				placeduser = await pb.send('/api/mod/user/create-placeholder', {
+				placeduser = await pb.send('/users/placeholder', {
 					method: 'POST', query: {'username': uploader}, headers: {'api-key': key}
 				});
 			} catch (err) {
@@ -83,7 +84,7 @@ module.exports = {
 		if (password) query['level_password'] = password;
 
 		try {
-			await pb.send('/api/aredl/mod/level/place', {
+			await pb.send('/api/aredl/levels', {
 				method: 'POST',
 				query: query,
 				headers: {

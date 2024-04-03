@@ -7,6 +7,7 @@ const { getRegisteredKey } = require('../utils.js');
 const denyReasons = new Map()
 	.set('none', 'No reason has been selected, please contact a list moderator')
 	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
+	.set('physicsbypass', 'The usage of physics bypass in 2.2 is not allowed, please make sure to check our guidelines on the website before submitting a record.')
 	.set('raw', 'Please resubmit with raw footage')
 	.set('ldm', 'The LDM used in the completion does not comply with the guidelines')
 	.set('duplicate', 'The submission has been sent more than once.')
@@ -37,10 +38,9 @@ module.exports = {
 		if (key==-1) return;
 
 		try {
-			await pb.send('/api/aredl/mod/submission/reject', {
+			await pb.send(`/api/aredl/submissions/${record.pocketbaseId}/reject`, {
 				method: 'POST',
 				query: {
-					'id': record.pocketbaseId,
 					'rejection_reason': reason
 				},
 				headers: {
@@ -105,7 +105,7 @@ module.exports = {
 		await db.deniedRecords.update({ denyReason: interaction.values[0] }, { where: { discordid: interaction.message.id } });
 
 		// Reply
-		console.log(`${interaction.user.id} selected deny reason '${interaction.values[0]}' of ${record.levelname} for ${record.username}`);
+		console.log(`${interaction.user.tag} (${interaction.user.id}) selected deny reason '${interaction.values[0]}' of ${record.levelname} for ${record.username}`);
 		return await interaction.editReply(':white_check_mark: The deny reason has been selected');
 	},
 };

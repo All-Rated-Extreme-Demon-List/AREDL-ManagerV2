@@ -81,7 +81,7 @@ module.exports = {
 		);
 		} else {
 			try {
-				results = await pb.send('/api/mod/user/list', {
+				results = await pb.send('/api/users', {
 					method: 'GET',
 					query: {
 						'per_page': 25,
@@ -112,7 +112,7 @@ module.exports = {
 			const key = await getRegisteredKey(interaction);
 			if (key==-1) return;
 
-			let query = { 'id': level.pb_id };
+			let query = {};
 
 			const gd_id = interaction.options.getInteger('id');
 			const uploader = interaction.options.getString('uploader');
@@ -131,8 +131,8 @@ module.exports = {
 			}
 
 			try {
-				await pb.send('/api/aredl/mod/level/update', {
-					method: 'POST',
+				await pb.send(`/api/aredl/levels/${level.pb_id}`, {
+					method: 'PATCH',
 					query: query,
 					headers: {
 						'api-key': key
@@ -162,11 +162,11 @@ module.exports = {
 
 			const creator = interaction.options.getString('creator');
 			let creator_id = await getUserPbId(interaction, creator, key);
-		
+			if (creator_id == -2) return;
 			if (creator_id == -1) {
 				let placeduser;
 				try {
-					placeduser = await pb.send('/api/mod/user/create-placeholder', {
+					placeduser = await pb.send('/api/users/placeholder', {
 						method: 'POST', query: {'username': creator}, headers: {'api-key': key}
 					});
 				} catch (err) {
@@ -182,8 +182,8 @@ module.exports = {
 			creators.push(creator_id);
 
 			try {
-				await pb.send('/api/aredl/mod/level/update', {
-					method: 'POST', query: {'id': level.pb_id, 'creator_ids':JSON.stringify(creators)}, headers: {'api-key': key}
+				await pb.send(`/api/aredl/levels/${level.pb_id}`, {
+					method: 'PATCH', query: {'creator_ids':JSON.stringify(creators)}, headers: {'api-key': key}
 				});
 			} catch(err) {
 				if (err.status == 403) return await interaction.editReply(':x: You do not have permission to update levels on the website');
@@ -210,11 +210,11 @@ module.exports = {
 
 			const creator = interaction.options.getString('creator');
 			let creator_id = await getUserPbId(interaction, creator, key);
-		
+			if (creator_id == -2) return;
 			if (creator_id == -1) {
 				let placeduser;
 				try {
-					placeduser = await pb.send('/api/mod/user/create-placeholder', {
+					placeduser = await pb.send('/api/user/placeholder', {
 						method: 'POST', query: {'username': creator}, headers: {'api-key': key}
 					});
 				} catch (err) {
@@ -231,8 +231,8 @@ module.exports = {
 			creators = creators.filter(current_creator => current_creator !== creator_id);
 
 			try {
-				await pb.send('/api/aredl/mod/level/update', {
-					method: 'POST', query: {'id': level.pb_id, 'creator_ids':JSON.stringify(creators)}, headers: {'api-key': key}
+				await pb.send(`/api/aredl/levels/${level.pb_id}`, {
+					method: 'PATCH', query: {'creator_ids':JSON.stringify(creators)}, headers: {'api-key': key}
 				});
 			} catch(err) {
 				if (err.status == 403) return await interaction.editReply(':x: You do not have permission to update levels on the website');

@@ -29,7 +29,7 @@ module.exports = {
 
 			let user_perms;
 			try {
-				user_perms = await pb.send('/api/user/permissions', {
+				user_perms = await pb.send('/api/me/permissions', {
 					headers: {
 						'api-key': key
 					},
@@ -56,7 +56,7 @@ module.exports = {
 			if (key==-1) return;
 			let user_perms;
 			try {
-				user_perms = await pb.send('/api/user/permissions', {
+				user_perms = await pb.send('/api/me/permissions', {
 					headers: {
 						'api-key': key
 					},

@@ -29,11 +29,8 @@ module.exports = {
 		if (key==-1) return;
 
 		try {
-			await pb.send('/api/aredl/mod/submission/accept', {
+			await pb.send(`/api/aredl/submissions/${record.pocketbaseId}/accept`, {
 				method: 'POST',
-				query: {
-					'id': record.pocketbaseId
-				},
 				headers: {
 					'api-key': key
 				}
@@ -134,7 +131,7 @@ module.exports = {
 		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await db.pendingRecords.count() });
 		else await db.dailyStats.update({ nbRecordsAccepted: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsAccepted + 1 }, { where: { date: Date.now() } });
 
-		console.log(`${interaction.user.id} accepted record of ${record.levelname} for ${record.username}`);
+		console.log(`${interaction.user.tag} (${interaction.user.id}) accepted record of ${record.levelname} for ${record.username}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been accepted');
 

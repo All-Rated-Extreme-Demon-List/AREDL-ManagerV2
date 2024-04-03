@@ -31,7 +31,7 @@ module.exports = {
 
 		let user_perms;
 		try {
-			user_perms = await pb.send('/api/user/permissions', {
+			user_perms = await pb.send('/api/me/permissions', {
 				headers: {
 					'api-key': key
 				}
@@ -78,6 +78,10 @@ module.exports = {
 					.setLabel('Invalid LDM')
 					.setDescription('The LDM used in the completion does not comply with the guidelines')
 					.setValue('ldm'),
+				new StringSelectMenuOptionBuilder()
+					.setLabel('Physics Bypass')
+					.setDescription('The usage of physics bypass in 2.2 is not allowed')
+					.setValue('physicsbypass'),
 				new StringSelectMenuOptionBuilder()
 					.setLabel('Duplicate Submission')
 					.setDescription('The submission has been sent more than once.')
@@ -161,7 +165,7 @@ module.exports = {
 		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await db.pendingRecords.count() });
 		else await db.dailyStats.update({ nbRecordsDenied: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
 
-		console.log(`${interaction.user.id} denied record of ${record.levelname} for ${record.username}`);
+		console.log(`${interaction.user.tag} (${interaction.user.id}) denied record of ${record.levelname} for ${record.username}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been denied');
 	},

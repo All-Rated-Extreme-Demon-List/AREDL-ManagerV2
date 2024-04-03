@@ -11,7 +11,7 @@ module.exports = {
 	async getUserPbId(interaction, username, key) {
 		const { pb } = require('./index.js');
 		try {
-			const results = await pb.send('/api/mod/user/list', {
+			const results = await pb.send('/api/users', {
 				method: 'GET',
 				query: {
 					'per_page': 1,
@@ -37,7 +37,7 @@ module.exports = {
 		const { pb } = require('./index.js');
 		let list_data;
 		try {
-			list_data = await pb.send('/api/aredl/list');
+			list_data = await pb.send('/api/aredl/levels');
 		} catch (fetchError) {
 			console.log(`Couldn't fetch list data: \n${fetchError}`);
 			return -1;
@@ -45,7 +45,7 @@ module.exports = {
 		for (const level of list_data) {
 			let level_data;
 			try {
-				level_data = await pb.send('/api/aredl/level', {query: {'id': level.id, creators:true}});
+				level_data = await pb.send(`/api/aredl/levels/${level.id}`, {query: {creators:true}});
 			} catch (fetchError) {
 				console.log(`Couldn't fetch level data: \n${fetchError}`);
 				return -1;

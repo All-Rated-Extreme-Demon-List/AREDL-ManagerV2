@@ -171,7 +171,7 @@ module.exports = {
 			});
 		} else if (interaction.options.getSubcommand() === 'move') {
 			const { pb, cache } = require('../../index.js');
-			const { getRegisteredKey, getUserPbId } = require('../../utils.js');
+			const { getRegisteredKey } = require('../../utils.js');
 
 			const level = await cache.levels.findOne({where: {name: interaction.options.getString('levelname')}});
 			const position = interaction.options.getInteger('position');
@@ -183,8 +183,8 @@ module.exports = {
 			if (key==-1) return;
 
 			try {
-				await pb.send('/api/aredl/mod/level/update', {
-					method: 'POST', query: {'id': level.pb_id, 'position': position, 'legacy': legacy}, headers: {'api-key': key}
+				await pb.send(`/api/aredl/levels/${level.pb_id}`, {
+					method: 'PATCH', query: {'position': position, 'legacy': legacy}, headers: {'api-key': key}
 				});
 			} catch(err) {
 				if (err.status == 403) return await interaction.editReply(':x: You do not have permission to move levels on the website');

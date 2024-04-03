@@ -133,7 +133,7 @@ module.exports = {
 			const levels = JSON.stringify([level1.pb_id, level2.pb_id]);
 
 			try {
-				await pb.send('/api/aredl/mod/pack', {
+				await pb.send('/api/aredl/packs', {
 					method: 'POST',
 					query: {
 						'name': interaction.options.getString('packname'),
@@ -165,14 +165,14 @@ module.exports = {
 			const pack = await cache.packs.findOne({where: {name: interaction.options.getString('packname')}});
 			if (!pack) return await interaction.editReply(':x: This pack does not exist');
 
-			let query = { 'id': pack.pb_id };
+			let query = { };
 			const color = await interaction.options.getString('color');
 			const newname = await interaction.options.getString('newname');
 			if (color) query['color'] = color;
 			if (newname) query['name'] = newname;
 
 			try {
-				await pb.send('/api/aredl/mod/pack', {
+				await pb.send(`/api/aredl/packs/${pack.pb_id}`, {
 					method: 'PATCH',
 					query: query,
 					headers: {
@@ -201,9 +201,8 @@ module.exports = {
 			if (!pack) return await interaction.editReply(':x: This pack does not exist');
 
 			try {
-				await pb.send('/api/aredl/mod/pack', {
+				await pb.send(`/api/aredl/packs/${pack.pb_id}`, {
 					method: 'DELETE',
-					query: {'id': pack.pb_id},
 					headers: {
 						'api-key': key
 					}
@@ -238,9 +237,9 @@ module.exports = {
 			levels.push(level.pb_id);
 
 			try {
-				await pb.send('/api/aredl/mod/pack', {
+				await pb.send(`/api/aredl/packs/${pack.pb_id}`, {
 					method: 'PATCH',
-					query: {'id': pack.pb_id, 'levels':JSON.stringify(levels)},
+					query: {'levels':JSON.stringify(levels)},
 					headers: {
 						'api-key': key
 					}
@@ -275,9 +274,9 @@ module.exports = {
 			levels = levels.filter(current_level => current_level !== level.pb_id);
 
 			try {
-				await pb.send('/api/aredl/mod/pack', {
+				await pb.send(`/api/aredl/packs/${pack.pb_id}`, {
 					method: 'PATCH',
-					query: {'id': pack.pb_id, 'levels':JSON.stringify(levels)},
+					query: {'levels':JSON.stringify(levels)},
 					headers: {
 						'api-key': key
 					}
