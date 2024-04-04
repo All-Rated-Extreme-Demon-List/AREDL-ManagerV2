@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const Sequelize = require('sequelize');
+
 module.exports = {
 	cooldown: 5,
 	enabled: true,
@@ -14,7 +14,7 @@ module.exports = {
 					option.setName('key')
 						.setDescription('The AREDL API key of the account you want to link to')
 						.setRequired(true)
-						))
+				))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('perms')
@@ -35,10 +35,10 @@ module.exports = {
 					},
 				});	
 			} catch (error)	{
-				return await interaction.reply({ content: `:x: The provided key is invalid\nError:\n${JSON.stringify(error.response)}`, ephemeral: true})
+				return await interaction.reply({ content: `:x: The provided key is invalid\nError:\n${JSON.stringify(error.response)}`, ephemeral: true});
 			}
 
-			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: You do not have enough permissions on the website', ephemeral: true})
+			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: You do not have enough permissions on the website', ephemeral: true});
 
 			let perms = '';
 			for (const permission of Object.keys(user_perms)) perms += `\n> - ${permission}`;
@@ -62,10 +62,10 @@ module.exports = {
 					},
 				});	
 			} catch (error)	{
-				return await interaction.reply({ content: `:x: Your API key is invalid, please register a new one with /aredl login\nError:\n${JSON.stringify(error.response)}`, ephemeral: true})
+				return await interaction.reply({ content: `:x: Your API key is invalid, please register a new one with /aredl login\nError:\n${JSON.stringify(error.response)}`, ephemeral: true});
 			}
 
-			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: You do not have any permission on the website', ephemeral: true})
+			if (Object.keys(user_perms).length == 0) return await interaction.reply({ content: ':x: You do not have any permission on the website', ephemeral: true});
 			else {
 				let perms = '';
 				for (const permission of Object.keys(user_perms)) perms += `\n> - ${permission}`;

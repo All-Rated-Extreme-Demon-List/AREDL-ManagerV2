@@ -5,7 +5,7 @@ const Sequelize = require('sequelize');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const PocketBase = require('pocketbase/cjs');
 const cron = require('node-cron');
-const { createDbSchema, createCacheDbSchema } =  require('./others/dbSchema.js')
+const { createDbSchema, createCacheDbSchema } =  require('./others/dbSchema.js');
 require('log-timestamp');
 
 // Create a new client instance

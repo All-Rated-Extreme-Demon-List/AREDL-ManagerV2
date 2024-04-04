@@ -27,7 +27,7 @@ module.exports = {
 		let recapStr = `> # ${yesterday.toLocaleString('en-us', { weekday: 'long' })} shifts recap`;
 
 		if (uncheckedAssignedRecords.length == 0) {
-			 recapStr += '\n> - None';
+			recapStr += '\n> - None';
 		} else {
 			for (const modRecords of uncheckedAssignedRecords) {
 				recapStr += `\n> - <@${modRecords.dataValues['assigned']}> (${modRecords.dataValues['count']} missed records)`;
@@ -44,16 +44,17 @@ module.exports = {
 			],
 			where: { assigned: { [Sequelize.Op.ne]: 'None' } },
 		});
-		for (record of rawUncheckedAssignedRecords) {
+		for (const record of rawUncheckedAssignedRecords) {
+			const recordId = record.dataValues['embedDiscordid'];
 			try {
-				const recordId = record.dataValues['embedDiscordid'];
+				
 				const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
-				const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Unassigned`);
+				const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription('Unassigned');
 				await new Promise(r => setTimeout(r, 5000));
-				console.log(`Clearing ${recordId} (${record.dataValues['assigned']})`)
+				console.log(`Clearing ${recordId} (${record.dataValues['assigned']})`);
 				embedMessage.edit({ embeds: [newEmbed]});
 			} catch (err) {
-				console.log(`Couldn't clear ${recordId} (${record.dataValues['assigned']})`)
+				console.log(`Couldn't clear ${recordId} (${record.dataValues['assigned']})`);
 			}
 		}
 		db.pendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
@@ -98,7 +99,7 @@ module.exports = {
 		try {
 			for (const moderator of Object.keys(shifts)) {
 				if (shifts[moderator].records == 0) {
-					shiftStr += `\n> \n> <@${moderator}>:\n> No records assigned`;
+					await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> <@${moderator}>:\n> No records assigned`);
 					continue;
 				}
 
@@ -107,9 +108,9 @@ module.exports = {
 					const embedMessage = await (await client.channels.fetch(pendingRecordsID)).messages.fetch(recordId);
 					const newEmbed = EmbedBuilder.from(embedMessage.embeds[0]).setDescription(`Assigned to: <@${moderator}>`);
 					await new Promise(r => setTimeout(r, 5000));
-					console.log(`(${record+1}/${totalAssignedRecords}) Assigning ${recordId} (${moderator})`)
+					console.log(`(${record+1}/${totalAssignedRecords}) Assigning ${recordId} (${moderator})`);
 					embedMessage.edit({ embeds: [newEmbed]});
-					dbPendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
+					db.pendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
 				}
 
 				const startRecord = {
@@ -127,7 +128,7 @@ module.exports = {
 				await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> <@${moderator}>:\n> From: https://discord.com/channels/${(enableSeparateStaffServer ? staffGuildId : guildId)}/${pendingRecordsID}/${startRecord.discordid} (${startRecord.levelname} for ${startRecord.username})\n>       to: https://discord.com/channels/${guildId}/${pendingRecordsID}/${endRecord.discordid} (${endRecord.levelname} for ${endRecord.username})\n> (${shifts[moderator].records} records)`);
 			}
 			console.log('New shift assigned successfully');
-			await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
+			await (await client.channels.fetch(shiftsReminderID)).send('\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed');
 		} catch (err) {
 			console.log(`Something went wrong while assigning records:\n${err}`);
 			await (await client.channels.fetch(shiftsReminderID)).send('> :x: Something went wrong while assigning shifts, check error logs');

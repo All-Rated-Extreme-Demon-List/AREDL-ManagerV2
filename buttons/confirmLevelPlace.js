@@ -1,5 +1,3 @@
-const { EmbedBuilder } = require('discord.js');
-
 const { db, pb } = require('../index.js');
 const { getRegisteredKey, getUserPbId } = require('../utils.js');
 
@@ -79,7 +77,7 @@ module.exports = {
 			'verification_fps': 360,
 			'verification_mobile': mobile,
 			'legacy': legacy ?? false,
-		}
+		};
 
 		if (password) query['level_password'] = password;
 

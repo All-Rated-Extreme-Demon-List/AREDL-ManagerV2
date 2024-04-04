@@ -77,8 +77,8 @@ module.exports = {
 			let levels = results.filter(level => level.name.toLowerCase().startsWith(focused.value.toLowerCase()));
 			if (levels.length > 25) levels = levels.slice(0, 25);
 			await interaction.respond(
-			levels.map(level => ({ name:level.name, value: level.name}))
-		);
+				levels.map(level => ({ name:level.name, value: level.name}))
+			);
 		} else {
 			try {
 				results = await pb.send('/api/users', {
@@ -125,7 +125,7 @@ module.exports = {
 			if (uploader!=null) {
 				const uploader_id  = await getUserPbId(interaction, uploader, key);
 				if (uploader_id == -2) return;
-				if (uploader_id == -1) return await interaction.editReply(`:x: The uploader does not have an account on the website (you can create one with /aredluser createplaceholder)`);
+				if (uploader_id == -1) return await interaction.editReply(':x: The uploader does not have an account on the website (you can create one with /aredluser createplaceholder)');
 
 				query['publisher'] = uploader_id;
 			}

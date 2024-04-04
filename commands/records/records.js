@@ -1,6 +1,5 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID, enableSeparateStaffServer, enablePriorityRole, staffGuildId, guildId } = require('../../config.json');
-const isUrlHttp = require('is-url-http');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { enablePriorityRole } = require('../../config.json');
 const denyReasons = new Map()
 	.set('none', 'No reason has been selected, please contact a list moderator')
 	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
@@ -100,9 +99,7 @@ module.exports = {
 
 		const { db } = require('../../index.js');
 
-		if (interaction.options.getSubcommand() === 'submit') {
-
-		} else if (interaction.options.getSubcommand() === 'status') {
+		if (interaction.options.getSubcommand() === 'status') {
 
 			// Check record submissions status //
 

@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { guildId, recordsPerWeek, pendingRecordsID } = require('../../config.json');
 
 module.exports = {
 	cooldown: 5,

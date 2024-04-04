@@ -101,9 +101,9 @@ module.exports = {
 						'api-key': key
 					},
 				});	
-			} catch (error)	{}
+			} catch (error)	{ /* Nothing */ }
 			const change_role_perm = user_perms['global.user_change_role'];
-			if (!change_role_perm) return await interaction.respond([])
+			if (!change_role_perm) return await interaction.respond([]);
 			return await interaction.respond(
 				change_role_perm.affected_roles.map(role => ({name:role, value:role}))
 			);
@@ -124,7 +124,7 @@ module.exports = {
 		
 			if (user_id != -1) return;
 			else {
-				let placed_user
+				let placed_user;
 				try {
 					placed_user = await pb.send('/api/users/placeholder', {
 						method: 'POST', query: {'username': username}, headers: {'api-key': key}
@@ -189,7 +189,7 @@ module.exports = {
 						'api-key': key
 					},
 				});	
-			} catch (error)	{}
+			} catch (error)	{ /* Nothing */ }
 			const change_role_perm = user_perms['global.user_change_role'];
 			if (!change_role_perm) return await interaction.editReply(':x: You do not have the permission to change user roles on the website');
 			if (!change_role_perm.affected_roles.includes(role)) return await interaction.editReply(':x: This role does not exist, or you do not have the permission to affect it');
@@ -202,7 +202,7 @@ module.exports = {
 					},
 				});
 			} catch (error) {
-				return await interaction.editReply(`:x: Could\'nt fetch this user\'s profile data:${JSON.stringify(error.response)}`);
+				return await interaction.editReply(`:x: Could'nt fetch this user's profile data:${JSON.stringify(error.response)}`);
 			}
 
 			let roles = user.roles;
@@ -238,11 +238,11 @@ module.exports = {
 						'api-key': key
 					},
 				});	
-			} catch (error)	{}
+			} catch (error)	{ /* Nothing */ }
 			const change_role_perm = user_perms['global.user_change_role'];
 			if (!change_role_perm) return await interaction.editReply(':x: You do not have the permission to change user roles on the website');
 			if (!change_role_perm.affected_roles.includes(role)) return await interaction.editReply(':x: This role does not exist, or you do not have the permission to affect it');
-		
+
 			let user;
 			try {
 				user = await pb.send(`/api/aredl/profiles/${user_id}`, {
@@ -251,7 +251,7 @@ module.exports = {
 					},
 				});
 			} catch (error) {
-				return await interaction.editReply(`:x: Could\'nt fetch this user\'s profile data:${JSON.stringify(error.response)}`);
+				return await interaction.editReply(`:x: Could'nt fetch this user's profile data:${JSON.stringify(error.response)}`);
 			}
 
 			let roles = user.roles;
@@ -272,5 +272,6 @@ module.exports = {
 			await interaction.editReply(':white_check_mark: The user was updated successfully');
 			return;
 		}
+
 	},
 };

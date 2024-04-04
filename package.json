@@ -21,6 +21,6 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "eslint": "^8.53.0"
+    "eslint": "^8.57.0"
   }
 }

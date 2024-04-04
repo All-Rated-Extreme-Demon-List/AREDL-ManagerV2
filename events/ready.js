@@ -1,9 +1,12 @@
 const { Events } = require('discord.js');
 
 const { submitRecord } = require('../others/pbRecordsSubmissions.js');
+const { submitMergeRequest } = require('../others/pbMergeRequests.js');
+const { submitNameChangeRequest } = require('../others/pbNameChangeRequests.js');
 const { guildId, enableSeparateStaffServer, staffGuildId, pendingRecordsID, priorityRecordsID, enablePriorityRole, botPbUser, botPbPasswd } = require('../config.json');
 //import eventsource from 'eventsource';
 const eventsource = require('eventsource');
+
 global.EventSource = eventsource;
 
 module.exports = {
@@ -41,10 +44,12 @@ module.exports = {
 			});
 		} else await db.infos.update({status: false}, {where:{name:'shifts'}});
 
-		console.log(`Logging in to pocketbase...`);
+		console.log('Logging in to pocketbase...');
 		try {
 			await pb.admins.authWithPassword(botPbUser, botPbPasswd);
 			pb.collection('record_submissions').subscribe('*', submitRecord, { expand:  'submitted_by, level' });
+			pb.collection('merge_requests').subscribe('*', submitMergeRequest, { expand:  'user, to_merge' });
+			pb.collection('name_change_requests').subscribe('*', submitNameChangeRequest, { expand:  'user' });
 		} catch(err) {
 			console.log(`Failed to login: ${err}`);
 		}

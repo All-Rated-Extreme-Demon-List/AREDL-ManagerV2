@@ -1,5 +1,4 @@
 const { fetchListData, fetchPackData } = require('../utils.js');
-const fs = require('node:fs');
 
 module.exports = {
 	name: 'cacheUpdate',

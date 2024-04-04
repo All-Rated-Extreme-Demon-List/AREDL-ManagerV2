@@ -51,6 +51,29 @@ module.exports = {
 			pocketbaseId: Sequelize.STRING,
 			moderator: Sequelize.STRING,
 		});
+
+		db.mergeRequests = sequelize.define('merges', {
+			pb_id: Sequelize.STRING,
+			user: Sequelize.STRING,
+			user_discord: Sequelize.STRING,
+			to_merge: Sequelize.STRING,
+			to_merge_discord: Sequelize.STRING,
+			discordid: {
+				type: Sequelize.STRING,
+				unique: true,
+			},
+		});
+
+		db.nameRequests = sequelize.define('namechanges', {
+			pb_id: Sequelize.STRING,
+			user: Sequelize.STRING,
+			user_discord: Sequelize.STRING,
+			new_name: Sequelize.STRING,
+			discordid: {
+				type: Sequelize.STRING,
+				unique: true,
+			},
+		});
 		
 		db.shifts = sequelize.define('shifts', {
 			moderator: Sequelize.STRING,
@@ -126,4 +149,4 @@ module.exports = {
 
 		return cache;
 	}
-}
+};
