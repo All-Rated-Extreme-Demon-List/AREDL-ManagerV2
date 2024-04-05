@@ -36,7 +36,7 @@ You will then need to create a config file (an example file is provided in `exam
 > - `shiftsLogsID`: If the shift system is enabled, the channel ID in which to send shifts messages that logs whoever missed their shift on the previous day, when new shifts are assigned
 > - `recordsPerWeek`: The target amount of records the bot will try assigning to moderators per week.
 
-> - `guildMemberAddID`: If welcome messages are enabled, the channel ID in which to send them.
+> - `guildMemberAddID`: If welcome messages are enabled, the channel ID in which to send them.    
 After you have created this config file, you can run `node ./deploy-commands.js` in the root directory, to register the bot's commands with discord. They will then appear in both the public and (if enabled) staff server.    
 **Be sure to properly set the command permissions in your discord server settings ("Integrations" tab), so that only staff/admins can use their respective commands**. The list of all commands is detailed later on.    
 You can then run the bot using `node ./index.js`. It will create a SQLite database to store records data (among other things) in a `data/` subfolder
