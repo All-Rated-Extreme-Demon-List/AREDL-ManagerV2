@@ -20,13 +20,11 @@ module.exports = {
 		const levelname = levelData.levelname;
 		const verification = levelData.verification;
 		const password = levelData.password;
-		let verifier_id = await getUserPbId(interaction, verifier, key);
-		let creator_id = await getUserPbId(interaction, creator, key);
-		let uploader_id = await getUserPbId(interaction, uploader, key);
+		let verifier_id = await getUserPbId(interaction, verifier);
+		let creator_id = await getUserPbId(interaction, creator);
+		let uploader_id = await getUserPbId(interaction, uploader);
 		const legacy = levelData.legacy;
 		const mobile = levelData.mobile;
-		
-		if (verifier_id == -2 || creator_id == -2 || uploader_id == -2) return;
 
 		if (verifier_id == -1) {
 			let placeduser;

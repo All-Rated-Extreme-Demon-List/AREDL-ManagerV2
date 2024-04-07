@@ -95,7 +95,7 @@ module.exports = {
 				return await interaction.respond([]);
 			}
 			await interaction.respond(
-				results.map(user => ({ name:user.name, value: user.name })),
+				results.map(user => ({ name:`${user.global_name} (${user.username})`, value: user.username })),
 			);
 		}
 	},
@@ -123,8 +123,7 @@ module.exports = {
 			if (password!= null) query['level_password'] = password;
 			if (newname!= null) query['name'] = newname;
 			if (uploader!=null) {
-				const uploader_id  = await getUserPbId(interaction, uploader, key);
-				if (uploader_id == -2) return;
+				const uploader_id  = await getUserPbId(interaction, uploader);
 				if (uploader_id == -1) return await interaction.editReply(':x: The uploader does not have an account on the website (you can create one with /aredluser createplaceholder)');
 
 				query['publisher'] = uploader_id;
@@ -144,9 +143,9 @@ module.exports = {
 			}
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) updated ${level.name} (${JSON.stringify(query)})`);
+			await cache.updateLevels();
+			
 			await interaction.editReply(':white_check_mark: The level was updated successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 
 		} else if (interaction.options.getSubcommand() === 'addcreator') {
@@ -161,14 +160,14 @@ module.exports = {
 			if (key==-1) return;
 
 			const creator = interaction.options.getString('creator');
-			let creator_id = await getUserPbId(interaction, creator, key);
-			if (creator_id == -2) return;
+			let creator_id = await getUserPbId(interaction, creator);
 			if (creator_id == -1) {
 				let placeduser;
 				try {
 					placeduser = await pb.send('/api/users/placeholder', {
 						method: 'POST', query: {'username': creator}, headers: {'api-key': key}
 					});
+					await cache.updateUsers();
 				} catch (err) {
 					if (err.status == 403) return await interaction.editReply(':x: You do not have permission to create placeholder users on the website');
 					else return await interaction.editReply(`:x: Couldn't create a new placeholder user: ${JSON.stringify(err.response)}`);
@@ -192,9 +191,10 @@ module.exports = {
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) updated creators of ${level.name} (${JSON.stringify(creators)})`);
 			
+			await cache.updateLevels();
+
 			await interaction.editReply(':white_check_mark: The level was updated successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
+			
 			return;
 
 		} else if (interaction.options.getSubcommand() === 'removecreator') {
@@ -209,8 +209,7 @@ module.exports = {
 			if (key==-1) return;
 
 			const creator = interaction.options.getString('creator');
-			let creator_id = await getUserPbId(interaction, creator, key);
-			if (creator_id == -2) return;
+			let creator_id = await getUserPbId(interaction, creator);
 			if (creator_id == -1) {
 				let placeduser;
 				try {
@@ -241,9 +240,9 @@ module.exports = {
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) updated creators of ${level.name} (${JSON.stringify(creators)})`);
 			
+			await cache.updateLevels();
+
 			await interaction.editReply(':white_check_mark: The level was updated successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 		}
 	},

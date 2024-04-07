@@ -1,4 +1,3 @@
-
 module.exports = {
 	async getRegisteredKey(interaction) {
 		const { db } = require('./index.js');
@@ -8,32 +7,17 @@ module.exports = {
 			return -1;
 		} else return modData.pbKey;
 	},
-	async getUserPbId(interaction, username, key) {
-		const { pb } = require('./index.js');
+	async getUserPbId(interaction, username) {
+		const { cache } = require('./index.js');
 		try {
-			const results = await pb.send('/api/users', {
-				method: 'GET',
-				query: {
-					'per_page': 1,
-					'name_filter': username
-				},
-				headers: {
-					'api-key': key
-				}
-			});
-
-			return results[0].id;
+			const results = await cache.users.findOne({where: {username: username}});
+			return results.pb_id;
 		} catch (err) {
-			if (err.status == 403){
-				await interaction.editReply(':x: You do not have the permission to list users on the website');
-				return -2;
-			} else {
-				return -1;
-			}
+			return -1;
 		}
 	},
 	async fetchListData() {
-		const levels = {};
+		const levels = [];
 		const { pb } = require('./index.js');
 		let list_data;
 		try {
@@ -50,12 +34,12 @@ module.exports = {
 				console.log(`Couldn't fetch level data: \n${fetchError}`);
 				return -1;
 			}
-			levels[level.name] = { 'id': level.id, 'creators':level_data.creators.map(creator => creator.id)};
+			levels.push({pb_id: level.id, name: level.name, creators: JSON.stringify(level_data.creators.map(creator => creator.id))});
 		}
 		return levels;
 	},
 	async fetchPackData() {
-		const packs_dict = {};
+		const packs = [];
 		const { pb } = require('./index.js');
 		let packs_data;
 		try {
@@ -65,8 +49,62 @@ module.exports = {
 			return -1;
 		}
 		for (const pack of packs_data) {
-			packs_dict[pack.name] = { 'id': pack.id, 'levels': pack.levels.map(level => level.id) };
+			packs.push({name: pack.name, pb_id: pack.id, levels: JSON.stringify(pack.levels.map(level => level.id)) });
 		}
-		return packs_dict;
+		return packs;
+	},
+	async fetchUserData() {
+		const users = [];
+		const { pb } = require('./index.js');
+		const { botApiKey } = require('./config.json');
+		let users_data;
+		try {
+			users_data = await pb.send('/api/users', { query: {'per_page': -1}, headers: {'api-key': botApiKey }});
+		} catch (fetchError) {
+			console.log(`Couldn't fetch users data: \n${fetchError}`);
+			return -1;
+		}
+		for (const user of users_data) {
+			users.push({ pb_id: user.id, username: user.username, global_name: user.global_name});
+		}
+		return users;
+	},
+	async updateCache(update_levels, update_packs, update_users) {
+		const { cache } = require('./index.js');
+		console.log('Updating cache...');
+
+		if (update_levels) {
+			const levels_data = await module.exports.fetchListData();
+			if (levels_data == -1) return;
+			cache.levels.destroy({ where: {}});
+			try {
+				cache.levels.bulkCreate(levels_data);
+				console.log(`Successfully updated ${levels_data.length} cached levels.`);
+			} catch (error) {
+				console.log(`Couldn't udate cached levels, something went wrong with sequelize: ${error}`);
+			}
+		}
+		if (update_packs) {
+			const packs_data = await module.exports.fetchPackData();
+			if (packs_data == -1) return;
+			cache.packs.destroy({ where: {}});
+			try {
+				cache.packs.bulkCreate(packs_data);
+				console.log(`Successfully updated ${packs_data.length} cached packs.`);
+			} catch (error) {
+				console.log(`Couldn't udate cached packs, something went wrong with sequelize: ${error}`);
+			}
+		}
+		if (update_users) {
+			const users_data = await module.exports.fetchUserData();
+			if (users_data == -1) return;
+			cache.users.destroy({ where: {}});
+			try {
+				cache.users.bulkCreate(users_data);
+				console.log(`Successfully updated ${users_data.length} cached users.`);
+			} catch (error) {
+				console.log(`Couldn't udate cached users, something went wrong with sequelize: ${error}`);
+			}
+		}
 	}
 };

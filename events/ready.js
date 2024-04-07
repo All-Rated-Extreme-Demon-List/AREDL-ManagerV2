@@ -20,7 +20,7 @@ module.exports = {
 		}
 
 		for (const table of Object.keys(cache)) {
-			await cache[table].sync({ alter: true});
+			if (typeof(cache[table]) !== 'function') await cache[table].sync({ alter: true});
 		}
 
 		if (!(await db.infos.count({ where: { name: 'records' } }))) {

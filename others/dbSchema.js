@@ -134,7 +134,7 @@ module.exports = {
 	
 	createCacheDbSchema(sequelize_cache) {
 		const cache = {};
-
+		const { updateCache } = require('../utils.js');
 		cache.levels = sequelize_cache.define('levels', {
 			name: Sequelize.STRING,
 			pb_id: Sequelize.STRING,
@@ -146,6 +146,17 @@ module.exports = {
 			pb_id: Sequelize.STRING,
 			levels: Sequelize.STRING,
 		});
+
+		cache.users = sequelize_cache.define('users', {
+			username: Sequelize.STRING,
+			global_name: Sequelize.STRING,
+			pb_id: Sequelize.STRING,
+		});
+
+		cache.update = async () => await updateCache(true, true, true);
+		cache.updateLevels = async () => await updateCache(true, false, false);
+		cache.updatePacks = async () => await updateCache(false, true, false);
+		cache.updateUsers = async () => await updateCache(false, false, true);
 
 		return cache;
 	}

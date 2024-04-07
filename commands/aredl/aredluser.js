@@ -91,7 +91,7 @@ module.exports = {
 				return await interaction.respond([]);
 			}
 			await interaction.respond(
-				results.map(user => ({ name:user.name, value: user.name })),
+				results.map(user => ({ name:`${user.global_name} (${user.username})`, value: user.username })),
 			);
 		} else {
 			let user_perms;
@@ -120,7 +120,7 @@ module.exports = {
 
 		if (interaction.options.getSubcommand() == 'createplaceholder') {
 			const username = interaction.options.getString('user');
-			let user_id = await getUserPbId(interaction, username, key);
+			let user_id = await getUserPbId(interaction, username);
 		
 			if (user_id != -1) return;
 			else {
@@ -139,9 +139,8 @@ module.exports = {
 
 		} else if (interaction.options.getSubcommand() == 'ban') {
 			const username = interaction.options.getString('user');
-			let user_id = await getUserPbId(interaction, username, key);
+			let user_id = await getUserPbId(interaction, username);
 			
-			if (user_id == -2) return;
 			if (user_id == -1) return await interaction.editReply(':x: This user does not exist');
 
 			try {
@@ -157,9 +156,8 @@ module.exports = {
 			
 		} else if (interaction.options.getSubcommand() == 'unban') {
 			const username = interaction.options.getString('user');
-			let user_id = await getUserPbId(interaction, username, key);
+			let user_id = await getUserPbId(interaction, username);
 			
-			if (user_id == -2) return;
 			if (user_id == -1) return await interaction.editReply(':x: This user does not exist');
 
 			try {
@@ -177,9 +175,8 @@ module.exports = {
 
 			const username = interaction.options.getString('user');
 			const role = interaction.options.getString('role');
-			let user_id = await getUserPbId(interaction, username, key);
+			let user_id = await getUserPbId(interaction, username);
 			
-			if (user_id == -2) return;
 			if (user_id == -1) return await interaction.editReply(':x: This user does not exist');
 
 			let user_perms;
@@ -226,9 +223,8 @@ module.exports = {
 		} else if (interaction.options.getSubcommand() == 'removerole') {
 			const username = interaction.options.getString('user');
 			const role = interaction.options.getString('role');
-			let user_id = await getUserPbId(interaction, username, key);
+			let user_id = await getUserPbId(interaction, username);
 			
-			if (user_id == -2) return;
 			if (user_id == -1) return await interaction.editReply(':x: This user does not exist');
 
 			let user_perms;

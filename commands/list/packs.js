@@ -150,9 +150,8 @@ module.exports = {
 			}
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) created the pack ${interaction.options.getString('packname')} (${JSON.stringify(levels)})`);
+			await cache.updatePacks();
 			await interaction.editReply(':white_check_mark: The pack was created successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 
 		} else if (interaction.options.getSubcommand() === 'update') {
@@ -185,9 +184,8 @@ module.exports = {
 			}
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) updated the pack ${interaction.options.getString('packname')} (${JSON.stringify(query)})`);
+			await cache.updatePacks();
 			await interaction.editReply(':white_check_mark: The pack was updated successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 
 		} else if (interaction.options.getSubcommand() === 'delete') {
@@ -213,9 +211,8 @@ module.exports = {
 			}
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) deleted the pack ${interaction.options.getString('packname')} })`);
+			await cache.updatePacks();
 			await interaction.editReply(':white_check_mark: The pack was deleted successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 
 		} else if (interaction.options.getSubcommand() === 'addlevel') {
@@ -250,9 +247,8 @@ module.exports = {
 			}
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) updated the levels of the pack ${interaction.options.getString('packname')} (${JSON.stringify(levels)})`);
+			await cache.updatePacks();
 			await interaction.editReply(':white_check_mark: The pack was updated successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 		} else if (interaction.options.getSubcommand() === 'removelevel') {
 			const { pb, cache } = require('../../index.js');
@@ -287,9 +283,8 @@ module.exports = {
 			}
 
 			console.log(`${interaction.user.tag} (${interaction.user.id}) updated the levels of the pack ${interaction.options.getString('packname')} (${JSON.stringify(levels)})`);
+			await cache.updatePacks();
 			await interaction.editReply(':white_check_mark: The pack was updated successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 		}
 	},

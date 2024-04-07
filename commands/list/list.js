@@ -74,21 +74,42 @@ module.exports = {
 					option.setName('legacy')
 						.setDescription('If the level should be placed in the legacy list or not'))),
 	async autocomplete(interaction) {
-		const focusedValue = interaction.options.getFocused();
-		const { cache } = require('../../index.js');
+		const focused = interaction.options.getFocused(true);
+		const { cache, pb } = require('../../index.js');
 		const { getRegisteredKey } = require('../../utils.js');
 
 		const key = await getRegisteredKey(interaction);
 		if (key == -1) return await interaction.respond([]);
 		
-		let results;
-		results = await cache.levels.findAll({where: {}});
-		let levels = results.filter(level => level.name.toLowerCase().startsWith(focusedValue.toLowerCase()));
-		if (levels.length > 25) levels = levels.slice(0, 25);
-		await interaction.respond(
-			levels.map(level => ({ name:level.name, value: level.name}))
-		);
-		
+		if (focused.name == 'levelname') {
+			let results;
+			results = await cache.levels.findAll({where: {}});
+			let levels = results.filter(level => level.name.toLowerCase().startsWith(focused.toLowerCase()));
+			if (levels.length > 25) levels = levels.slice(0, 25);
+			await interaction.respond(
+				levels.map(level => ({ name:level.name, value: level.name}))
+			);
+
+		} else {
+			let results;
+			try {
+				results = await pb.send('/api/users', {
+					method: 'GET',
+					query: {
+						'per_page': 25,
+						'name_filter': focused.value
+					},
+					headers: {
+						'api-key': key
+					}
+				});
+			} catch (err) {
+				return await interaction.respond([]);
+			}
+			await interaction.respond(
+				results.map(user => ({ name:`${user.global_name} (${user.username})`, value: user.username })),
+			);
+		}
 	},
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true });
@@ -115,16 +136,13 @@ module.exports = {
 
 			let description = '\n';
 
-			const uploader_id = await getUserPbId(interaction, uploader, key);
-			if (uploader_id == -2) return;
+			const uploader_id = await getUserPbId(interaction, uploader);
 			if (uploader_id == -1) description += `Couldn't find an account for ${uploader}, a new placeholder will be created.\n`;
 
-			const verifier_id = await getUserPbId(interaction, verifier, key);
-			if (verifier_id == -2) return;
+			const verifier_id = await getUserPbId(interaction, verifier);
 			if (verifier_id == -1) description += `Couldn't find an account for ${verifier}, a new placeholder will be created.\n`;
 
-			const creator_id = await getUserPbId(interaction, creator, key);
-			if (creator_id == -2) return;
+			const creator_id = await getUserPbId(interaction, creator);
 			if (creator_id == -1) description += `Couldn't find an account for ${creator}, a new placeholder will be created.\n`;
 
 			
@@ -194,8 +212,6 @@ module.exports = {
 			console.log(`${interaction.user.tag} (${interaction.user.id}) moved ${level.name} to ${position} )`);
 			
 			await interaction.editReply(':white_check_mark: The level was moved successfully');
-			const cacheUpdate = require('../../scheduled/cacheUpdate.js');
-			cacheUpdate.execute();
 			return;
 		}
 	},
