@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
-const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const { deniedRecordsID } = require('../config.json');
 const { dbPendingRecords, dbDeniedRecords, staffStats, dbInfos } = require('../index.js');
@@ -45,59 +45,13 @@ module.exports = {
 			)
 			.setTimestamp();
 
-		// Create menu deny selection selectmenu
-		const denySelect = new StringSelectMenuBuilder()
-			.setCustomId('denySelect')
-			.setPlaceholder('Deny : select a reason')
-			.addOptions(
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Illegitimate')
-					.setDescription('The completion doesn\'t comply with the guidelines.')
-					.setValue('illegitimate'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Resubmit with raw')
-					.setDescription('Please resubmit with raw footage')
-					.setValue('raw'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Physics Bypass')
-					.setDescription('The usage of physics bypass in 2.2 is not allowed')
-					.setValue('physicsbypass'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Invalid LDM')
-					.setDescription('The LDM used in the completion does not comply with the guidelines')
-					.setValue('ldm'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Duplicate Submission')
-					.setDescription('The submission has been sent more than once.')
-					.setValue('duplicate'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Invalid Level')
-					.setDescription('The specified level is not on the list.')
-					.setValue('invalid'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Hacked')
-					.setDescription('The completion was deemed to be hacked')
-					.setValue('hacked'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Invalid Form')
-					.setDescription('The submission was filled out incorrectly.')
-					.setValue('form'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Joke Submission')
-					.setDescription('Please only submit serious submissions.')
-					.setValue('joke'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Group Submission')
-					.setDescription('Please only provide one level per submission.')
-					.setValue('group'),
-				new StringSelectMenuOptionBuilder()
-					.setLabel('Incomplete Run')
-					.setDescription('The submission is not a run from 0% to 100%, or does not include the endscreen')
-					.setValue('run'),
-			);
-
+		const denyReason = new ButtonBuilder()
+			.setCustomId('denyReason')
+			.setLabel('Enter a deny reason')
+			.setStyle(ButtonStyle.Primary);
+			
 		const row = new ActionRowBuilder()
-			.addComponents(denySelect);
+			.addComponents(denyReason);
 
 		// Send in moderator dms
 		let sent;

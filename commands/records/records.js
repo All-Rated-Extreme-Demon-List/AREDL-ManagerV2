@@ -1,19 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID, enableSeparateStaffServer, enablePriorityRole, staffGuildId, guildId } = require('../../config.json');
 const isUrlHttp = require('is-url-http');
-const denyReasons = new Map()
-	.set('none', 'No reason has been selected, please contact a list moderator')
-	.set('illegitimate', 'The completion doesn\'t comply with the guidelines. Please make sure to check our guidelines on the website before submitting a record.')
-	.set('physicsbypass', 'The usage of physics bypass in 2.2 is not allowed, please make sure to check our guidelines on the website before submitting a record.')
-	.set('raw', 'Please resubmit with raw footage')
-	.set('ldm', 'The LDM used in the completion does not comply with the guidelines')
-	.set('duplicate', 'The submission has been sent more than once.')
-	.set('hacked', 'The completion was deemed to be hacked')
-	.set('invalid', 'The specified level is not on the list')
-	.set('form', 'The submission was filled out incorrectly')
-	.set('joke', 'Please only submit serious submissions. The staff team does not have the time to deal with your bullshit')
-	.set('group', 'Please only provide one level per submission')
-	.set('run', 'The submission is not a run from 0% to 100%, or does not include the endscreen');
 
 module.exports = {
 	cooldown: 5,
@@ -311,7 +298,7 @@ module.exports = {
 				});
 
 				for (let i = 0; i < newestDeniedRecords.length; i++) {
-					const denyReason = denyReasons.get(newestDeniedRecords[i].denyReason);
+					const denyReason = newestDeniedRecords[i].denyReason;
 					strInfo += `- **${newestDeniedRecords[i].levelname}** - ${newestDeniedRecords[i].username} - Denied on ${newestDeniedRecords[i].updatedAt.toDateString()}\n\tReason: ${denyReason}\n`;
 				}
 				if (nbDeniedRecords > 20) strInfo += '...';

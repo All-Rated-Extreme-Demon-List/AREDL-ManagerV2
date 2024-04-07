@@ -231,6 +231,19 @@ for (const file of menusFiles) {
 	console.log(`  Loaded ${menu.customId} from ${filePath}`);
 }
 
+// Modals
+console.log('Loading modals');
+client.modals = new Collection();
+const modalsPath = path.join(__dirname, 'modals');
+const modalsFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
+
+for (const file of modalsFiles) {
+	const filePath = path.join(modalsPath, file);
+	const modal = require(filePath);
+	client.modals.set(modal.customId, modal);
+	console.log(`  Loaded ${modal.customId} from ${filePath}`);
+}
+
 // Events
 console.log('Loading events');
 const eventsPath = path.join(__dirname, 'events');
