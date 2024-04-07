@@ -65,12 +65,11 @@ module.exports = {
 				.addFields(
 					{ name: 'ID:', value: `${id}`, inline: true },
 					{ name: 'Uploader:', value: `${uploader}`, inline: true },
-					{ name: 'Creators:', value: `${strCreators}`, inline: true },
+					{ name: 'Creators:', value: `${strCreators.slice(0,1023)}`, inline: true },
 					{ name: 'Verifier:', value: `${verifier}`, inline: true },
 					{ name: 'Verification:', value: `${verification}`, inline: true },
 					{ name: 'Password:', value: `${password}`, inline: true },
 					{ name: 'Position:', value: `${position}`, inline: true },
-					{ name: 'Github Code:', value: `\`\`\`json\n${githubCode}\n\`\`\`` },
 				)
 				.setTimestamp();
 			// Create commit buttons
