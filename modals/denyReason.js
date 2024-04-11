@@ -1,22 +1,50 @@
 const { EmbedBuilder, } = require('discord.js');
 const { archiveRecordsID, deniedRecordsID, recordsID, guildId, staffGuildId, enableSeparateStaffServer } = require('../config.json');
-const { dbDeniedRecords } = require('../index.js');
+const { dbDeniedRecords, dbPendingRecords } = require('../index.js');
+const { staffStats, dbInfos } = require('../index.js');
 
 module.exports = {
 	customId: 'denyReason',
 	async execute(interaction) {
+		await interaction.deferReply({ephemeral: true});
 		// Check for record info corresponding to the message id
-		const record = await dbDeniedRecords.findOne({ where: { discordid: interaction.message.id } });
+		if (!interaction.message) return await interaction.editReply(':x: This form has expired');
+		const record = await dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
-			return await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
+			await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
+			try {
+				await interaction.message.delete();
+			} catch (error) {
+				console.log(error);
+			}
+			return;
 		}
 
-		if (record.denyReason != 'none') {
-			return await interaction.editReply(':x: This deny reason has already been selected');
-		}
-
-		// Get reason from the menu
+		// Get reason from the text field
 		const reason = interaction.fields.getTextInputValue('denyReasonInput');
+
+		const shiftsLock = await dbInfos.findOne({ where: { name: 'shifts' } });
+		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: The bot is currently assigning shifts, please wait a few minutes before checking records.');
+
+		// Add record to denied table
+		try {
+			await dbDeniedRecords.create({
+				username: record.username,
+				submitter: record.submitter,
+				levelname: record.levelname,
+				device: record.device,
+				completionlink: record.completionlink,
+				raw: record.raw,
+				ldm: record.ldm,
+				additionalnotes: record.additionalnotes,
+				priority: record.priority,
+				denyReason: reason,
+				moderator: interaction.user.id,
+			});
+		} catch (error) {
+			console.log(`Couldn't add the denied record ; something went wrong with Sequelize : ${error}`);
+			return await interaction.editReply(':x: Something went wrong while adding the denied record to the database');
+		}
 
 		// Create embed with all record info to send in archive
 		const denyArchiveEmbed = new EmbedBuilder()
@@ -67,13 +95,38 @@ module.exports = {
 		await staffGuild.channels.cache.get(deniedRecordsID).send({ embeds : [denyEmbed] });
 		await guild.channels.cache.get(recordsID).send({ content : `<@${record.submitter}>`, embeds : [publicDenyEmbed] });
 
-		// Update info in denied table
-		await dbDeniedRecords.update({ denyReason: reason }, { where: { discordid: interaction.message.id } });
+		// Remove message from pending
+		try {
+			await interaction.message.delete();
+			if (record.embedDiscordid != null) await (await interaction.message.channel.messages.fetch(record.embedDiscordid)).delete();
+		} catch (_) {
+			await interaction.editReply(':x: The record has already been accepted/denied');
+			return;
+		}
+
+		// Remove record from pending table
+		await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+
+		// Update moderator data
+		const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
+		if (!modInfo) {
+			await staffStats.create({
+				moderator: interaction.user.id,
+				nbRecords: 1,
+				nbDenied: 1,
+				nbAccepted: 0,
+			});
+		} else {
+			await modInfo.increment('nbRecords');
+			await modInfo.increment('nbDenied');
+		}
+
+		const { dailyStats } = require('../index.js');
+		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await dbPendingRecords.count() });
+		else await dailyStats.update({ nbRecordsDenied: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
 
 		// Reply
-
-		console.log(`${interaction.user.id} entered deny reason '${reason}' of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
-
-		return await interaction.reply({ content:':white_check_mark: The deny reason has been added', ephemeral:true });
+		console.log(`${interaction.user.id} denied ${record.levelname} for ${record.username} submitted by ${record.submitter} (Reason: '${reason}')`);
+		return await interaction.editReply(':white_check_mark: The record has been denied');
 	},
 };
