@@ -23,9 +23,14 @@ module.exports = {
 		if (uncheckedAssignedRecords.length != 0) {
 			for (const modRecords of uncheckedAssignedRecords) {
 				const modId = modRecords.dataValues['assigned'];
-				if ((await staffSettings.findOne({ where: {moderator: modId} })).shiftReminder) await client.users.send(modId, `> ## Shift Reminder\n> Your shift ends in 2 hours, and you currently have ${modRecords.dataValues['count']} assigned records left`);
+				const staff = await staffSettings.findOne({ where: {moderator: modId} });
+				try {
+					if (staff && staff.shiftReminder) await client.users.send(modId, `> ## Shift Reminder\n> Your shift ends in 2 hours, and you currently have ${modRecords.dataValues['count']} assigned records left`);
+				} catch (_) {
+					console.log(`Couldn't DM a reminder to ${modId}`);
+				}
 			}
 		}
-		console.log('Reminder sent successfully');
+		console.log('Shift reminder executed successfully');
 	},
 };
