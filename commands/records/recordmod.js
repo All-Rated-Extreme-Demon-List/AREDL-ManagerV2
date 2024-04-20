@@ -57,6 +57,18 @@ module.exports = {
 						.addChoices(
 							{ name: 'Enabled', value: 'enabled' },
 							{ name: 'Disabled', value: 'disabled' },
+						)))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('enablereminder')
+				.setDescription('Enables the shifts reminder')
+				.addStringOption(option =>
+					option.setName('status')
+						.setDescription('Enable or disable this setting')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'Enabled', value: 'enabled' },
+							{ name: 'Disabled', value: 'disabled' },
 						))),
 	async execute(interaction) {
 
@@ -220,6 +232,25 @@ module.exports = {
 				const create = await staffSettings.create({
 					moderator: interaction.user.id,
 					sendAcceptedInDM: interaction.options.getString('status') === 'enabled',
+				});
+
+				if (!create) return await interaction.editReply(':x: Something went wrong while executing the command');
+			}
+			return await interaction.editReply(`:white_check_mark: Changed setting to ${interaction.options.getString('status')}`);
+
+		} else if (interaction.options.getSubcommand() === 'enablereminder') {
+
+			await interaction.deferReply({ ephemeral: true });
+
+			const { staffSettings } = require('../../index.js');
+
+			// Update sqlite db
+			const update = await staffSettings.update({ shiftReminder: interaction.options.getString('status') === 'enabled' }, { where: { moderator: interaction.user.id } });
+
+			if (!update) {
+				const create = await staffSettings.create({
+					moderator: interaction.user.id,
+					shiftReminder: interaction.options.getString('status') === 'enabled',
 				});
 
 				if (!create) return await interaction.editReply(':x: Something went wrong while executing the command');

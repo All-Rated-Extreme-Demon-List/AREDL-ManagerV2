@@ -142,6 +142,10 @@ const staffSettings = sequelize.define('settings', {
 		type: Sequelize.BOOLEAN,
 		defaultValue: false,
 	},
+	shiftReminder: {
+		type:Sequelize.BOOLEAN,
+		defaultValue: false,
+	}
 });
 
 const dbInfos = sequelize.define('infos', {
