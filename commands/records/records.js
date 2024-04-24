@@ -259,7 +259,7 @@ module.exports = {
 				});
 
 				for (let i = 0; i < oldestPendingRecords.length; i++) {
-					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - Submitted on ${oldestPendingRecords[i].updatedAt.toDateString()}\n`;
+					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - Submitted on ${oldestPendingRecords[i].createdAt.toDateString()}\n`;
 				}
 				if (nbPendingRecords > 20) strInfo += '...';
 
