@@ -3,7 +3,7 @@ const { guildId, recordsPerWeek, pendingRecordsID } = require('../../config.json
 
 module.exports = {
 	cooldown: 5,
-	enabled: true,
+	enabled: false,
 	data: new SlashCommandBuilder()
 		.setName('test')
 		.setDescription('Test')
