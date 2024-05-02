@@ -16,11 +16,11 @@ module.exports = {
 		const { db, cache, pb } = require('../index.js');
 		console.log('Syncing database data...');
 		for (const table of Object.keys(db)) {
-			await db[table].sync({ alter: true});
+			if(db[table].hasOwnProperty('sync')) await db[table].sync({ alter: true});
 		}
 
 		for (const table of Object.keys(cache)) {
-			if (typeof(cache[table]) !== 'function') await cache[table].sync({ alter: true});
+			if (cache[table].hasOwnProperty('sync')) await cache[table].sync({ alter: true});
 		}
 
 		if (!(await db.infos.count({ where: { name: 'records' } }))) {
