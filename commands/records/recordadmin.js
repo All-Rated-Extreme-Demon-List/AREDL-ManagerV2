@@ -41,7 +41,7 @@ module.exports = {
 				.setDescription('Checks for errored record data')),
 	async execute(interaction) {
 
-		const { staffStats, dbAcceptedRecords, dbDeniedRecords, dbPendingRecords } = require('../../index.js');
+		const { db } = require('../../index.js');
 
 		await interaction.deferReply({ ephemeral: true });
 
@@ -49,10 +49,8 @@ module.exports = {
 
 			// Changes record status
 
-			const { dbInfos } = require('../../index.js');
-
 			// Update sqlite db
-			const update = await dbInfos.update({ status: interaction.options.getString('status') === 'closed' }, { where: { name: 'records' } });
+			const update = await db.infos.update({ status: interaction.options.getString('status') === 'closed' }, { where: { name: 'records' } });
 
 			if (!update) return await interaction.editReply(':x: Something went wrong while executing the command');
 			console.log(`Changed record status to ${interaction.options.getString('status')}`);
@@ -63,9 +61,9 @@ module.exports = {
 			// Display staff records leaderboard //
 
 			// Get number of staff
-			const nbTotal = await staffStats.count();
+			const nbTotal = await db.staffStats.count();
 			// Get sqlite data, ordered by descending number of records, limited to top 20 for now (maybe add a page system later)
-			const modInfos = await staffStats.findAll({ limit: 30, order: [ ['nbRecords', 'DESC'] ], attributes: ['moderator', 'nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'] });
+			const modInfos = await db.staffStats.findAll({ limit: 30, order: [ ['nbRecords', 'DESC'] ], attributes: ['moderator', 'nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'] });
 			if (!nbTotal || !modInfos) return await interaction.editReply(':x: Something went wrong while executing the command');
 
 			let strModData = '';
@@ -90,14 +88,14 @@ module.exports = {
 
 			const modId = interaction.options.getUser('moderator').id;
 
-			const modInfo = await staffStats.findOne({ attribute: ['nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'], where: { moderator: modId } });
+			const modInfo = await db.staffStats.findOne({ attribute: ['nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'], where: { moderator: modId } });
 
 			if (!modInfo) {
 				return await interaction.editReply(':x: This moderator hasn\'t accepted or denied any record');
 			}
 
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
-			const modAcceptedData = await dbAcceptedRecords.findAll({
+			const modAcceptedData = await db.acceptedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -106,7 +104,7 @@ module.exports = {
 				where: { moderator: modId, createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
-			const modDeniedData = await dbDeniedRecords.findAll({
+			const modDeniedData = await db.deniedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -196,7 +194,7 @@ module.exports = {
 			// Clears errored records //
 
 			console.log('Looking for errored records...');
-			const pendingRecords = await dbPendingRecords.findAll();
+			const pendingRecords = await db.pendingRecords.findAll();
 			let nbFound = 0;
 			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 			const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
@@ -206,7 +204,7 @@ module.exports = {
 					if (enablePriorityRole && pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
 					else await pendingChannel.messages.fetch(pendingRecords[i].discordid);
 				} catch (_) {
-					await dbPendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
+					await db.pendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
 					nbFound++;
 					console.log(`Found an errored record : ${pendingRecords[i].discordid}`);
 

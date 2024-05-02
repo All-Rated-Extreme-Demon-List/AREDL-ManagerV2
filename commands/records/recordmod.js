@@ -72,7 +72,7 @@ module.exports = {
 						))),
 	async execute(interaction) {
 
-		const { staffStats, dbAcceptedRecords, dbDeniedRecords } = require('../../index.js');
+		const { db } = require('../../index.js');
 
 		if (interaction.options.getSubcommand() === 'stats') {
 
@@ -81,14 +81,14 @@ module.exports = {
 
 			const modId = interaction.user.id;
 
-			const modInfo = await staffStats.findOne({ attribute: ['nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'], where: { moderator: modId } });
+			const modInfo = await db.staffStats.findOne({ attribute: ['nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'], where: { moderator: modId } });
 
 			if (!modInfo) {
 				return await interaction.editReply(':x: You haven\'t accepted or denied any record yet');
 			}
 
 			const minDate = new Date(new Date() - (30 * 24 * 60 * 60 * 1000));
-			const modAcceptedData = await dbAcceptedRecords.findAll({
+			const modAcceptedData = await db.acceptedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -97,7 +97,7 @@ module.exports = {
 				where: { moderator: modId, createdAt: { [Sequelize.Op.gte]: minDate } },
 			});
 
-			const modDeniedData = await dbDeniedRecords.findAll({
+			const modDeniedData = await db.deniedRecords.findAll({
 				attributes: [
 					[Sequelize.literal('DATE("createdAt")'), 'date'],
 					[Sequelize.literal('COUNT(*)'), 'count'],
@@ -187,13 +187,13 @@ module.exports = {
 
 			await interaction.deferReply({ ephemeral: true });
 
-			const { dbPendingRecords } = require('../../index.js');
+			const { db } = require('../../index.js');
 
 			// Check submissions info //
 			const submissionsType = interaction.options.getString('type');
 
-			const selectedDb = (submissionsType === 'pending' ? dbPendingRecords : (submissionsType === 'accepted' ? dbAcceptedRecords : dbDeniedRecords));
-			let strInfo = `Total records : ${await dbPendingRecords.count()} pending, ${await dbAcceptedRecords.count()} accepted, ${await dbDeniedRecords.count()} denied\n\n`;
+			const selectedDb = (submissionsType === 'pending' ? db.pendingRecords : (submissionsType === 'accepted' ? db.acceptedRecords : db.deniedRecords));
+			let strInfo = `Total records : ${await db.pendingRecords.count()} pending, ${await db.acceptedRecords.count()} accepted, ${await db.deniedRecords.count()} denied\n\n`;
 			const users = await selectedDb.findAll({
 				attributes: [
 					'submitter',
@@ -204,9 +204,9 @@ module.exports = {
 				limit: 30,
 			});
 			for (let i = 0; i < users.length; i++) {
-				const pendingCount = await dbPendingRecords.count({ where: { submitter: users[i].submitter } });
-				const acceptedCount = await dbAcceptedRecords.count({ where: { submitter: users[i].submitter } });
-				const deniedCount = await dbDeniedRecords.count({ where: { submitter: users[i].submitter } });
+				const pendingCount = await db.pendingRecords.count({ where: { submitter: users[i].submitter } });
+				const acceptedCount = await db.acceptedRecords.count({ where: { submitter: users[i].submitter } });
+				const deniedCount = await db.deniedRecords.count({ where: { submitter: users[i].submitter } });
 				const submittedCount = pendingCount + acceptedCount + deniedCount;
 				strInfo += `**${i + 1}** - <@${users[i].submitter}> - ${pendingCount} pending - (${submittedCount} submitted, ${acceptedCount} accepted, ${deniedCount} denied)\n`;
 			}
@@ -223,13 +223,13 @@ module.exports = {
 
 			await interaction.deferReply({ ephemeral: true });
 
-			const { staffSettings } = require('../../index.js');
+			const { db } = require('../../index.js');
 
 			// Update sqlite db
-			const update = await staffSettings.update({ sendAcceptedInDM: interaction.options.getString('status') === 'enabled' }, { where: { moderator: interaction.user.id } });
+			const update = await db.staffSettings.update({ sendAcceptedInDM: interaction.options.getString('status') === 'enabled' }, { where: { moderator: interaction.user.id } });
 
 			if (!update) {
-				const create = await staffSettings.create({
+				const create = await db.staffSettings.create({
 					moderator: interaction.user.id,
 					sendAcceptedInDM: interaction.options.getString('status') === 'enabled',
 				});
@@ -242,13 +242,13 @@ module.exports = {
 
 			await interaction.deferReply({ ephemeral: true });
 
-			const { staffSettings } = require('../../index.js');
+			const { db } = require('../../index.js');
 
 			// Update sqlite db
-			const update = await staffSettings.update({ shiftReminder: interaction.options.getString('status') === 'enabled' }, { where: { moderator: interaction.user.id } });
+			const update = await db.staffSettings.update({ shiftReminder: interaction.options.getString('status') === 'enabled' }, { where: { moderator: interaction.user.id } });
 
 			if (!update) {
-				const create = await staffSettings.create({
+				const create = await db.staffSettings.create({
 					moderator: interaction.user.id,
 					shiftReminder: interaction.options.getString('status') === 'enabled',
 				});
@@ -259,17 +259,17 @@ module.exports = {
 		} else if (interaction.options.getSubcommand() === 'commit') {
 
 			await interaction.deferReply();
-			const { dbRecordsToCommit } = require('../../index.js');
+			const { db } = require('../../index.js');
 
-			await dbRecordsToCommit.update({ discordid: interaction.id }, { where: {} });
+			await db.recordsToCommit.update({ discordid: interaction.id }, { where: {} });
 
-			if (await dbRecordsToCommit.count({ where: { discordid: interaction.id } }) == 0) return await interaction.editReply(':x: There are no pending accepted record to be commited');
+			if (await db.recordsToCommit.count({ where: { discordid: interaction.id } }) == 0) return await interaction.editReply(':x: There are no pending accepted record to be commited');
 			const commitEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
 				.setTitle('Commiting records')
 				.addFields(
-					{ name: 'Number of records:', value: `${await dbRecordsToCommit.count({ where: { discordid: interaction.id } })}`, inline: true },
-					{ name: 'Affected files:', value: `${(await dbRecordsToCommit.findAll({ where: { discordid: interaction.id }, group: 'filename' })).length}`, inline: true },
+					{ name: 'Number of records:', value: `${await db.recordsToCommit.count({ where: { discordid: interaction.id } })}`, inline: true },
+					{ name: 'Affected files:', value: `${(await db.recordsToCommit.findAll({ where: { discordid: interaction.id }, group: 'filename' })).length}`, inline: true },
 				)
 				.setTimestamp();
 			// Create commit buttons
@@ -289,16 +289,16 @@ module.exports = {
 
 			await interaction.editReply({ embeds: [commitEmbed], components: [row] });
 			const sent = await interaction.fetchReply();
-			await dbRecordsToCommit.update({ discordid: sent.id }, { where: { discordid: interaction.id } });
+			await db.recordsToCommit.update({ discordid: sent.id }, { where: { discordid: interaction.id } });
 		} else if (interaction.options.getSubcommand() === 'commitdebug') {
 			// Changes debug status
 
 			await interaction.deferReply({ ephemeral: true });
 
-			const { dbInfos } = require('../../index.js');
+			const { db } = require('../../index.js');
 
 			// Update sqlite db
-			const update = await dbInfos.update({ status: (interaction.options.getString('status') === 'enabled') }, { where: { name: 'commitdebug' } });
+			const update = await db.infos.update({ status: (interaction.options.getString('status') === 'enabled') }, { where: { name: 'commitdebug' } });
 			if (!update) return await interaction.editReply(':x: Something went wrong while executing the command');
 			console.log(`Changed debug status to ${interaction.options.getString('status')}`);
 			return await interaction.editReply(`:white_check_mark: Changed debug status to ${interaction.options.getString('status')}`);
@@ -307,10 +307,10 @@ module.exports = {
 
 			await interaction.deferReply({ ephemeral: true });
 
-			const { dbRecordsToCommit } = require('../../index.js');
+			const { db } = require('../../index.js');
 
-			await dbRecordsToCommit.destroy({ where: {} });
-			if (await dbRecordsToCommit.count() == 0) return await interaction.editReply(':white_check_mark: The list was successfully reset');
+			await db.recordsToCommit.destroy({ where: {} });
+			if (await db.recordsToCommit.count() == 0) return await interaction.editReply(':white_check_mark: The list was successfully reset');
 			else return await interaction.editReply(':x: Something went wrong while removing records');
 		}
 	},

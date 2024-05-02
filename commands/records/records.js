@@ -70,13 +70,16 @@ module.exports = {
 		if (focusedValue.length < 2) {
 			return await interaction.respond([]);
 		} else {
-			const { getLevelsDict } = require('../../index.js');
-			const levelsDict = getLevelsDict();
-			let levels = Object.keys(levelsDict).filter(levelname => levelname.toLowerCase().startsWith(focusedValue.toLowerCase()));
-			if (levels.length > 25) levels = levels.slice(0, 25);
+			const { cache } = require('../../index.js');
+			const Sequelize = require('sequelize');
 
+			let levels = await cache.levels.findAll({
+				where: { 
+					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', focusedValue.toLowerCase() + '%')
+				}});
+			if (levels.length > 25) levels = levels.slice(0, 25);
 			await interaction.respond(
-				levels.map(levelname => ({ name:levelname, value: levelname })),
+				levels.map(level => ({ name:level.name, value: level.name })),
 			);
 		}
 
@@ -84,7 +87,7 @@ module.exports = {
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true });
 
-		const { dbPendingRecords, dbAcceptedRecords, dbDeniedRecords, dbInfos } = require('../../index.js');
+		const { db } = require('../../index.js');
 
 		if (interaction.options.getSubcommand() === 'submit') {
 
@@ -97,7 +100,7 @@ module.exports = {
 			}
 
 			// Check record submission status
-			const dbStatus = await dbInfos.findOne({ where: { name: 'records' } });
+			const dbStatus = await db.infos.findOne({ where: { name: 'records' } });
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 
 			if (dbStatus.status) return await interaction.editReply(':x: Couldn\'t submit the record: Submissions are closed at the moment');
@@ -109,8 +112,8 @@ module.exports = {
 			if (/\s/g.test(rawStr) || !isUrlHttp(rawStr)) return await interaction.editReply(':x: Couldn\'t submit the record: The provided completion link is not a valid URL');
 
 			// Check given level name
-			const { getLevelsDict } = require('../../index.js');
-			if (!getLevelsDict()[interaction.options.getString('levelname')]) return await interaction.editReply(':x: Couldn\'t submit the record: the given level name is not on the list (please be sure to select one of the available options)');
+			const { cache } = require('../../index.js');
+			if (!cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}})) return await interaction.editReply(':x: Couldn\'t submit the record: the given level name is not on the list (please be sure to select one of the available options)');
 
 			// Create accept/deny buttons
 			const accept = new ButtonBuilder()
@@ -150,7 +153,7 @@ module.exports = {
 
 			// Add record to sqlite db
 			try {
-				await dbPendingRecords.create({
+				await db.pendingRecords.create({
 					username: interaction.options.getString('username'),
 					submitter: interaction.user.id,
 					levelname: interaction.options.getString('levelname'),
@@ -172,16 +175,14 @@ module.exports = {
 			}
 
 			// Check for and add optionnal values to db
-			if (interaction.options.getString('raw') != null) await dbPendingRecords.update({ raw: interaction.options.getString('raw') }, { where: { discordid: sentvideo.id } });
-			if (interaction.options.getInteger('ldm') != null) await dbPendingRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sentvideo.id } });
-			if (interaction.options.getString('additionalnotes') != null) await dbPendingRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sentvideo.id } });
+			if (interaction.options.getString('raw') != null) await db.pendingRecords.update({ raw: interaction.options.getString('raw') }, { where: { discordid: sentvideo.id } });
+			if (interaction.options.getInteger('ldm') != null) await db.pendingRecords.update({ ldm: interaction.options.getInteger('ldm') }, { where: { discordid: sentvideo.id } });
+			if (interaction.options.getString('additionalnotes') != null) await db.pendingRecords.update({ additionalnotes: interaction.options.getString('additionalnotes') }, { where: { discordid: sentvideo.id } });
 
-			const { dailyStats } = require('../../index.js');
+			if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsSubmitted: 1, nbRecordsPending: await db.pendingRecords.count() });
+			else await db.dailyStats.update({ nbRecordsSubmitted: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsSubmitted + 1 }, { where: { date: Date.now() } });
 
-			if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsSubmitted: 1, nbRecordsPending: await dbPendingRecords.count() });
-			else await dailyStats.update({ nbRecordsSubmitted: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsSubmitted + 1 }, { where: { date: Date.now() } });
-
-			console.log(`${interaction.user.id} submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
+			console.log(`${interaction.user.tag} (${interaction.user.id}) submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
 			// Reply
 			await interaction.editReply((enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID) ? ':white_check_mark: The priority record has been submitted successfully' : ':white_check_mark: The record has been submitted successfully'));
 
@@ -190,9 +191,9 @@ module.exports = {
 			// Check record submissions status //
 
 			// Get records info
-			const nbRecords = await dbPendingRecords.count({ where: { priority: false } });
-			const nbPriorityRecords = (enablePriorityRole ? await dbPendingRecords.count({ where: { priority: true } }) : 0);
-			const dbStatus = await dbInfos.findOne({ where: { name: 'records' } });
+			const nbRecords = await db.pendingRecords.count({ where: { priority: false } });
+			const nbPriorityRecords = (enablePriorityRole ? await db.pendingRecords.count({ where: { priority: true } }) : 0);
+			const dbStatus = await db.infos.findOne({ where: { name: 'records' } });
 
 			if (!dbStatus) return await interaction.editReply(':x: Something wrong happened while executing the command; please try again later');
 
@@ -219,19 +220,19 @@ module.exports = {
 
 			// Count records
 
-			const nbPendingRecords = await dbPendingRecords.count({
+			const nbPendingRecords = await db.pendingRecords.count({
 				where: {
 					submitter: interaction.user.id,
 				},
 			});
 
-			const nbAcceptedRecords = await dbAcceptedRecords.count({
+			const nbAcceptedRecords = await db.acceptedRecords.count({
 				where: {
 					submitter: interaction.user.id,
 				},
 			});
 
-			const nbDeniedRecords = await dbDeniedRecords.count({
+			const nbDeniedRecords = await db.deniedRecords.count({
 				where: {
 					submitter: interaction.user.id,
 				},
@@ -250,7 +251,7 @@ module.exports = {
 				title = 'Pending records';
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Oldest pending records**:\n`;
 
-				const oldestPendingRecords = await dbPendingRecords.findAll({
+				const oldestPendingRecords = await db.pendingRecords.findAll({
 					where: {
 						submitter: interaction.user.id,
 					},
@@ -270,7 +271,7 @@ module.exports = {
 				title = 'Accepted records';
 				color = 0x8fce00;
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Newly accepted records**:\n`;
-				const newestAcceptedRecords = await dbAcceptedRecords.findAll({
+				const newestAcceptedRecords = await db.acceptedRecords.findAll({
 					where: {
 						submitter: interaction.user.id,
 					},
@@ -289,7 +290,7 @@ module.exports = {
 				title = 'Denied records';
 				color = 0xcc0000;
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Newly denied records**:\n`;
-				const newestDeniedRecords = await dbDeniedRecords.findAll({
+				const newestDeniedRecords = await db.deniedRecords.findAll({
 					where: {
 						submitter: interaction.user.id,
 					},

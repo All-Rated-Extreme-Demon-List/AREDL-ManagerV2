@@ -56,7 +56,7 @@ module.exports = {
 				.setDescription('Shows all assigned shifts')),
 	async execute(interaction) {
 
-		const { dbShifts } = require('../../index.js');
+		const { db } = require('../../index.js');
 
 		await interaction.deferReply({ ephemeral: true });
 
@@ -65,9 +65,9 @@ module.exports = {
 			const mod = interaction.options.getUser('moderator');
 			const day = interaction.options.getString('day');
 
-			if (await dbShifts.count({ where: { moderator: mod.id } }) == 3) return await interaction.editReply(':x: This moderator already has 3 shifts assigned');
+			if (await db.shifts.count({ where: { moderator: mod.id } }) == 3) return await interaction.editReply(':x: This moderator already has 3 shifts assigned');
 
-			const addedShift = await dbShifts.create({ moderator: mod.id, day: day });
+			const addedShift = await db.shifts.create({ moderator: mod.id, day: day });
 			if (addedShift) return await interaction.editReply(`:white_check_mark: Successfully added ${day} shift for ${mod}`);
 			else return await interaction.editReply(`:x: Couldn't add ${day} shift for ${mod}`);
 
@@ -77,17 +77,17 @@ module.exports = {
 			const mod = interaction.options.getUser('moderator');
 			const day = interaction.options.getString('day');
 
-			if (await dbShifts.count({ where: { moderator: mod.id, day: day } }) == 0) return await interaction.editReply(':x: This moderator does not have any assigned shift on that day');
+			if (await db.shifts.count({ where: { moderator: mod.id, day: day } }) == 0) return await interaction.editReply(':x: This moderator does not have any assigned shift on that day');
 
-			await dbShifts.destroy({ where: { moderator: mod.id, day: day } });
-			if (await dbShifts.count({ where: { moderator: mod.id, day: day } }) == 0) return await interaction.editReply(`:white_check_mark: Successfully removed ${day} shift for ${mod}`);
+			await db.shifts.destroy({ where: { moderator: mod.id, day: day } });
+			if (await db.shifts.count({ where: { moderator: mod.id, day: day } }) == 0) return await interaction.editReply(`:white_check_mark: Successfully removed ${day} shift for ${mod}`);
 			else return interaction.editReply(`:x: Couldn't remove ${day} shift for ${mod}, something went wrong`);
 
 		} else if (interaction.options.getSubcommand() === 'list') {
 
-			if (await dbShifts.count() === 0) return await interaction.editReply(':x: There are no assigned shifts yet');
+			if (await db.shifts.count() === 0) return await interaction.editReply(':x: There are no assigned shifts yet');
 
-			const shifts = await dbShifts.findAll({ where: {} });
+			const shifts = await db.shifts.findAll({ where: {} });
 			const shiftsList = { 'Monday':'', 'Tuesday':'', 'Wednesday':'', 'Thursday':'', 'Friday':'', 'Saturday':'', 'Sunday':'' };
 			let shiftStr = '';
 

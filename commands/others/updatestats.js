@@ -11,16 +11,16 @@ module.exports = {
 	async execute(interaction) {
 
 		await interaction.deferReply({ ephemeral: true });
-		const { dailyStats, dbAcceptedRecords, dbDeniedRecords } = require('../../index.js');
+		const { db } = require('../../index.js');
 
-		const acceptedData = await dbAcceptedRecords.findAll({
+		const acceptedData = await db.acceptedRecords.findAll({
 			attributes: [
 				[Sequelize.literal('DATE("createdAt")'), 'date'],
 				[Sequelize.literal('COUNT(*)'), 'count'],
 			],
 			group: ['date'] },
 		);
-		const deniedData = await dbDeniedRecords.findAll({
+		const deniedData = await db.deniedRecords.findAll({
 			attributes: [
 				[Sequelize.literal('DATE("createdAt")'), 'date'],
 				[Sequelize.literal('COUNT(*)'), 'count'],
@@ -29,13 +29,13 @@ module.exports = {
 		);
 
 		for (const date of acceptedData) {
-			if (!(await dailyStats.findOne({ where: { date: date.dataValues['date'] } }))) await dailyStats.create({ date: date.dataValues['date'], nbRecordsAccepted: date.dataValues['count'] });
-			else await dailyStats.update({ nbRecordsAccepted: date.dataValues['count'] }, { where: { date: date.dataValues['date'] } });
+			if (!(await db.dailyStats.findOne({ where: { date: date.dataValues['date'] } }))) await db.dailyStats.create({ date: date.dataValues['date'], nbRecordsAccepted: date.dataValues['count'] });
+			else await db.dailyStats.update({ nbRecordsAccepted: date.dataValues['count'] }, { where: { date: date.dataValues['date'] } });
 		}
 
 		for (const date of deniedData) {
-			if ((!await dailyStats.findOne({ where: { date: date.dataValues['date'] } }))) await dailyStats.create({ date: date.dataValues['date'], nbRecordsDenied: date.dataValues['count'] });
-			else await dailyStats.update({ nbRecordsDenied: date.dataValues['count'] }, { where: { date: date.dataValues['date'] } });
+			if ((!await db.dailyStats.findOne({ where: { date: date.dataValues['date'] } }))) await db.dailyStats.create({ date: date.dataValues['date'], nbRecordsDenied: date.dataValues['count'] });
+			else await db.dailyStats.update({ nbRecordsDenied: date.dataValues['count'] }, { where: { date: date.dataValues['date'] } });
 		}
 
 		await interaction.editReply(':white_check_mark: Successfully updated internal daily stats database');

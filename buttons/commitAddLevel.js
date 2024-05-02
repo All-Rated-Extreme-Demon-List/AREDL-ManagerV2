@@ -4,11 +4,11 @@ module.exports = {
 	customId: 'commitAddLevel',
 	ephemeral: true,
 	async execute(interaction) {
-		const { octokit, dbLevelsToPlace, dbMessageLocks } = require('../index.js');
+		const { octokit, db } = require('../index.js');
 
-		const lock = await dbMessageLocks.findOne({ where: { discordid: interaction.message.id } });
+		const lock = await db.messageLocks.findOne({ where: { discordid: interaction.message.id } });
 		if (!lock) {
-			await dbMessageLocks.create({
+			await db.messageLocks.create({
 				discordid: interaction.message.id,
 				locked: true,
 				userdiscordid: interaction.user.id,
@@ -18,7 +18,7 @@ module.exports = {
 		}
 
 		// Check for level info corresponding to the message id
-		const level = await dbLevelsToPlace.findOne({ where: { discordid: interaction.message.id } });
+		const level = await db.levelsToPlace.findOne({ where: { discordid: interaction.message.id } });
 
 		let list_response;
 		try {
@@ -145,7 +145,7 @@ module.exports = {
 
 			try {
 				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}`);
-				dbLevelsToPlace.destroy({ where: { discordid: level.discordid } });
+				db.levelsToPlace.destroy({ where: { discordid: level.discordid } });
 				await interaction.message.delete();
 			} catch (cleanupErr) {
 				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}, but an error occured while cleanin up:\n${cleanupErr}`);

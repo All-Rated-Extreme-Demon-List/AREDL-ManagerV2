@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const { dbInfos, staffStats, dbPendingRecords, dbDeniedRecords, dbAcceptedRecords, staffSettings, dbLevelsToPlace, dbRecordsToCommit, dbMessageLocks, dailyStats, dbShifts } = require('../index.js');
+const { db, cache } = require('../index.js');
 const { guildId, enableSeparateStaffServer, staffGuildId, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../config.json');
 
 module.exports = {
@@ -8,34 +8,30 @@ module.exports = {
 	async execute(client) {
 
 		console.log('Syncing database data...');
+		for (const table of Object.keys(db)) {
+			if(db[table].hasOwnProperty('sync')) await db[table].sync({ alter: true});
+		}
 
-		await dbPendingRecords.sync({ alter: true });
-		await dbDeniedRecords.sync({ alter: true });
-		await dbAcceptedRecords.sync({ alter: true });
-		await dbInfos.sync({ alter: true });
-		await staffStats.sync({ alter: true });
-		await staffSettings.sync({ alter: true });
-		await dbLevelsToPlace.sync({ alter: true });
-		await dbRecordsToCommit.sync({ alter: true });
-		await dbMessageLocks.sync({ alter: true });
-		await dailyStats.sync({ alter: true });
-		await dbShifts.sync({ alter: true });
+		for (const table of Object.keys(cache)) {
+			if (cache[table].hasOwnProperty('sync')) await cache[table].sync({ alter: true});
+		}
+		cache.levels.sync({alter: true});
 
-		if (!(await dbInfos.count({ where: { name: 'records' } }))) {
-			await dbInfos.create({
+		if (!(await db.infos.count({ where: { name: 'records' } }))) {
+			await db.infos.create({
 				status: false,
 				name: 'records',
 			});
 		}
-		if (!(await dbInfos.count({ where: { name: 'shifts' } }))) {
-			await dbInfos.create({
+		if (!(await db.infos.count({ where: { name: 'shifts' } }))) {
+			await db.infos.create({
 				status: false,
 				name: 'shifts',
 			});
-		} else await dbInfos.update({status:false}, {where:{name:'shifts'}});
+		} else await db.infos.update({status:false}, {where:{name:'shifts'}});
 
-		if (!(await dbInfos.count({ where: { name: 'commitdebug' } }))) {
-			await dbInfos.create({
+		if (!(await db.infos.count({ where: { name: 'commitdebug' } }))) {
+			await db.infos.create({
 				status: 0,
 				name: 'commitdebug',
 			});
@@ -43,7 +39,7 @@ module.exports = {
 
 		console.log('Checking pending record data...');
 
-		const pendingRecords = await dbPendingRecords.findAll();
+		const pendingRecords = await db.pendingRecords.findAll();
 		let nbFound = 0;
 		const guild = await client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
 		const pendingChannel = await guild.channels.cache.get(pendingRecordsID);
@@ -53,7 +49,7 @@ module.exports = {
 				if (enablePriorityRole && pendingRecords[i].priority) await priorityChannel.messages.fetch(pendingRecords[i].discordid);
 				else await pendingChannel.messages.fetch(pendingRecords[i].discordid);
 			} catch (_) {
-				await dbPendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
+				await db.pendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
 				nbFound++;
 				console.log(`Found an errored record : ${pendingRecords[i].discordid}`);
 

@@ -1,4 +1,4 @@
-const { dbRecordsToCommit, dbMessageLocks } = require('../index.js');
+const { db } = require('../index.js');
 const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../config.json');
 const { EmbedBuilder } = require('discord.js');
 
@@ -6,9 +6,9 @@ module.exports = {
 	customId: 'commitRecords',
 	ephemeral: true,
 	async execute(interaction) {
-		const lock = await dbMessageLocks.findOne({ where: { discordid: interaction.message.id } });
+		const lock = await db.messageLocks.findOne({ where: { discordid: interaction.message.id } });
 		if (!lock) {
-			await dbMessageLocks.create({
+			await db.messageLocks.create({
 				discordid: interaction.message.id,
 				locked: true,
 				userdiscordid: interaction.user.id,
@@ -17,7 +17,7 @@ module.exports = {
 			return await interaction.editReply(`:x: This interaction is being used by <@${lock.userdiscordid}>`);
 		}
 
-		const recordsToCommit = await dbRecordsToCommit.findAll({ where: { discordid: interaction.message.id } });
+		const recordsToCommit = await db.recordsToCommit.findAll({ where: { discordid: interaction.message.id } });
 		const { octokit } = require('../index.js');
 
 		let addedRecords = 0;
@@ -73,7 +73,7 @@ module.exports = {
 			// If duplicate, don't add it to githubCodes
 			if (previousContent[filename].records.some(fileRecord => fileRecord.user === user)) {
 				console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
-				await dbRecordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
+				await db.recordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 				duplicateRecords++;
 				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 				continue;
@@ -95,7 +95,7 @@ module.exports = {
 			} else {
 				if (newContent[filename].some(fileRecord => fileRecord.user === user)) {
 					console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
-					await dbRecordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
+					await db.recordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 					duplicateRecords++;
 					interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 					continue;
@@ -124,14 +124,12 @@ module.exports = {
 
 		if (changes.length === 0) {
 			console.log('No new or updated records to commit after filtering out duplicates and errors.');
-			await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+			await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 			return await interaction.editReply(':x: No changes to commit after removing duplicates and handling errors.');
 		}
 
-		const { dbInfos } = require('../index.js');
-
 		interaction.editReply('Building commit...');
-		const debugStatus = await dbInfos.findOne({ where: { name: 'commitdebug' } });
+		const debugStatus = await db.infos.findOne({ where: { name: 'commitdebug' } });
 		if (!debugStatus || !debugStatus.status) {
 			let commitSha;
 			try {
@@ -144,7 +142,7 @@ module.exports = {
 				commitSha = refData.object.sha;
 			} catch (getRefError) {
 				console.log(`Something went wrong while fetching the latest commit SHA:\n${getRefError}`);
-				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getRefError)');
 			}
 			let treeSha;
@@ -158,7 +156,7 @@ module.exports = {
 				treeSha = commitData.tree.sha;
 			} catch (getCommitError) {
 				console.log(`Something went wrong while fetching the latest commit:\n${getCommitError}`);
-				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getCommitError)');
 			}
 
@@ -178,7 +176,7 @@ module.exports = {
 				});
 			} catch (createTreeError) {
 				console.log(`Something went wrong while creating a new tree:\n${createTreeError}`);
-				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createTreeError)');
 			}
 
@@ -194,7 +192,7 @@ module.exports = {
 				});
 			} catch (createCommitError) {
 				console.log(`Something went wrong while creating a new commit:\n${createCommitError}`);
-				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createCommitError)');
 			}
 
@@ -208,13 +206,13 @@ module.exports = {
 				});
 			} catch (updateRefError) {
 				console.log(`Something went wrong while updating the branch :\n${updateRefError}`);
-				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (updateRefError)');
 			}
 			console.log(`Successfully created commit on ${githubBranch} (record addition): ${newCommit.data.sha}`);
 			try {
-				await dbRecordsToCommit.destroy({ where: { discordid: interaction.message.id } });
-				await dbMessageLocks.destroy({ where: { discordid: interaction.message.id } });
+				await db.recordsToCommit.destroy({ where: { discordid: interaction.message.id } });
+				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				await interaction.message.delete();
 			} catch (cleanupError) {
 				console.log(`Something went wrong while cleaning up the commit database & discord message:\n${cleanupError}`);

@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
 
 const { archiveRecordsID, acceptedRecordsID, recordsID, enableSeparateStaffServer, guildId, staffGuildId } = require('../config.json');
-const { dbPendingRecords, dbAcceptedRecords, staffStats, staffSettings, dbRecordsToCommit, dbInfos } = require('../index.js');
+const { db } = require('../index.js');
 
 module.exports = {
 	customId: 'accept',
@@ -12,7 +12,7 @@ module.exports = {
 		// Accepting a record //
 
 		// Check for record info corresponding to the message id
-		const record = await dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.pendingRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 			try {
@@ -23,15 +23,16 @@ module.exports = {
 			return;
 		}
 
-		const shiftsLock = await dbInfos.findOne({ where: { name: 'shifts' } });
+		const shiftsLock = await db.infos.findOne({ where: { name: 'shifts' } });
 		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: The bot is currently assigning shifts, please wait a few minutes before checking records.');
 
 		// Create embed to send with github code
 		const githubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": 360` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');
-		const { getLevelsDict } = require('../index.js');
+		const { cache } = require('../index.js');
+		const level = await cache.levels.findOne({ where: {name: record.levelname}});
 		try {
-			await dbRecordsToCommit.create({
-				filename: getLevelsDict()[record.levelname],
+			await db.recordsToCommit.create({
+				filename: level.filename,
 				user: record.username,
 				githubCode: githubCode,
 				discordid: '',
@@ -51,7 +52,7 @@ module.exports = {
 				{ name: 'Github code', value: `\`\`\`json\n${githubCode}\n\`\`\`` },
 			)
 			.setTimestamp()
-			.setFooter({ text: `Added to the commit list (currently ${await dbRecordsToCommit.count()} pending accepted records to commit)` });
+			.setFooter({ text: `Added to the commit list (currently ${await db.recordsToCommit.count()} pending accepted records to commit)` });
 
 		// Create button to remove the message
 		const remove = new ButtonBuilder()
@@ -109,9 +110,9 @@ module.exports = {
 		guild.channels.cache.get(recordsID).send({ content : `${record.completionlink}` });
 
 		// Check if we need to send in dms as well
-		const settings = await staffSettings.findOne({ where: { moderator: interaction.user.id } });
+		const settings = await db.staffSettings.findOne({ where: { moderator: interaction.user.id } });
 		if (!settings) {
-			await staffSettings.create({
+			await db.staffSettings.create({
 				moderator: interaction.user.id,
 				sendAcceptedInDM: false,
 			});
@@ -135,9 +136,9 @@ module.exports = {
 		}
 
 		// Update moderator data (create new entry if that moderator hasn't accepted/denied records before)
-		const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
+		const modInfo = await db.staffStats.findOne({ where: { moderator: interaction.user.id } });
 		if (!modInfo) {
-			await staffStats.create({
+			await db.staffStats.create({
 				moderator: interaction.user.id,
 				nbRecords: 1,
 				nbDenied: 0,
@@ -150,10 +151,10 @@ module.exports = {
 
 
 		// Remove record from pending table
-		await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+		await db.pendingRecords.destroy({ where: { discordid: record.discordid } });
 		// Add record to accepted table
 		try {
-			await dbAcceptedRecords.create({
+			await db.acceptedRecords.create({
 				username: record.username,
 				submitter: record.submitter,
 				levelname: record.levelname,
@@ -170,12 +171,10 @@ module.exports = {
 			return await interaction.editReply(':x: Something went wrong while adding the accepted record to the database');
 		}
 
-		const { dailyStats } = require('../index.js');
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await db.pendingRecords.count() });
+		else await db.dailyStats.update({ nbRecordsAccepted: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsAccepted + 1 }, { where: { date: Date.now() } });
 
-		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await dbPendingRecords.count() });
-		else await dailyStats.update({ nbRecordsAccepted: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsAccepted + 1 }, { where: { date: Date.now() } });
-
-		console.log(`${interaction.user.id} accepted record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
+		console.log(`${interaction.user.tag} (${interaction.user.id}) accepted record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been accepted');
 

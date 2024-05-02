@@ -1,7 +1,6 @@
 const { EmbedBuilder, } = require('discord.js');
 const { archiveRecordsID, deniedRecordsID, recordsID, guildId, staffGuildId, enableSeparateStaffServer } = require('../config.json');
-const { dbDeniedRecords, dbPendingRecords } = require('../index.js');
-const { staffStats, dbInfos } = require('../index.js');
+const { db } = require('../index.js');
 
 module.exports = {
 	customId: 'denyReason',
@@ -9,7 +8,7 @@ module.exports = {
 		await interaction.deferReply({ephemeral: true});
 		// Check for record info corresponding to the message id
 		if (!interaction.message) return await interaction.editReply(':x: This form has expired');
-		const record = await dbPendingRecords.findOne({ where: { discordid: interaction.message.id } });
+		const record = await db.pendingRecords.findOne({ where: { discordid: interaction.message.id } });
 		if (!record) {
 			await interaction.editReply(':x: Couldn\'t find a record linked to that discord message ID');
 			try {
@@ -23,12 +22,12 @@ module.exports = {
 		// Get reason from the text field
 		const reason = interaction.fields.getTextInputValue('denyReasonInput');
 
-		const shiftsLock = await dbInfos.findOne({ where: { name: 'shifts' } });
+		const shiftsLock = await db.infos.findOne({ where: { name: 'shifts' } });
 		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: The bot is currently assigning shifts, please wait a few minutes before checking records.');
 
 		// Add record to denied table
 		try {
-			await dbDeniedRecords.create({
+			await db.deniedRecords.create({
 				username: record.username,
 				submitter: record.submitter,
 				levelname: record.levelname,
@@ -105,12 +104,12 @@ module.exports = {
 		}
 
 		// Remove record from pending table
-		await dbPendingRecords.destroy({ where: { discordid: record.discordid } });
+		await db.pendingRecords.destroy({ where: { discordid: record.discordid } });
 
 		// Update moderator data
-		const modInfo = await staffStats.findOne({ where: { moderator: interaction.user.id } });
+		const modInfo = await db.staffStats.findOne({ where: { moderator: interaction.user.id } });
 		if (!modInfo) {
-			await staffStats.create({
+			await db.staffStats.create({
 				moderator: interaction.user.id,
 				nbRecords: 1,
 				nbDenied: 1,
@@ -121,12 +120,11 @@ module.exports = {
 			await modInfo.increment('nbDenied');
 		}
 
-		const { dailyStats } = require('../index.js');
-		if (!(await dailyStats.findOne({ where: { date: Date.now() } }))) dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await dbPendingRecords.count() });
-		else await dailyStats.update({ nbRecordsDenied: (await dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
+		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsDenied: 1, nbRecordsPending: await db.pendingRecords.count() });
+		else await db.dailyStats.update({ nbRecordsDenied: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
 
 		// Reply
-		console.log(`${interaction.user.id} denied ${record.levelname} for ${record.username} submitted by ${record.submitter} (Reason: '${reason}')`);
+		console.log(`${interaction.user.tag} (${interaction.user.id}) denied ${record.levelname} for ${record.username} submitted by ${record.submitter} (Reason: '${reason}')`);
 		return await interaction.editReply(':white_check_mark: The record has been denied');
 	},
 };

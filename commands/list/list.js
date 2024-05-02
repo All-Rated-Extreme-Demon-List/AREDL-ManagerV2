@@ -45,7 +45,7 @@ module.exports = {
 
 		if (interaction.options.getSubcommand() === 'place') {
 
-			const { dbLevelsToPlace } = require('../../index.js');
+			const { db } = require('../../index.js');
 
 			const levelname = interaction.options.getString('levelname');
 			const position = interaction.options.getInteger('position');
@@ -91,7 +91,7 @@ module.exports = {
 			const sent = await interaction.fetchReply();
 
 			try {
-				await dbLevelsToPlace.create({
+				await db.levelsToPlace.create({
 					filename: levelname.normalize('NFD').replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '_').toLowerCase(),
 					position: position,
 					githubCode: githubCode,

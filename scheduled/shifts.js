@@ -8,12 +8,12 @@ module.exports = {
 	enabled: enableShifts,
 	async execute() {
 		console.log('Running shifts');
-		const { dbShifts, dbInfos, dbPendingRecords, client } = require('../index.js');
+		const { db, client } = require('../index.js');
 
-		await dbInfos.update({status: true}, {where: {name: 'shifts'}});
+		await db.infos.update({status: true}, {where: {name: 'shifts'}});
 		// Past shift recap
 		console.log('Checking last shifts undone records..');
-		const uncheckedAssignedRecords = await dbPendingRecords.findAll({
+		const uncheckedAssignedRecords = await db.pendingRecords.findAll({
 			attributes: [
 				[Sequelize.literal('COUNT(*)'), 'count'],
 				'assigned',
@@ -36,7 +36,7 @@ module.exports = {
 		await (await client.channels.fetch(shiftsLogsID)).send(recapStr);
 		console.log('Clearing unchecked assigned records..');
 		// Reset other assigned records
-		const rawUncheckedAssignedRecords = await dbPendingRecords.findAll({
+		const rawUncheckedAssignedRecords = await db.pendingRecords.findAll({
 			attributes: [
 				'embedDiscordid',
 				'assigned',
@@ -55,21 +55,21 @@ module.exports = {
 				console.log(`Couldn't clear ${recordId} (${record.dataValues['assigned']})`)
 			}
 		}
-		dbPendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
+		db.pendingRecords.update({ assigned: 'None' }, { where: { assigned: { [Sequelize.Op.ne]: 'None' } }});
 
 		// Assign new records
 		console.log('Assigning new records..');
 		const day = new Date().toLocaleString('en-us', { weekday: 'long' });
 
-		const shiftData = await dbShifts.findAll({ where: { day: day } });
-		const pendingRecords = await dbPendingRecords.findAll({ where: {}, order:[['createdAt', 'ASC']] });
+		const shiftData = await db.shifts.findAll({ where: { day: day } });
+		const pendingRecords = await db.pendingRecords.findAll({ where: {}, order:[['createdAt', 'ASC']] });
 		const nbPendingRecords = pendingRecords.length;
 
 		let totalShiftRecords = 0;
 		const shifts = {};
 
 		for (const shift of shiftData) {
-			const nbRecords = Math.floor(recordsPerWeek / (await dbShifts.count({ where: { moderator: shift.moderator } })));
+			const nbRecords = Math.floor(recordsPerWeek / (await db.shifts.count({ where: { moderator: shift.moderator } })));
 			shifts[shift.moderator] = {
 				'records': nbRecords,
 			};
@@ -108,7 +108,7 @@ module.exports = {
 					await new Promise(r => setTimeout(r, 5000));
 					console.log(`(${record+1}/${totalAssignedRecords}) Assigning ${recordId} (${moderator})`)
 					embedMessage.edit({ embeds: [newEmbed]});
-					dbPendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
+					db.pendingRecords.update({ assigned: moderator }, { where: { embedDiscordid: recordId }});
 				}
 
 				const startRecord = {
@@ -127,7 +127,7 @@ module.exports = {
 			}
 			console.log('New shift assigned successfully');
 			await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
-			await dbInfos.update({status: false}, {where: {name: 'shifts'}});
+			await db.infos.update({status: false}, {where: {name: 'shifts'}});
 		} catch (err) {
 			console.log(`Something went wrong while assigning records:\n${err}`);
 			await (await client.channels.fetch(shiftsReminderID)).send('> :x: Something went wrong while assigning shifts, check error logs');

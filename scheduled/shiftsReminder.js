@@ -8,10 +8,10 @@ module.exports = {
 	enabled: enableShifts,
 	async execute() {
 		console.log('Running shift reminder');
-		const { dbPendingRecords, staffSettings, client } = require('../index.js');
+		const { db, client } = require('../index.js');
 
 		console.log('Checking last shifts undone records..');
-		const uncheckedAssignedRecords = await dbPendingRecords.findAll({
+		const uncheckedAssignedRecords = await db.pendingRecords.findAll({
 			attributes: [
 				[Sequelize.literal('COUNT(*)'), 'count'],
 				'assigned',
@@ -23,7 +23,7 @@ module.exports = {
 		if (uncheckedAssignedRecords.length != 0) {
 			for (const modRecords of uncheckedAssignedRecords) {
 				const modId = modRecords.dataValues['assigned'];
-				const staff = await staffSettings.findOne({ where: {moderator: modId} });
+				const staff = await db.staffSettings.findOne({ where: {moderator: modId} });
 				try {
 					if (staff && staff.shiftReminder) await client.users.send(modId, `> ## Shift Reminder\n> Your shift ends in 2 hours, and you currently have ${modRecords.dataValues['count']} assigned records left`);
 				} catch (_) {
