@@ -86,7 +86,7 @@ module.exports = {
 		});
 		
 		
-		db.dailyStats = sequelize.define('db.dailyStats', {
+		db.dailyStats = sequelize.define('dailyStats', {
 			date: Sequelize.DATEONLY,
 			nbRecordsSubmitted: { type: Sequelize.NUMBER, defaultValue: 0 },
 			nbRecordsPending: { type: Sequelize.NUMBER, defaultValue: 0 },
