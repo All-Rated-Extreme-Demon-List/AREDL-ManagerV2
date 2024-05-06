@@ -27,7 +27,8 @@ module.exports = {
 			console.log(`Unable to parse data fetched from _list.json:\n${parseError}`);
 			return -1;
 		}
-			
+		
+		let i = 1;
 		for (const filename of list_data) {
 			let fileResponse;
 			try {
@@ -49,8 +50,8 @@ module.exports = {
 				continue;
 			}
 			
-			levels.push({ name: parsedData.name, filename: filename});
-
+			levels.push({ name: parsedData.name, position: i, filename: filename});
+			i++;
 		}
 
 		cache.levels.destroy({ where: {}});

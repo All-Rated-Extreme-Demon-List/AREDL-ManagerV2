@@ -8,12 +8,10 @@ module.exports = {
 	async execute(client) {
 
 		console.log('Syncing database data...');
-		for (const table of Object.keys(db)) {
-			if(db[table].hasOwnProperty('sync')) await db[table].sync({ alter: true});
-		}
+		for (const table of Object.keys(db)) await db[table].sync({ alter: true});
 
 		for (const table of Object.keys(cache)) {
-			if (cache[table].hasOwnProperty('sync')) await cache[table].sync({ alter: true});
+			if (table !== 'update')	await cache[table].sync({ alter: true});
 		}
 		cache.levels.sync({alter: true});
 

@@ -116,6 +116,11 @@ module.exports = {
 			},
 		});
 
+		db.fish = sequelize.define('fish', {
+			user: Sequelize.STRING,
+			amount: Sequelize.DOUBLE,
+		});
+
 		return db;
 	},
 	
@@ -124,6 +129,7 @@ module.exports = {
 		const { updateCache } = require('../utils.js');
 		cache.levels = sequelize_cache.define('levels', {
 			name: Sequelize.STRING,
+			position: Sequelize.INTEGER,
 			filename: Sequelize.STRING,
 		});
 

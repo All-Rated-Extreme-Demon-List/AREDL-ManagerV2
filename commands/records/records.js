@@ -113,7 +113,7 @@ module.exports = {
 
 			// Check given level name
 			const { cache } = require('../../index.js');
-			if (!cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}})) return await interaction.editReply(':x: Couldn\'t submit the record: the given level name is not on the list (please be sure to select one of the available options)');
+			if (!(await cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}}))) return await interaction.editReply(':x: Couldn\'t submit the record: the given level name is not on the list (please be sure to select one of the available options)');
 
 			// Create accept/deny buttons
 			const accept = new ButtonBuilder()
