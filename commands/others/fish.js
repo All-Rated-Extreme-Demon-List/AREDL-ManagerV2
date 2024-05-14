@@ -24,6 +24,6 @@ module.exports = {
 		const userdata = await db.fish.findOne({where: {user: id}});
 		if (!userdata) await db.fish.create({ user: id, amount: fished_score});
 		else await db.fish.update({ amount: userdata.amount + fished_score }, { where: { user: id }});
-		return await interaction.reply(`> **${name}** fished **${fished_level}** (TOP ${fished_pos + 1})\n> +${Math.round(fished_score*100)/100} points`);
+		return await interaction.reply(`> **${name}** fished **${fished_level}** (TOP ${fished_pos + 1})\n> +${Math.round(fished_score*100)/100} points (Total: ${Math.round((userdata ? userdata.amount + fished_score : fished_score)*100)/100} points)`);
 	},
 };
