@@ -21,7 +21,6 @@ module.exports = {
 			});
 
 			page = Math.floor(rank / 20);
-			console.log(rank)
 		}
 		
 		const leaderboard = await db.fish.findAll({
