@@ -1,6 +1,7 @@
 const { Events } = require('discord.js');
 const { db, cache } = require('../index.js');
 const { guildId, enableSeparateStaffServer, staffGuildId, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../config.json');
+const { githubOwner, githubRepo } = require('../config.json');
 
 module.exports = {
 	name: Events.ClientReady,
@@ -61,6 +62,24 @@ module.exports = {
 			}
 		}
 		console.log(`Found a total of ${nbFound} errored records.`);
+
+		console.log(`Checking github token permissions for ${githubOwner}/${githubRepo}...`);
+
+		const { octokit } = require('../index.js');
+		try {
+			const { data } = await octokit.rest.repos.get({
+				owner: githubOwner,
+				repo: githubRepo
+			});
+	
+			if (data.permissions.push) {
+				console.log(`Found push access to ${githubOwner}/${githubRepo}`);
+			} else {
+				console.log(`Couldn't find push access to ${githubOwner}/${githubRepo}`);
+			}
+		} catch (error) {
+			console.log(`Error fetching repository information: ${error}`);
+		}
 
 		console.log(`Ready! Logged in as ${client.user.tag}`);
 		return 1;
