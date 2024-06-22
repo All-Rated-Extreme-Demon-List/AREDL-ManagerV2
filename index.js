@@ -33,7 +33,7 @@ const octokit = new Octokit({ auth: githubToken });
 const db = createDbSchema(sequelize);
 const cache = createCacheDbSchema(sequelize_cache);
 
-module.exports = { db, cache, octokit, client };
+module.exports = { db, cache, octokit, client, sequelize };
 
 // Update levels cache
 cache.update();

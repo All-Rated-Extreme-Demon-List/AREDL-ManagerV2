@@ -214,6 +214,7 @@ module.exports = {
 			// Send message and reply
 			await interaction.channel.send({ embeds : [statusEmbed] });
 			await interaction.editReply('Executed command');
+
 		} else if (interaction.options.getSubcommand() === 'info') {
 
 			// Check user submission infos //
@@ -251,16 +252,31 @@ module.exports = {
 				title = 'Pending records';
 				strInfo += `You have submitted ${nbSubmittedRecords} record(s), out of which ${nbAcceptedRecords} were accepted, ${nbDeniedRecords} denied, and ${nbPendingRecords} still pending\n\n**Oldest pending records**:\n`;
 
-				const oldestPendingRecords = await db.pendingRecords.findAll({
-					where: {
-						submitter: interaction.user.id,
-					},
-					order: [['createdAt', 'ASC']],
-					limit: 20,
-				});
+				const { QueryTypes } = require('sequelize');
+				const { sequelize } = require('../../index.js');
+
+				const oldestPendingRecords = await sequelize.query(
+					`
+					SELECT 
+						*,
+						RANK() OVER (ORDER BY "priority", "createdAt") AS rank
+					FROM 
+						"pendingRecords"
+					WHERE 
+						"submitter" = :submitter
+					ORDER BY 
+						"createdAt" ASC
+					LIMIT 20
+					`,
+					{
+						replacements: { submitter: interaction.user.id },
+						type: QueryTypes.SELECT
+					}
+				);
 
 				for (let i = 0; i < oldestPendingRecords.length; i++) {
-					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - Submitted on ${oldestPendingRecords[i].createdAt.toDateString()}\n`;
+					const createdAt = new Date(oldestPendingRecords[i].createdAt);
+					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - ${oldestPendingRecords[i].rank}/${nbPendingRecords} in queue - Submitted on ${createdAt.toDateString()}\n`;
 				}
 				if (nbPendingRecords > 20) strInfo += '...';
 
