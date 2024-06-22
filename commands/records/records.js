@@ -257,15 +257,12 @@ module.exports = {
 
 				const oldestPendingRecords = await sequelize.query(
 					`
-					SELECT 
-						*,
-						RANK() OVER (ORDER BY "priority", "createdAt") AS rank
+					SELECT pr.*, rank
 					FROM 
-						"pendingRecords"
-					WHERE 
-						"submitter" = :submitter
-					ORDER BY 
-						"createdAt" ASC
+					(SELECT id, RANK() OVER (ORDER BY "priority", "createdAt") AS rank FROM "pendingRecords") as rank_table
+					INNER JOIN "pendingRecords" AS pr ON pr.id = rank_table.id
+					WHERE submitter = :submitter
+					ORDER BY rank
 					LIMIT 20
 					`,
 					{
