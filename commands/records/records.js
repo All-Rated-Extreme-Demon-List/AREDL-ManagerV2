@@ -255,6 +255,7 @@ module.exports = {
 				const { QueryTypes } = require('sequelize');
 				const { sequelize } = require('../../index.js');
 
+				const totalPendingRecords = await db.pendingRecords.count({where: {}});
 				const oldestPendingRecords = await sequelize.query(
 					`
 					SELECT pr.*, rank
@@ -273,7 +274,7 @@ module.exports = {
 
 				for (let i = 0; i < oldestPendingRecords.length; i++) {
 					const createdAt = new Date(oldestPendingRecords[i].createdAt);
-					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - ${oldestPendingRecords[i].rank}/${nbPendingRecords} in queue - Submitted on ${createdAt.toDateString()}\n`;
+					strInfo += `- **${oldestPendingRecords[i].levelname}** - ${oldestPendingRecords[i].username} - ${oldestPendingRecords[i].rank}/${totalPendingRecords} in queue - Submitted on ${createdAt.toDateString()}\n`;
 				}
 				if (nbPendingRecords > 20) strInfo += '...';
 
