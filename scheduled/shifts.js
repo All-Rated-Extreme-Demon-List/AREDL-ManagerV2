@@ -129,6 +129,7 @@ module.exports = {
 			await (await client.channels.fetch(shiftsReminderID)).send(`\n> \n> You have 24 hours to complete this shift. React to this message with a :white_check_mark: so we know that your shift has been completed`);
 			await db.infos.update({status: false}, {where: {name: 'shifts'}});
 		} catch (err) {
+			await db.infos.update({status: false}, {where: {name: 'shifts'}});
 			console.log(`Something went wrong while assigning records:\n${err}`);
 			await (await client.channels.fetch(shiftsReminderID)).send('> :x: Something went wrong while assigning shifts, check error logs');
 		}
