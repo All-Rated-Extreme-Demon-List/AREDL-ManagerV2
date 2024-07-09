@@ -108,8 +108,8 @@ module.exports = {
 			// Check given URL
 			const linkStr = interaction.options.getString('completionlink');
 			if (/\s/g.test(linkStr) || !isUrlHttp(linkStr)) return await interaction.editReply(':x: Couldn\'t submit the record: The provided completion link is not a valid URL');
-			const rawStr = interaction.options.getString('completionlink');
-			if (/\s/g.test(rawStr) || !isUrlHttp(rawStr)) return await interaction.editReply(':x: Couldn\'t submit the record: The provided completion link is not a valid URL');
+			const rawStr = interaction.options.getString('raw');
+			if (/\s/g.test(rawStr) || !isUrlHttp(rawStr)) return await interaction.editReply(':x: Couldn\'t submit the record: The provided raw footage link is not a valid URL');
 
 			// Check given level name
 			const { cache } = require('../../index.js');
