@@ -131,9 +131,10 @@ module.exports = {
 				.addComponents(deny);
 
 			// Embed with record data to send in pending-record-log
+			const level = await cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}});
 			const recordEmbed = new EmbedBuilder()
 				.setColor(0x005c91)
-				.setTitle(`${interaction.options.getString('levelname')}`)
+				.setTitle(`${interaction.options.getString('levelname')} ${level ? `| [#${level.position}]` : ''}`)
 				.setDescription('Unassigned')
 				.addFields(
 					{ name: 'Record submitted by', value: `<@${interaction.user.id}>` },
