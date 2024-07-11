@@ -106,7 +106,7 @@ module.exports = {
 
 		staffGuild.channels.cache.get(acceptedRecordsID).send({ content: `${interaction.user}`, embeds: [acceptEmbed], components: [row] });
 		staffGuild.channels.cache.get(archiveRecordsID).send({ embeds: [archiveEmbed] });
-		guild.channels.cache.get(recordsID).send({ embeds: [publicEmbed] });
+		guild.channels.cache.get(recordsID).send({ content : `<@${record.submitter}>`, embeds: [publicEmbed] });
 		guild.channels.cache.get(recordsID).send({ content : `${record.completionlink}` });
 
 		// Check if we need to send in dms as well
