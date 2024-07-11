@@ -6,7 +6,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('placement')
 		.setDMPermission(false)
-		.setDescription('Bot ping measurements')
+		.setDescription('Look up the placement for any level on the list.')
         .addStringOption(option =>
             option.setName('levelname')
                 .setDescription('Name of the level you\'re looking up the placement for (Be sure to select one of the available options.)')
