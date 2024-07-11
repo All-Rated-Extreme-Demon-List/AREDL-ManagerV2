@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { cache } = require('../../index.js');
+
 
 module.exports = {
 	enabled: true,
@@ -14,6 +14,7 @@ module.exports = {
                 .setRequired(true)
                 .setAutocomplete(true)),
     async autocomplete(interaction) {
+        const { cache } = require('../../index.js');
 		const focusedValue = interaction.options.getFocused();
 		if (focusedValue.length < 2) {
 			return await interaction.respond([]);
@@ -31,6 +32,7 @@ module.exports = {
 
 	},
 	async execute(interaction) {
+        const { cache } = require('../../index.js');
         const level = await cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}});
 
 		await interaction.reply(`**${interaction.options.getString('levelname')}** is placed at **#${level.position}**`);
