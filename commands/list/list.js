@@ -41,7 +41,7 @@ module.exports = {
 					option.setName('password')
 						.setDescription('The GD password of the level to place'))),
 	async execute(interaction) {
-		await interaction.deferReply();
+		await interaction.deferReply({ ephemeral: true});
 
 		if (interaction.options.getSubcommand() === 'place') {
 
