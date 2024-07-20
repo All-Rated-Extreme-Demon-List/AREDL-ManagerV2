@@ -59,6 +59,12 @@ module.exports = {
 			githubCode: Sequelize.STRING,
 			discordid: Sequelize.STRING,
 		});
+
+		db.levelsToMove = sequelize.define('levelsToMove', {
+			filename: Sequelize.STRING,
+			position: Sequelize.INTEGER,
+			discordid: Sequelize.STRING,
+		});
 		
 		db.recordsToCommit = sequelize.define('recordsToCommit', {
 			filename: Sequelize.STRING,

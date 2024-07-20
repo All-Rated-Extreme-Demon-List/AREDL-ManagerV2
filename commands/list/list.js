@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
+const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../../config.json');
 
 module.exports = {
 	cooldown: 5,
@@ -39,7 +40,34 @@ module.exports = {
 						.setDescription('The list of the creators of the level, each separated by a comma'))
 				.addStringOption(option =>
 					option.setName('password')
-						.setDescription('The GD password of the level to place'))),
+						.setDescription('The GD password of the level to place')))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('move')
+				.setDescription('Moves a level to another position on the list')
+				.addStringOption(option =>
+					option.setName('levelname')
+						.setDescription('The name of the level to move')
+						.setAutocomplete(true)
+						.setMinLength(1)
+						.setRequired(true))
+				.addIntegerOption(option =>
+					option.setName('position')
+						.setDescription('The new position to move the level at')
+						.setMinValue(1)
+						.setRequired(true))),
+	async autocomplete(interaction) {
+		const focused = interaction.options.getFocused();
+		const { cache } = require('../../index.js');
+		
+		let results;
+		results = await cache.levels.findAll({where: {}});
+		let levels = results.filter(level => level.name.toLowerCase().includes(focused.toLowerCase()));
+		if (levels.length > 25) levels = levels.slice(0, 25);
+		await interaction.respond(
+			levels.map(level => ({ name:level.name, value: level.filename}))
+		);
+	},
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true});
 
@@ -72,7 +100,6 @@ module.exports = {
 					{ name: 'Verifier:', value: `${verifier}`, inline: true },
 					{ name: 'Verification:', value: `${verification}`, inline: true },
 					{ name: 'Password:', value: `${password}`, inline: true },
-					{ name: 'Position:', value: `${position}`, inline: true },
 				)
 				.setTimestamp();
 			// Create commit buttons
@@ -81,14 +108,8 @@ module.exports = {
 				.setLabel('Commit changes')
 				.setStyle(ButtonStyle.Success);
 
-			const cancel = new ButtonBuilder()
-				.setCustomId('removeMsg')
-				.setLabel('Cancel')
-				.setStyle(ButtonStyle.Danger);
-
 			const row = new ActionRowBuilder()
-				.addComponents(commit)
-				.addComponents(cancel);
+				.addComponents(commit);
 
 			await interaction.editReply({ embeds: [placeEmbed], components: [row] });
 			const sent = await interaction.fetchReply();
@@ -103,6 +124,61 @@ module.exports = {
 			} catch (error) {
 				console.log(`Couldn't register the level ; something went wrong with Sequelize : ${error}`);
 				return await interaction.editReply(':x: Something went wrong while adding the level; Please try again later');
+			}
+			return;
+		} else if (interaction.options.getSubcommand() === 'move') {
+			const { db, octokit, cache } = require('../../index.js');
+
+			const levelfile = interaction.options.getString('levelname');
+			const position = interaction.options.getInteger('position');
+
+			let list_response;
+			try {
+				list_response = await octokit.rest.repos.getContent({
+					owner: githubOwner,
+					repo: githubRepo,
+					path: githubDataPath + '/_list.json',
+					branch: githubBranch,
+				});
+			} catch (_) {
+				return await interaction.editReply(':x: Something went wrong while fetching data from github, please try again later');
+			}
+
+			const list = JSON.parse(Buffer.from(list_response.data.content, 'base64').toString('utf-8'));
+
+			const currentPosition = list.indexOf(levelfile);
+			if (currentPosition == -1) return await interaction.editReply(':x: The level you are trying to move is not on the list');
+
+			const levelAbove = (currentPosition < position ? list[position - 1] : list[position - 2]) ?? null;
+			const levelBelow = (currentPosition < position ? list[position] : list[position - 1]) ?? null;
+
+			const moveEmbed = new EmbedBuilder()
+				.setColor(0x8fce00)
+				.setTitle(`Move Level: ${levelfile}`)
+				.setDescription(`${levelfile} will be ${currentPosition < position ? "lowered" : "raised"} to #${position}, above ${levelBelow ?? '-'} and below ${levelAbove ?? '-'}`)
+				.setTimestamp();
+
+			// Create commit buttons
+			const commit = new ButtonBuilder()
+				.setCustomId('commitMoveLevel')
+				.setLabel('Commit changes')
+				.setStyle(ButtonStyle.Success);
+
+			const row = new ActionRowBuilder()
+				.addComponents(commit);
+
+			await interaction.editReply({ embeds: [moveEmbed], components: [row] });
+			const sent = await interaction.fetchReply();
+
+			try {
+				await db.levelsToMove.create({
+					filename: levelfile,
+					position: position,
+					discordid: sent.id,
+				});
+			} catch (error) {
+				console.log(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
+				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
 			}
 			return;
 		}
