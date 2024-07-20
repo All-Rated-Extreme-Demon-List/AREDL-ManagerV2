@@ -159,6 +159,7 @@ module.exports = {
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (updateRefError)');
 			}
 
+			console.log(`${interaction.user.tag} (${interaction.user.id}) placed ${level.filename} at ${level.position}`);
 			try {
 				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}`);
 				db.levelsToPlace.destroy({ where: { discordid: level.discordid } });

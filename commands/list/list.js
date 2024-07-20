@@ -45,7 +45,7 @@ module.exports = {
 
 		if (interaction.options.getSubcommand() === 'place') {
 
-			const { db } = require('../../index.js');
+			const { db, cache } = require('../../index.js');
 
 			const levelname = interaction.options.getString('levelname');
 			const position = interaction.options.getInteger('position');
@@ -59,9 +59,12 @@ module.exports = {
 
 			const githubCode = `{\n\t"id": ${id},\n\t"name": "${levelname}",\n\t"author": "${uploader}",\n\t"creators": ${strCreators},\n\t"verifier": "${verifier}",\n\t"verification": "${verification}",\n\t"percentToQualify": 100,\n\t"password": "${password}",\n\t"records" : []\n}`;
 
+			const levelBelow = await cache.levels.findOne({ where: { position: position } });
+			const levelAbove = await cache.levels.findOne({ where: { position: position - 1 } });
 			const placeEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
 				.setTitle(`Place Level: ${levelname}`)
+				.setDescription(`${levelname} will be placed at #${position}, above ${levelBelow ? levelBelow.name : '-'} and below ${levelAbove ? levelAbove.name : '-'}`)
 				.addFields(
 					{ name: 'ID:', value: `${id}`, inline: true },
 					{ name: 'Uploader:', value: `${uploader}`, inline: true },
@@ -99,7 +102,6 @@ module.exports = {
 				});
 			} catch (error) {
 				console.log(`Couldn't register the level ; something went wrong with Sequelize : ${error}`);
-				await sent.delete();
 				return await interaction.editReply(':x: Something went wrong while adding the level; Please try again later');
 			}
 			return;
