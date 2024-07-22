@@ -8,6 +8,10 @@ module.exports = {
 
 		// Check for level info corresponding to the message id
 		const level = await db.levelsToPlace.findOne({ where: { discordid: interaction.message.id } });
+		if (!level) {
+			await interaction.editReply(':x: This action is no longer available');
+			return await interaction.message.delete();
+		}
 
 		let list_response;
 		let changelog_response;
@@ -34,24 +38,24 @@ module.exports = {
 			console.log('No changelog file found, creating a new one');
 		}
 
-		const jsonList = JSON.parse(Buffer.from(list_response.data.content, 'base64').toString('utf-8'));
-		const nbLevels = jsonList.length;
+		const list = JSON.parse(Buffer.from(list_response.data.content, 'base64').toString('utf-8'));
 
 		const changelogList = changelog_response ? JSON.parse(Buffer.from(changelog_response.data.content, 'base64').toString('utf-8')) : [];
 
-		if (level.position < 1 || level.position > nbLevels + 1) {
+		if (level.position < 1 || level.position > list.length + 1) {
 			return await interaction.editReply(':x: The given position is incorrect');
 		}
 
-		jsonList.splice(level.position - 1, 0, level.filename);
+		list.splice(level.position - 1, 0, level.filename);
+		
 		changelogList.push({
 			"date": Math.floor(new Date().getTime() / 1000),
 			"action": "placed",
 			"name": level.filename,
 			"to_rank": level.position,
 			"from_rank": null,
-			"above": jsonList[level.position] || null,
-			"below": jsonList[level.position - 2] || null,
+			"above": list[level.position] || null,
+			"below": list[level.position - 2] || null,
 		});
 
 		// Check if file already exists
@@ -72,7 +76,7 @@ module.exports = {
 			const changes = [
 				{
 					path: githubDataPath + '/_list.json',
-					content: JSON.stringify(jsonList, null, '\t'),
+					content: JSON.stringify(list, null, '\t'),
 				},
 				{
 					path: githubDataPath + `/${level.filename}.json`,

@@ -55,13 +55,39 @@ module.exports = {
 					option.setName('position')
 						.setDescription('The new position to move the level at')
 						.setMinValue(1)
+						.setRequired(true)))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('tolegacy')
+				.setDescription('Moves a level to the top of the legacy list')
+				.addStringOption(option =>
+					option.setName('levelname')
+						.setDescription('The name of the level to move')
+						.setAutocomplete(true)
+						.setMinLength(1)
+						.setRequired(true)))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('fromlegacy')
+				.setDescription('Moves a level from the legacy list to the main list')
+				.addStringOption(option =>
+					option.setName('levelname')
+						.setDescription('The name of the level to move')
+						.setAutocomplete(true)
+						.setMinLength(1)
+						.setRequired(true))
+				.addIntegerOption(option =>
+					option.setName('position')
+						.setDescription('The position to place the level at')
 						.setRequired(true))),
 	async autocomplete(interaction) {
 		const focused = interaction.options.getFocused();
 		const { cache } = require('../../index.js');
-		
+		const subcommand = interaction.options.getSubcommand();
+
 		let results;
-		results = await cache.levels.findAll({where: {}});
+		results = subcommand === "fromlegacy" ? await cache.legacy.findAll({where: {}}) : await cache.levels.findAll({where: {}});
+
 		let levels = results.filter(level => level.name.toLowerCase().includes(focused.toLowerCase()));
 		if (levels.length > 25) levels = levels.slice(0, 25);
 		await interaction.respond(
@@ -92,7 +118,7 @@ module.exports = {
 			const placeEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
 				.setTitle(`Place Level: ${levelname}`)
-				.setDescription(`${levelname} will be placed at #${position}, above ${levelBelow ? levelBelow.name : '-'} and below ${levelAbove ? levelAbove.name : '-'}`)
+				.setDescription(`**${levelname}** will be placed at **#${position}**, above **${levelBelow ? levelBelow.name : '-'}** and below **${levelAbove ? levelAbove.name : '-'}**`)
 				.addFields(
 					{ name: 'ID:', value: `${id}`, inline: true },
 					{ name: 'Uploader:', value: `${uploader}`, inline: true },
@@ -127,7 +153,7 @@ module.exports = {
 			}
 			return;
 		} else if (interaction.options.getSubcommand() === 'move') {
-			const { db, octokit, cache } = require('../../index.js');
+			const { db, octokit } = require('../../index.js');
 
 			const levelfile = interaction.options.getString('levelname');
 			const position = interaction.options.getInteger('position');
@@ -149,13 +175,13 @@ module.exports = {
 			const currentPosition = list.indexOf(levelfile);
 			if (currentPosition == -1) return await interaction.editReply(':x: The level you are trying to move is not on the list');
 
-			const levelAbove = (currentPosition < position ? list[position - 1] : list[position - 2]) ?? null;
-			const levelBelow = (currentPosition < position ? list[position] : list[position - 1]) ?? null;
+			const levelAbove = (currentPosition + 1 < position ? list[position - 1] : list[position - 2]) ?? null;
+			const levelBelow = (currentPosition + 1 < position ? list[position] : list[position - 1]) ?? null;
 
 			const moveEmbed = new EmbedBuilder()
 				.setColor(0x8fce00)
 				.setTitle(`Move Level: ${levelfile}`)
-				.setDescription(`${levelfile} will be ${currentPosition < position ? "lowered" : "raised"} to #${position}, above ${levelBelow ?? '-'} and below ${levelAbove ?? '-'}`)
+				.setDescription(`**${levelfile}** will be ${currentPosition + 1 < position ? "lowered" : "raised"} to **#${position}**, above **${levelBelow ?? '-'}** and below **${levelAbove ?? '-'}**`)
 				.setTimestamp();
 
 			// Create commit buttons
@@ -172,6 +198,108 @@ module.exports = {
 
 			try {
 				await db.levelsToMove.create({
+					filename: levelfile,
+					position: position,
+					discordid: sent.id,
+				});
+			} catch (error) {
+				console.log(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
+				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
+			}
+			return;
+		} else if (interaction.options.getSubcommand() === 'tolegacy') {
+			const { db, octokit } = require('../../index.js');
+
+			const levelfile = interaction.options.getString('levelname');
+
+			let list_response;
+			try {
+				list_response = await octokit.rest.repos.getContent({
+					owner: githubOwner,
+					repo: githubRepo,
+					path: githubDataPath + '/_list.json',
+					branch: githubBranch,
+				});
+				
+			} catch (_) {
+				return await interaction.editReply(':x: Something went wrong while fetching data from github, please try again later');
+			}
+
+			const list = JSON.parse(Buffer.from(list_response.data.content, 'base64').toString('utf-8'));
+			const currentPosition = list.indexOf(levelfile);
+
+			if (currentPosition == -1) return await interaction.editReply(':x: The level you are trying to move is not on the list');
+
+			const moveEmbed = new EmbedBuilder()
+				.setColor(0x8fce00)
+				.setTitle(`Move to Legacy: ${levelfile}`)
+				.setDescription(`**${levelfile}** will be moved from **#${currentPosition + 1}** to the top of the **legacy** list (**#${list.length}**)`)
+				.setTimestamp();
+
+			const commit = new ButtonBuilder()
+				.setCustomId('commitLevelToLegacy')
+				.setLabel('Commit changes')
+				.setStyle(ButtonStyle.Success);
+
+			const row = new ActionRowBuilder()
+				.addComponents(commit);
+
+			await interaction.editReply({ embeds: [moveEmbed], components: [row] });
+			const sent = await interaction.fetchReply();
+
+			try {
+				await db.levelsToLegacy.create({
+					filename: levelfile,
+					discordid: sent.id,
+				});
+			} catch (error) {
+				console.log(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
+				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
+			}
+			return;
+		} else if (interaction.options.getSubcommand() === 'fromlegacy') {
+			const { db, octokit } = require('../../index.js');
+
+			const levelfile = interaction.options.getString('levelname');
+			const position = interaction.options.getInteger('position');
+
+			let list_response;
+			try {
+				list_response = await octokit.rest.repos.getContent({
+					owner: githubOwner,
+					repo: githubRepo,
+					path: githubDataPath + '/_list.json',
+					branch: githubBranch,
+				});
+			} catch (_) {
+				return await interaction.editReply(':x: Something went wrong while fetching data from github, please try again later');
+			}
+
+			const list = JSON.parse(Buffer.from(list_response.data.content, 'base64').toString('utf-8'));
+
+			const levelAbove = list[position - 2] ?? null;
+			const levelBelow = list[position - 1] ?? null;
+
+			const moveEmbed = new EmbedBuilder()
+				.setColor(0x8fce00)
+				.setTitle(`Move Level: ${levelfile}`)
+				.setDescription(`**${levelfile}** will be moved from **legacy** to **#${position}**, above **${levelBelow ?? '-'}** and below **${levelAbove ?? '-'}**`)
+				.setTimestamp();
+
+			// Create commit buttons
+			const commit = new ButtonBuilder()
+				.setCustomId('commitLevelFromLegacy')
+				.setLabel('Commit changes')
+				.setStyle(ButtonStyle.Success);
+
+			const row = new ActionRowBuilder()
+				.addComponents(commit);
+
+			await interaction.editReply({ embeds: [moveEmbed], components: [row] });
+			const sent = await interaction.fetchReply();
+
+			try {
+				await db.levelsFromLegacy.create({
 					filename: levelfile,
 					position: position,
 					discordid: sent.id,

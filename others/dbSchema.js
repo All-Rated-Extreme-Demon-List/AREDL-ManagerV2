@@ -65,7 +65,18 @@ module.exports = {
 			position: Sequelize.INTEGER,
 			discordid: Sequelize.STRING,
 		});
+
+		db.levelsToLegacy = sequelize.define('levelsToLegacy', {
+			filename: Sequelize.STRING,
+			discordid: Sequelize.STRING,
+		});
 		
+		db.levelsFromLegacy = sequelize.define('levelsFromLegacy', {
+			filename: Sequelize.STRING,
+			position: Sequelize.INTEGER,
+			discordid: Sequelize.STRING,
+		});
+
 		db.recordsToCommit = sequelize.define('recordsToCommit', {
 			filename: Sequelize.STRING,
 			githubCode: Sequelize.STRING,
@@ -138,6 +149,12 @@ module.exports = {
 			position: Sequelize.INTEGER,
 			filename: Sequelize.STRING,
 		});
+
+		cache.legacy = sequelize_cache.define('legacy_levels', {
+			name:Sequelize.STRING,
+			position: Sequelize.INTEGER,
+			filename: Sequelize.STRING,
+		})
 
 		cache.update = async () => await updateCache();
 		return cache;
