@@ -15,6 +15,10 @@ module.exports = {
 				.setDescription('Shows how many records you\'ve checked'))
 		.addSubcommand(subcommand =>
 			subcommand
+				.setName('modleaderboard')
+				.setDescription('Shows list staff records leaderboard'))
+		.addSubcommand(subcommand =>
+			subcommand
 				.setName('recordsinfo')
 				.setDescription('Shows info on people with the most pending/accepted/denied records')
 				.addStringOption(option =>
@@ -181,6 +185,32 @@ module.exports = {
 				.setImage('attachment://modgraph.png');
 
 			return await interaction.editReply({ embeds: [ modInfoEmbed ], files: [attachment] });
+
+
+		} else if (interaction.options.getSubcommand() === 'modleaderboard') {
+
+			// Display staff records leaderboard //
+
+			// Get number of staff
+			const nbTotal = await db.staffStats.count();
+			// Get sqlite data, ordered by descending number of records, limited to top 20 for now (maybe add a page system later)
+			const modInfos = await db.staffStats.findAll({ limit: 30, order: [ ['nbRecords', 'DESC'] ], attributes: ['moderator', 'nbRecords', 'nbAccepted', 'nbDenied', 'updatedAt'] });
+			if (!nbTotal || !modInfos) return await interaction.editReply(':x: Something went wrong while executing the command');
+
+			let strModData = '';
+			for (let i = 0; i < modInfos.length; i++) {
+				strModData += `**${i + 1}** - <@${modInfos[i].moderator}> - ${modInfos[i].nbRecords} records (${modInfos[i].nbAccepted} A, ${modInfos[i].nbDenied} D) - Last activity : ${modInfos[i].updatedAt.toDateString()}\n`;
+			}
+
+			// Embed displaying the data
+			const modEmbed = new EmbedBuilder()
+				.setColor(0xFFBF00)
+				.setAuthor({ name: 'Moderator leaderboard' })
+				.setDescription(strModData)
+				.setTimestamp();
+
+			// Send reply
+			return await interaction.editReply({ embeds: [ modEmbed ] });
 
 
 		} else if (interaction.options.getSubcommand() === 'recordsinfo') {
