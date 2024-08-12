@@ -189,6 +189,7 @@ module.exports = {
 
 		} else if (interaction.options.getSubcommand() === 'modleaderboard') {
 			const { db } = require('../../index.js');
+			await interaction.deferReply({ ephemeral: true });
 			// Display staff records leaderboard //
 
 			// Get number of staff
