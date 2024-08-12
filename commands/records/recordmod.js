@@ -188,7 +188,7 @@ module.exports = {
 
 
 		} else if (interaction.options.getSubcommand() === 'modleaderboard') {
-
+			const { db } = require('../../index.js');
 			// Display staff records leaderboard //
 
 			// Get number of staff
