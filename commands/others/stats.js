@@ -203,7 +203,12 @@ module.exports = {
 
 			const { db } = require('../../index.js');
 
-			let filePath = "";
+			const exportDir = path.join(__dirname, '../../data/exports/');
+            if (!fs.existsSync(exportDir)) {
+                fs.mkdirSync(exportDir, { recursive: true });
+            }
+			const filePath = path.join(exportDir, `database_export_${Date.now()}.xlsx`);
+            
 
 			try {
 				const workbook = new ExcelJS.Workbook();
@@ -254,7 +259,6 @@ module.exports = {
 				deniedRecords.forEach(record => deniedSheet.addRow(record.toJSON()));
 				dailyStats.forEach(stat => dailyStatsSheet.addRow(stat.toJSON()));
 
-				filePath = path.join(__dirname, '../../data/exports/', `database_export_${Date.now()}.xlsx`);
 				await workbook.xlsx.writeFile(filePath);
 
 				const fileAttachment = new AttachmentBuilder(filePath, { name: 'database_export.xlsx' });
