@@ -1,6 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const Sequelize = require('sequelize');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
+const path = require('path');
+const ExcelJS = require('exceljs');
+const fs = require('fs');
 
 module.exports = {
 	cooldown: 5,
@@ -20,7 +23,11 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('servertraffic')
-				.setDescription('Shows info about server members traffic')),
+				.setDescription('Shows info about server members traffic'))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('exportdb')
+				.setDescription('Exports the records database')),
 
 	async execute(interaction) {
 
@@ -192,6 +199,72 @@ module.exports = {
 			return await interaction.editReply({ embeds: [membersStatsEmbed], files: [membersAttachment] });
 
 
+		} else if (interaction.options.getSubcommand() === 'exportdb') {
+
+			const { db } = require('../../index.js');
+
+			let filePath = "";
+
+			try {
+				const workbook = new ExcelJS.Workbook();
+				const pendingSheet = workbook.addWorksheet('Pending Records');
+				const acceptedSheet = workbook.addWorksheet('Accepted Records');
+				const deniedSheet = workbook.addWorksheet('Denied Records');
+				const dailyStatsSheet = workbook.addWorksheet('Daily Stats');
+
+				// Add columns to the sheets
+				pendingSheet.columns = [
+					{ header: 'Username', key: 'username', width: 25 },
+					{ header: 'Level Name', key: 'levelname', width: 30 },
+					{ header: 'Device', key: 'device', width: 20 },
+					{ header: 'Created At', key: 'createdAt', width: 25 },
+				];
+
+				acceptedSheet.columns = [
+					{ header: 'Username', key: 'username', width: 25 },
+					{ header: 'Level Name', key: 'levelname', width: 30 },
+					{ header: 'Device', key: 'device', width: 20 },
+					{ header: 'Created At', key: 'createdAt', width: 25 },
+				];
+
+				deniedSheet.columns = [
+					{ header: 'Username', key: 'username', width: 25 },
+					{ header: 'Level Name', key: 'levelname', width: 30 },
+					{ header: 'Device', key: 'device', width: 20 },
+					{ header: 'Created At', key: 'createdAt', width: 25 },
+				];
+
+				dailyStatsSheet.columns = [
+					{ header: 'Date', key: 'date', width: 15 },
+					{ header: 'Records Submitted', key: 'nbRecordsSubmitted', width: 25 },
+					{ header: 'Records Pending', key: 'nbRecordsPending', width: 25 },
+					{ header: 'Records Accepted', key: 'nbRecordsAccepted', width: 25 },
+					{ header: 'Records Denied', key: 'nbRecordsDenied', width: 25 },
+					{ header: 'Members Joined', key: 'nbMembersJoined', width: 20 },
+					{ header: 'Members Left', key: 'nbMembersLeft', width: 20 },
+				];
+
+				const pendingRecords = await db.pendingRecords.findAll({ attributes: ['username', 'levelname', 'device', 'createdAt'] });
+				const acceptedRecords = await db.acceptedRecords.findAll({ attributes: ['username', 'levelname', 'device', 'createdAt'] });
+				const deniedRecords = await db.deniedRecords.findAll({ attributes: ['username', 'levelname', 'device', 'createdAt'] });
+				const dailyStats = await db.dailyStats.findAll({ attributes: ['date', 'nbRecordsSubmitted', 'nbRecordsPending', 'nbRecordsAccepted', 'nbRecordsDenied', 'nbMembersJoined', 'nbMembersLeft'] });
+
+				pendingRecords.forEach(record => pendingSheet.addRow(record.toJSON()));
+				acceptedRecords.forEach(record => acceptedSheet.addRow(record.toJSON()));
+				deniedRecords.forEach(record => deniedSheet.addRow(record.toJSON()));
+				dailyStats.forEach(stat => dailyStatsSheet.addRow(stat.toJSON()));
+
+				filePath = path.join(__dirname, '../../data/exports/', `database_export_${Date.now()}.xlsx`);
+				await workbook.xlsx.writeFile(filePath);
+
+				const fileAttachment = new AttachmentBuilder(filePath, { name: 'database_export.xlsx' });
+				await interaction.editReply({ content: ':white_check_mark: Exported data successfully:', files: [fileAttachment] });
+
+				fs.unlinkSync(filePath);
+			} catch (error) {
+				console.error(error);
+				await interaction.editReply({ content: ':x: An error occurred while exporting the database.' });
+			}
 		}
 	},
 };
