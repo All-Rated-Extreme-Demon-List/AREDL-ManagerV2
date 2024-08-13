@@ -13,6 +13,7 @@
     "@octokit/rest": "^20.0.2",
     "chartjs-node-canvas": "^4.1.6",
     "discord.js": "^14.13.0",
+    "exceljs": "^4.4.0",
     "is-url-http": "^2.3.8",
     "log-timestamp": "^0.3.0",
     "node-cron": "^3.0.3",
