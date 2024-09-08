@@ -12,7 +12,7 @@ module.exports = {
 		for (const table of Object.keys(db)) await db[table].sync({ alter: true});
 
 		for (const table of Object.keys(cache)) {
-			if (table !== 'update')	await cache[table].sync({ alter: true});
+			if (table !== 'updateLevels' && table !== 'updateUsers')	await cache[table].sync({ alter: true});
 		}
 		cache.levels.sync({alter: true});
 
@@ -35,6 +35,11 @@ module.exports = {
 				name: 'commitdebug',
 			});
 		}
+
+		// Update levels cache
+		cache.updateLevels();
+		// Update users cache
+		cache.updateUsers();
 
 		console.log('Checking pending record data...');
 

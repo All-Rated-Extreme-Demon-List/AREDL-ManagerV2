@@ -26,9 +26,14 @@ module.exports = {
 		const shiftsLock = await db.infos.findOne({ where: { name: 'shifts' } });
 		if (!shiftsLock || shiftsLock.status) return await interaction.editReply(':x: The bot is currently assigning shifts, please wait a few minutes before checking records.');
 
-		// Create embed to send with github code
-		const githubCode = `{\n\t\t"user": "${record.username}",\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": 360` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');
 		const { cache } = require('../index.js');
+
+		// Get cached user
+		const user = await cache.users.findOne({ where: { name: record.username } });
+		if (!user) return await interaction.editReply(':x: Couldn\'t find the user this record was submitted for (their name might have changed since they submitted it)');
+		// Create embed to send with github code
+		const githubCode = `{\n\t\t"user": ${user.user_id},\n\t\t"link": "${record.completionlink}",\n\t\t"percent": 100,\n\t\t"hz": 360` + (record.device == 'Mobile' ? ',\n\t\t"mobile": true\n}\n' : '\n}');
+		
 		const level = await cache.levels.findOne({ where: {name: record.levelname}});
 		try {
 			await db.recordsToCommit.create({

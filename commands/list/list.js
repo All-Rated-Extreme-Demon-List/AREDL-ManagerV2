@@ -79,20 +79,40 @@ module.exports = {
 				.addIntegerOption(option =>
 					option.setName('position')
 						.setDescription('The position to place the level at')
+						.setRequired(true)))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('renameuser')
+				.setDescription('Renames a user')
+				.addStringOption(option =>
+					option.setName('user')
+						.setDescription('The name of the user to rename')
+						.setRequired(true)
+						.setAutocomplete(true))
+				.addStringOption(option =>
+					option.setName('newname')
+						.setDescription('The new name of the user')
 						.setRequired(true))),
 	async autocomplete(interaction) {
 		const focused = interaction.options.getFocused();
 		const { cache } = require('../../index.js');
 		const subcommand = interaction.options.getSubcommand();
-
-		let results;
-		results = subcommand === "fromlegacy" ? await cache.legacy.findAll({where: {}}) : await cache.levels.findAll({where: {}});
-
-		let levels = results.filter(level => level.name.toLowerCase().includes(focused.toLowerCase()));
-		if (levels.length > 25) levels = levels.slice(0, 25);
-		await interaction.respond(
-			levels.map(level => ({ name:level.name, value: level.filename}))
-		);
+		if (subcommand === 'renameuser') return await interaction.respond(
+			(await 
+				cache.users
+				.findAll({where: {}})
+			).filter(user => user.name.toLowerCase().includes(focused.toLowerCase()))
+				.slice(0,25)
+				.map(user => ({ name: user.name, value: user.user_id }))
+			);
+		else return await interaction.respond(
+			(await 
+				(subcommand === "fromlegacy" ? cache.legacy : cache.levels)
+				.findAll({where: {}})
+			).filter(level => level.name.toLowerCase().includes(focused.toLowerCase()))
+				.slice(0,25)
+				.map(level => ({ name: level.name, value: level.filename }))
+			);
 	},
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true});
@@ -309,6 +329,127 @@ module.exports = {
 				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
 			}
 			return;
+		} else if (interaction.options.getSubcommand() === 'renameuser') {
+			const { cache, octokit } = require('../../index.js');
+			const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../../config.json');
+
+			const userID = interaction.options.getString('user');
+			const newname = interaction.options.getString('newname');
+
+			const user = await cache.users.findOne({ where: { user_id: userID } });
+			if (!user) return await interaction.editReply(':x: Couldn\'t find the user you are trying to rename');
+
+			// Change user on github
+			let name_map_response;	
+			try {
+				name_map_response = await octokit.rest.repos.getContent({
+					owner: githubOwner,
+					repo: githubRepo,
+					path: githubDataPath + '/_name_map.json',
+					branch: githubBranch,
+				});
+
+			} catch (fetchError) {
+				console.log(`Failed to fetch _name_map.json: ${fetchError}`);
+				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
+			}
+
+			const names = JSON.parse(Buffer.from(name_map_response.data.content, 'base64').toString('utf-8'));
+			names[userID] = newname;
+
+			const changes = [
+				{
+					path: githubDataPath + '/_name_map.json',
+					content: JSON.stringify(names, null, '\t'),
+				}
+			];
+
+			let commitSha;
+			try {
+				// Get the SHA of the latest commit from the branch
+				const { data: refData } = await octokit.git.getRef({
+					owner: githubOwner,
+					repo: githubRepo,
+					ref: `heads/${githubBranch}`,
+				});
+				commitSha = refData.object.sha;
+			} catch (getRefErr) {
+				console.log(`Failed to get the latest commit SHA: ${getRefErr}`);
+				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
+			}
+
+			let treeSha;
+			try {
+				// Get the commit using its SHA
+				const { data: commitData } = await octokit.git.getCommit({
+					owner: githubOwner,
+					repo: githubRepo,
+					commit_sha: commitSha,
+				});
+				treeSha = commitData.tree.sha;
+			} catch (getCommitErr) {
+				console.log(`Failed to get the commit SHA: ${getCommitErr}`);
+				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
+			}
+
+			let newTree;
+			try {
+				// Create a new tree with the changes
+				newTree = await octokit.git.createTree({
+					owner: githubOwner,
+					repo: githubRepo,
+					base_tree: treeSha,
+					tree: changes.map(change => ({
+						path: change.path,
+						mode: '100644',
+						type: 'blob',
+						content: change.content,
+					})),
+				});
+			} catch (createTreeErr) {
+				console.log(`Failed to create a new tree: ${createTreeErr}`);
+				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
+			}
+
+			let newCommit;
+			try {
+				// Create a new commit with this tree
+				newCommit = await octokit.git.createCommit({
+					owner: githubOwner,
+					repo: githubRepo,
+					message: `${interaction.user.tag} renamed ${user.name} to ${newname}`,
+					tree: newTree.data.sha,
+					parents: [commitSha],
+				});
+			} catch (createCommitErr) {
+				console.log(`Failed to create a new commit: ${createCommitErr}`);
+				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
+			}
+
+			try {
+				// Update the branch to point to the new commit
+				await octokit.git.updateRef({
+					owner: githubOwner,
+					repo: githubRepo,
+					ref: `heads/${githubBranch}`,
+					sha: newCommit.data.sha,
+				});
+			} catch (updateRefErr) {
+				console.log(`Failed to update the branch: ${updateRefErr}`);
+				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
+			}
+
+			const { db } = require('../../index.js');
+			try {
+				await db.pendingRecords.update({ username: newname }, { where: { username: user.name } });
+				await db.acceptedRecords.update({ username: newname }, { where: { username: user.name } });
+				await db.deniedRecords.update({ username: newname }, { where: { username: user.name } });
+			} catch(error) {
+				console.log(`Failed to update records (username change): ${error}`);
+			}
+			cache.updateUsers();
+			console.log(`${interaction.user.tag} (${interaction.user.id}) renamed ${user.name} (${user.user_id}) to ${newname}`);
+			return await interaction.editReply(`:white_check_mark: Successfully renamed **${user.name}** to **${newname}**`);
 		}
 	},
 };

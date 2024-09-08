@@ -15,8 +15,9 @@ module.exports = {
 				.setDescription('Submit a record for the list')
 				.addStringOption(option =>
 					option.setName('username')
-						.setDescription('The name that will show up on records and the leaderboard (KEEP CONSISTENT BETWEEN RECORDS)')
+						.setDescription('The username you\'re submitting for (Be sure to select one of the available options.)')
 						.setMaxLength(1024)
+						.setAutocomplete(true)
 						.setRequired(true))
 				.addStringOption(option =>
 					option.setName('levelname')
@@ -64,25 +65,40 @@ module.exports = {
 							{ name: 'Pending', value: 'pending' },
 							{ name: 'Accepted', value: 'accepted' },
 							{ name: 'Denied', value: 'denied' },
-						))),
+						)))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('createuser')
+				.setDescription('Creates a new AREDL account')
+				.addStringOption(option =>
+					option.setName('username')
+						.setDescription('The username you want to create')
+						.setRequired(true)
+						.setMaxLength(1024))),
 	async autocomplete(interaction) {
-		const focusedValue = interaction.options.getFocused();
-		if (focusedValue.length < 2) {
-			return await interaction.respond([]);
-		} else {
-			const { cache } = require('../../index.js');
-			const Sequelize = require('sequelize');
+		const focused = interaction.options.getFocused(true);
+		
+		const { cache } = require('../../index.js');
+		const Sequelize = require('sequelize');
 
+		if (focused.name === 'levelname') {
 			let levels = await cache.levels.findAll({
 				where: { 
-					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', focusedValue.toLowerCase() + '%')
+					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', focused.value.toLowerCase() + '%')
 				}});
-			if (levels.length > 25) levels = levels.slice(0, 25);
+
 			await interaction.respond(
-				levels.map(level => ({ name:level.name, value: level.name })),
+				levels.slice(0,25).map(level => ({ name:level.name, value: level.name })),
+			);
+		} else if (focused.name === 'username') {
+			let users = await cache.users.findAll({
+				where: { 
+					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', '%' + focused.value.toLowerCase() + '%')
+				}});
+			await interaction.respond(
+				users.slice(0,25).map(user => ({ name:user.name, value: user.name })),
 			);
 		}
-
 	},
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true });
@@ -115,6 +131,9 @@ module.exports = {
 			const { cache } = require('../../index.js');
 			if (!(await cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}}))) return await interaction.editReply(':x: Couldn\'t submit the record: the given level name is not on the list (please be sure to select one of the available options)');
 
+			// Check given username
+			if (!(await cache.users.findOne({where: {name: [interaction.options.getString('username')]}}))) return await interaction.editReply(':x: Couldn\'t submit the record: this user does not exist. If it\'s your first time submitting a record, use /record createuser to create a new one. Otherwise, please be sure to select your username from the available options');
+			
 			// Create accept/deny buttons
 			const accept = new ButtonBuilder()
 				.setCustomId('accept')
@@ -327,6 +346,140 @@ module.exports = {
 				.setTimestamp();
 
 			return await interaction.editReply({ embeds: [infoEmbed] });
+		} else if (interaction.options.getSubcommand() === 'createuser') {
+
+			// Create a new user //
+
+			const { cache, octokit } = require('../../index.js');
+			const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../../config.json');
+			const Sequelize = require('sequelize');
+
+			// Check if user already exists
+			if (await cache.users.findOne({
+				where: Sequelize.where(
+					Sequelize.fn('LOWER', Sequelize.col('name')),
+					interaction.options.getString('username').toLowerCase()
+				)
+			}))
+			return await interaction.editReply(':x: Couldn\'t create the user: this user already exists');
+
+			// Add user to github
+			let name_map_response;	
+			try {
+				name_map_response = await octokit.rest.repos.getContent({
+					owner: githubOwner,
+					repo: githubRepo,
+					path: githubDataPath + '/_name_map.json',
+					branch: githubBranch,
+				});
+
+			} catch (fetchError) {
+				console.log(`Failed to fetch _name_map.json: ${fetchError}`);
+				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
+			}
+
+			const names = JSON.parse(Buffer.from(name_map_response.data.content, 'base64').toString('utf-8'));
+			
+			const idDigits = 10;
+			const idLower = Math.pow(10, idDigits - 1);
+			const idUpper = Math.pow(10, idDigits) - 1;
+
+			let userId = 0;
+			while (userId === 0) {
+				const randomId = Math.floor(Math.random() * (idUpper - idLower + 1)) + idLower;
+				if (!Object.keys(names).includes(randomId)) {
+					userId = randomId;
+				}
+			}
+    
+			names[userId] = interaction.options.getString('username');
+			const changes = [
+				{
+					path: githubDataPath + '/_name_map.json',
+					content: JSON.stringify(names, null, '\t'),
+				}
+			];
+
+			let commitSha;
+			try {
+				// Get the SHA of the latest commit from the branch
+				const { data: refData } = await octokit.git.getRef({
+					owner: githubOwner,
+					repo: githubRepo,
+					ref: `heads/${githubBranch}`,
+				});
+				commitSha = refData.object.sha;
+			} catch (getRefErr) {
+				console.log(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
+				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
+			}
+
+			let treeSha;
+			try {
+				// Get the commit using its SHA
+				const { data: commitData } = await octokit.git.getCommit({
+					owner: githubOwner,
+					repo: githubRepo,
+					commit_sha: commitSha,
+				});
+				treeSha = commitData.tree.sha;
+			} catch (getCommitErr) {
+				console.log(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
+				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
+			}
+
+			let newTree;
+			try {
+				// Create a new tree with the changes
+				newTree = await octokit.git.createTree({
+					owner: githubOwner,
+					repo: githubRepo,
+					base_tree: treeSha,
+					tree: changes.map(change => ({
+						path: change.path,
+						mode: '100644',
+						type: 'blob',
+						content: change.content,
+					})),
+				});
+			} catch (createTreeErr) {
+				console.log(`Something went wrong while creating a new tree: \n${createTreeErr}`);
+				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
+			}
+
+			let newCommit;
+			try {
+				// Create a new commit with this tree
+				newCommit = await octokit.git.createCommit({
+					owner: githubOwner,
+					repo: githubRepo,
+					message: `${interaction.user.tag} created a new user: ${interaction.options.getString('username')}`,
+					tree: newTree.data.sha,
+					parents: [commitSha],
+				});
+			} catch (createCommitErr) {
+				console.log(`Something went wrong while creating a new commit: \n${createCommitErr}`);
+				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
+			}
+
+			try {
+				// Update the branch to point to the new commit
+				await octokit.git.updateRef({
+					owner: githubOwner,
+					repo: githubRepo,
+					ref: `heads/${githubBranch}`,
+					sha: newCommit.data.sha,
+				});
+			} catch (updateRefErr) {
+				console.log(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
+				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
+			}
+
+			// Add user to cache
+			cache.updateUsers();
+
+			console.log(`${interaction.user.tag} (${interaction.user.id}) created a new user: ${interaction.options.getString('username')}`);
+			await interaction.editReply(`:white_check_mark: Successfully created the user: **${interaction.options.getString('username')}**. You can now submit records.`);
 		}
 	},
 };

@@ -4,7 +4,8 @@ module.exports = {
 	customId: 'commitMoveLevel',
 	ephemeral: true,
 	async execute(interaction) {
-		const { octokit, db } = require('../index.js');
+		const { octokit, db, cache } = require('../index.js');
+		const { enableChangelogMessage } = require('../config.json');
 
 		// Check for level info corresponding to the message id
 		const level = await db.levelsToMove.findOne({ where: { discordid: interaction.message.id } });
@@ -146,6 +147,26 @@ module.exports = {
 		} catch (updateRefErr) {
 			console.log(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
 			return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (updateRefError)');
+		}
+
+		try {
+			const above = list[level.position] ? await cache.levels.findOne({ where: { filename: list[level.position] } }) : null;
+			const below = list[level.position - 2] ? await cache.levels.findOne({ where: { filename: list[level.position - 2] } }) : null;
+			const levelname = (await cache.levels.findOne({ where: { filename: level.filename } }))?.name;
+
+			if (enableChangelogMessage) {
+				await db.changelog.create({
+					levelname: levelname,
+					old_position: currentPosition,
+					new_position: level.position,
+					level_above: above?.name || null,
+					level_below: below?.name || null,
+					action: (currentPosition < level.position) ? "lowered" : "raised",
+				});
+			}
+		} catch (changelogErr) {
+			console.log(`An error occured while creating a changelog entry:\n${changelogErr}`);
+			return await interaction.editReply(`:white_check_mark: Successfully moved **${level.filename}.json** (${newCommit.data.html_url}), but an error occured while creating a changelog entry`);
 		}
 
 		console.log(`${interaction.user.tag} (${interaction.user.id}) moved ${level.filename} from ${currentPosition} to ${level.position}`);

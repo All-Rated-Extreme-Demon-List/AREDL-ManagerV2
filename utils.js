@@ -1,12 +1,12 @@
 const { githubBranch, githubDataPath, githubOwner, githubRepo } = require('./config.json');
 
 module.exports = {
-	async updateCache() {
+	async updateCachedLevels() {
 
 		const { octokit, cache } = require('./index.js');
 		const levels = [];
 		const legacy = [];
-		console.log('Updating cache...');
+		console.log('Updating cached levels...');
 
 		let listFileResponse;
 		let legacyFileResponse;
@@ -120,5 +120,46 @@ module.exports = {
 			} catch (error) {
 				console.log(`Couldn't udate cached legacy levels, something went wrong with sequelize: ${error}`);
 			}
+	},
+	async updateCachedUsers() {
+
+		const { octokit, cache } = require('./index.js');
+		const users = [];
+		console.log('Updating cached users...');
+
+		let usersFileResponse;
+		try {
+			usersFileResponse = await octokit.rest.repos.getContent({
+				owner: githubOwner,
+				repo: githubRepo,
+				path: githubDataPath + `/_name_map.json`,
+				branch: githubBranch,
+			});
+		} catch (fetchError) {
+			console.log(`Couldn't fetch _name_map.json: \n${fetchError}`);
+			return -1;
+		}
+		
+		let users_data;
+	
+		try {
+			users_data = JSON.parse(Buffer.from(usersFileResponse.data.content, 'base64').toString('utf-8'));
+		} catch (parseError) {
+			console.log(`Unable to parse data fetched from _list.json:\n${parseError}`);
+			return -1;
+		}
+
+		
+		for (const user of Object.keys(users_data)) {
+			users.push({ name: users_data[user], user_id: user});
+		}
+
+		cache.users.destroy({ where: {}});
+		try {
+			cache.users.bulkCreate(users);
+			console.log(`Successfully updated ${users.length} cached users.`);
+		} catch (error) {
+			console.log(`Couldn't udate cached users, something went wrong with sequelize: ${error}`);
+		}
 	},
 };

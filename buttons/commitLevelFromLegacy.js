@@ -4,8 +4,8 @@ module.exports = {
 	customId: 'commitLevelFromLegacy',
 	ephemeral: true,
 	async execute(interaction) {
-		const { octokit, db } = require('../index.js');
-
+		const { octokit, db, cache } = require('../index.js');
+		const { enableChangelogMessage } = require('../config.json');
 		// Check for level info corresponding to the message id
 		const level = await db.levelsFromLegacy.findOne({ where: { discordid: interaction.message.id } });
 		if (!level) {
@@ -159,10 +159,32 @@ module.exports = {
 			return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (updateRefError)');
 		}
 
+		const levelname = (await cache.legacy.findOne({ where: { filename: level.filename } }))?.name;
+		try {
+			const above = list[level.position] ? await cache.levels.findOne({ where: { filename: list[level.position] } }) : null;
+			const below = list[level.position - 2] ? await cache.levels.findOne({ where: { filename: list[level.position - 2] } }) : null;
+			
+			if (enableChangelogMessage) {
+				await db.changelog.create({
+					levelname: levelname,
+					old_position: null,
+					new_position: level.position,
+					level_above: above?.name || null,
+					level_below: below?.name || null,
+					action: 'fromlegacy',
+				});
+			}
+		} catch (changelogErr) {
+			console.log(`An error occured while creating a changelog entry:\n${changelogErr}`);
+			return await interaction.editReply(`:white_check_mark: Successfully moved **${level.filename}.json** (${newCommit.data.html_url}), but an error occured while creating a changelog entry`);
+		}
+
 		console.log(`${interaction.user.tag} (${interaction.user.id}) moved ${level.filename} from legacy (${list.length + currentLegacyPosition}) to (${level.position})`);
 		try {
 			console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}`);
-			db.levelsToLegacy.destroy({ where: { discordid: level.discordid } });
+			await db.levelsToLegacy.destroy({ where: { discordid: level.discordid } });
+			await cache.legacy.destroy({ where: { filename: level.filename } });
+			await cache.levels.create({ name: levelname, filename: level.filename, position: level.position });
 		} catch (cleanupErr) {
 			console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}, but an error occured while cleaning up:\n${cleanupErr}`);
 		}

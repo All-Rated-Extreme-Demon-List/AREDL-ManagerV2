@@ -35,8 +35,7 @@ const cache = createCacheDbSchema(sequelize_cache);
 
 module.exports = { db, cache, octokit, client, sequelize };
 
-// Update levels cache
-cache.update();
+
 
 // Scheduled cron tasks
 console.log('Loading scheduled tasks');
