@@ -71,7 +71,7 @@ module.exports = {
 			}
 
 			// If duplicate, don't add it to githubCodes
-			if (previousContent[filename].records.some(fileRecord => fileRecord.user === user)) {
+			if (previousContent[filename].records.some(fileRecord => fileRecord.user == user)) {
 				console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
 				await db.recordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 				duplicateRecords++;
