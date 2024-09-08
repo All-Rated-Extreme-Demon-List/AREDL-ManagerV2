@@ -120,18 +120,52 @@ module.exports = {
 		if (interaction.options.getSubcommand() === 'place') {
 
 			const { db, cache } = require('../../index.js');
+			const { Op, Sequelize } = require('sequelize');
 
 			const levelname = interaction.options.getString('levelname');
 			const position = interaction.options.getInteger('position');
 			const id = interaction.options.getInteger('id');
-			const uploader = interaction.options.getString('uploader');
-			const verifier = interaction.options.getString('verifier');
+			const uploaderName = interaction.options.getString('uploader');
+			const verifierName = interaction.options.getString('verifier');
 			const verification = interaction.options.getString('verification');
 			const password = (interaction.options.getString('password') == null ? 'No Copy' : interaction.options.getString('password'));
 			const rawCreators = interaction.options.getString('creators');
-			const strCreators = (rawCreators ? JSON.stringify(rawCreators.split(',')) : '[]');
+			const creatorNames = rawCreators ? rawCreators.split(',') : [];
 
-			const githubCode = `{\n\t"id": ${id},\n\t"name": "${levelname}",\n\t"author": "${uploader}",\n\t"creators": ${strCreators},\n\t"verifier": "${verifier}",\n\t"verification": "${verification}",\n\t"percentToQualify": 100,\n\t"password": "${password}",\n\t"records" : []\n}`;
+			const uploader = await cache.users.findOne({ 
+				where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), {
+					[Op.like]: uploaderName.toLowerCase()
+				})
+			});
+			if (!uploader) {
+				return await interaction.editReply(`:x: Uploader "${uploaderName}" not found.`);
+			}
+			const uploaderId = uploader.user_id;
+
+			const verifier = await cache.users.findOne({ 
+				where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), {
+					[Op.like]: verifierName.toLowerCase()
+				})
+			});
+			if (!verifier) {
+				return await interaction.editReply(`:x: Verifier "${verifierName}" not found.`);
+			}
+			const verifierId = verifier.user_id;
+
+			const creatorIds = [];
+			for (const creatorName of creatorNames) {
+				const creator = await cache.users.findOne({ 
+					where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), {
+						[Op.like]: creatorName.trim().toLowerCase()
+					})
+				});
+				if (!creator) {
+					return await interaction.editReply(`:x: Creator "${creatorName}" not found.`);
+				}
+				creatorIds.push(Number(creator.user_id));
+			}
+
+			const githubCode = `{\n\t"id": ${id},\n\t"name": "${levelname}",\n\t"author": ${uploaderId},\n\t"creators": ${JSON.stringify(creatorIds)},\n\t"verifier": ${verifierId},\n\t"verification": "${verification}",\n\t"percentToQualify": 100,\n\t"password": "${password}",\n\t"records" : []\n}`;
 
 			const levelBelow = await cache.levels.findOne({ where: { position: position } });
 			const levelAbove = await cache.levels.findOne({ where: { position: position - 1 } });
@@ -141,9 +175,9 @@ module.exports = {
 				.setDescription(`**${levelname}** will be placed at **#${position}**, above **${levelBelow ? levelBelow.name : '-'}** and below **${levelAbove ? levelAbove.name : '-'}**`)
 				.addFields(
 					{ name: 'ID:', value: `${id}`, inline: true },
-					{ name: 'Uploader:', value: `${uploader}`, inline: true },
-					{ name: 'Creators:', value: `${strCreators.slice(0,1023)}`, inline: true },
-					{ name: 'Verifier:', value: `${verifier}`, inline: true },
+					{ name: 'Uploader:', value: `${uploaderName}`, inline: true },
+					{ name: 'Creators:', value: `${rawCreators.slice(0,1023)}`, inline: true },
+					{ name: 'Verifier:', value: `${verifierName}`, inline: true },
 					{ name: 'Verification:', value: `${verification}`, inline: true },
 					{ name: 'Password:', value: `${password}`, inline: true },
 				)

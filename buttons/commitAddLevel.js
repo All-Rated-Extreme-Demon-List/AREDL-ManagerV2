@@ -67,7 +67,6 @@ module.exports = {
 				path: githubDataPath + `/${level.filename}.json`,
 				branch: githubBranch,
 			});
-			await interaction.message.delete();
 			return await interaction.editReply(':x: The file for this level already exists');
 
 		} catch (_) {
