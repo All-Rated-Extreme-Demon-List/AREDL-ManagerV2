@@ -403,6 +403,8 @@ module.exports = {
 			}
 
 			const names = JSON.parse(Buffer.from(name_map_response.data.content, 'base64').toString('utf-8'));
+			if (Object.values(names).includes(newname)) 
+				return await interaction.editReply(':x: Another user already has this name. If you are trying to merge two users, you need to manually replace the IDs on github.');
 			names[userID] = newname;
 
 			const changes = [
