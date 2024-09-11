@@ -90,7 +90,7 @@ module.exports = {
 			filename: Sequelize.STRING,
 			githubCode: Sequelize.STRING,
 			discordid: Sequelize.STRING,
-			user: Sequelize.STRING,
+			user: Sequelize.BIGINT,
 		});
 		
 		db.messageLocks = sequelize.define('messageLocks', {

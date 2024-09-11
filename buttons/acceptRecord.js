@@ -38,7 +38,7 @@ module.exports = {
 		try {
 			await db.recordsToCommit.create({
 				filename: level.filename,
-				user: record.username,
+				user: user.user_id,
 				githubCode: githubCode,
 				discordid: '',
 			});
