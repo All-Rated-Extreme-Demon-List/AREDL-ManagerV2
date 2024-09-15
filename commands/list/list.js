@@ -190,7 +190,7 @@ module.exports = {
 				.addFields(
 					{ name: 'ID:', value: `${id}`, inline: true },
 					{ name: 'Uploader:', value: `${uploaderName}`, inline: true },
-					{ name: 'Creators:', value: `${rawCreators.slice(0,1023)}`, inline: true },
+					{ name: 'Creators:', value: `${rawCreators ? rawCreators.slice(0,1023) : 'None provided'}`, inline: true },
 					{ name: 'Verifier:', value: `${verifierName}`, inline: true },
 					{ name: 'Verification:', value: `${verification}`, inline: true },
 					{ name: 'Password:', value: `${password}`, inline: true },
