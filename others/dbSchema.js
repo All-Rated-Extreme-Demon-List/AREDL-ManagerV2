@@ -152,7 +152,7 @@ module.exports = {
 	
 	createCacheDbSchema(sequelize_cache) {
 		const cache = {};
-		const { updateCachedLevels, updateCachedUsers } = require('../utils.js');
+		const { updateCachedLevels, updateCachedUsers } = require('./cacheUpdate.js');
 		cache.levels = sequelize_cache.define('levels', {
 			name: Sequelize.STRING,
 			position: Sequelize.INTEGER,

@@ -1,40 +1,12 @@
 const { Events } = require('discord.js');
 const { db, cache } = require('../index.js');
 const { guildId, enableSeparateStaffServer, staffGuildId, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../config.json');
-const { githubOwner, githubRepo } = require('../config.json');
+const { scheduledTasksInit } = require('../startUtils.js');
 
 module.exports = {
 	name: Events.ClientReady,
 	once: true,
 	async execute(client) {
-
-		console.log('Syncing database data...');
-		for (const table of Object.keys(db)) await db[table].sync({ alter: true});
-
-		for (const table of Object.keys(cache)) {
-			if (table !== 'updateLevels' && table !== 'updateUsers')	await cache[table].sync({ alter: true});
-		}
-		cache.levels.sync({alter: true});
-
-		if (!(await db.infos.count({ where: { name: 'records' } }))) {
-			await db.infos.create({
-				status: false,
-				name: 'records',
-			});
-		}
-		if (!(await db.infos.count({ where: { name: 'shifts' } }))) {
-			await db.infos.create({
-				status: false,
-				name: 'shifts',
-			});
-		} else await db.infos.update({status:false}, {where:{name:'shifts'}});
-
-		if (!(await db.infos.count({ where: { name: 'commitdebug' } }))) {
-			await db.infos.create({
-				status: 0,
-				name: 'commitdebug',
-			});
-		}
 
 		// Update levels cache
 		cache.updateLevels();
@@ -68,25 +40,8 @@ module.exports = {
 		}
 		console.log(`Found a total of ${nbFound} errored records.`);
 
-		console.log(`Checking github token permissions for ${githubOwner}/${githubRepo}...`);
-
-		const { octokit } = require('../index.js');
-		try {
-			const { data } = await octokit.rest.repos.get({
-				owner: githubOwner,
-				repo: githubRepo
-			});
-	
-			if (data.permissions.push) {
-				console.log(`Found push access to ${githubOwner}/${githubRepo}`);
-			} else {
-				console.log(`Couldn't find push access to ${githubOwner}/${githubRepo}`);
-			}
-		} catch (error) {
-			console.log(`Error fetching repository information: ${error}`);
-		}
-
-		console.log(`Ready! Logged in as ${client.user.tag}`);
+		await scheduledTasksInit();
+		console.log(`Initialization complete`);
 		return 1;
 	},
 };
