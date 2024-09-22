@@ -1,6 +1,8 @@
+const { scheduleCacheUpdate } = require('../config.json')
+
 module.exports = {
 	name: 'updateCache',
-	cron: '30 * * * *',
+	cron: scheduleCacheUpdate,
 	enabled: true,
 	async execute() {
 		const { cache } = require('../index.js');

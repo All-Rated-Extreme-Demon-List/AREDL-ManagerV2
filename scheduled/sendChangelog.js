@@ -1,8 +1,8 @@
-const { enableChangelogMessage } = require('../config.json');
+const { enableChangelogMessage, scheduleChangelog } = require('../config.json');
 
 module.exports = {
 	name: 'sendChangelog',
-	cron: '00 22 * * *',
+	cron: scheduleChangelog,
 	enabled: enableChangelogMessage,
 	async execute() {
 		console.log("Sending changelog message...");
