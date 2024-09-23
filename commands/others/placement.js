@@ -5,7 +5,6 @@ module.exports = {
 	enabled: true,
 	data: new SlashCommandBuilder()
 		.setName('placement')
-		.setDMPermission(false)
 		.setDescription('Look up the placement for any level on the list.')
         .addStringOption(option =>
             option.setName('levelname')
@@ -16,25 +15,23 @@ module.exports = {
     async autocomplete(interaction) {
         const { cache } = require('../../index.js');
 		const focusedValue = interaction.options.getFocused();
-		if (focusedValue.length < 2) {
-			return await interaction.respond([]);
-		} else {
-            const Sequelize = require('sequelize');
-			let levels = await cache.levels.findAll({
-				where: { 
-					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', focusedValue.toLowerCase() + '%')
-				}});
-			if (levels.length > 25) levels = levels.slice(0, 25);
-			await interaction.respond(
-				levels.map(level => ({ name:level.name, value: level.name })),
-			);
-		}
+
+		const Sequelize = require('sequelize');
+		let levels = await cache.levels.findAll({
+			where: { 
+				name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', '%' + focusedValue.toLowerCase() + '%')
+			}});
+		await interaction.respond(
+			levels.slice(0,25).map(level => ({ name:level.name, value: level.name })),
+		);
+	
 
 	},
 	async execute(interaction) {
         const { cache } = require('../../index.js');
         const level = await cache.levels.findOne({where: {name: [interaction.options.getString('levelname')]}});
 
+		if (!level || level?.position == null) return await interaction.reply(`:x: **${interaction.options.getString('levelname')}** is not on the list. Make sure to select the right option`);
 		await interaction.reply(`**${interaction.options.getString('levelname')}** is placed at **#${level.position}**`);
 	},
 };
