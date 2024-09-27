@@ -1,10 +1,10 @@
-const { staffGuildId, enableShifts } = require('../config.json');
+const { staffGuildId, enableShifts, scheduleShiftsReminder } = require('../config.json');
 const { EmbedBuilder } = require('discord.js');
 const Sequelize = require('sequelize');
 
 module.exports = {
 	name: 'shiftsReminder',
-	cron: '5 22 * * *',
+	cron: scheduleShiftsReminder,
 	enabled: enableShifts,
 	async execute() {
 		console.log('Running shift reminder');

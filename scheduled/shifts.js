@@ -1,10 +1,10 @@
-const { recordsPerWeek, pendingRecordsID, shiftsReminderID, shiftsLogsID, guildId, enableSeparateStaffServer, staffGuildId, enableShifts } = require('../config.json');
+const { recordsPerWeek, pendingRecordsID, shiftsReminderID, shiftsLogsID, guildId, enableSeparateStaffServer, staffGuildId, enableShifts, scheduleShifts } = require('../config.json');
 const { EmbedBuilder } = require('discord.js');
 const Sequelize = require('sequelize');
 
 module.exports = {
 	name: 'shifts',
-	cron: '5 0 * * *',
+	cron: scheduleShifts,
 	enabled: enableShifts,
 	async execute() {
 		console.log('Running shifts');
