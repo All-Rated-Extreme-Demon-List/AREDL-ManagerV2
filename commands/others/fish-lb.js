@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { Sequelize } = require('sequelize');
 module.exports = {
-	enabled: true,
+	enabled: false,
 	cooldown: 5,
 	data: new SlashCommandBuilder()
 		.setName('fish-lb')

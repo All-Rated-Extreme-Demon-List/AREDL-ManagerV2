@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
-	enabled: true,
+	enabled: false,
 	cooldown: 3600,
 	data: new SlashCommandBuilder()
 		.setName('fish')
