@@ -6,6 +6,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName("message")
 		.setDescription("Bot messages management")
+		.setDefaultMemberPermissions(0)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName("create")
@@ -22,7 +23,33 @@ module.exports = {
 						.setDescription("Channel to send the message in")
 						.setRequired(true)
 				)
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName("edit")
+				.setDescription("Edit a previously sent message")
+				.addStringOption(option =>
+					option
+						.setName("name")
+						.setDescription("Internal name of the message to edit")
+						.setAutocomplete(true)
+						.setRequired(true)
+				)
 		),
+
+	async autocomplete(interaction) {
+		const focused = interaction.options.getFocused();
+		const { db } = require('../../index.js');
+		const subcommand = interaction.options.getSubcommand();
+		if (subcommand === 'edit') return await interaction.respond(
+			(await db.messages.findAll({ where: { guild: interaction.guild.id } }))
+				.filter(message => message.name.toLowerCase().includes(focused.toLowerCase()))
+				.slice(0, 25)
+				.map(message => ({ name: message.name, value: message.name }))
+		);
+		else return await interaction.respond([]);
+	},
+
 	async execute(interaction) {
 		const { db } = require("../..");
 		const subcommand = interaction.options.getSubcommand();
@@ -111,6 +138,84 @@ module.exports = {
 				}
 			} catch (e) {
 				await submittedModal.editReply({ content: ':x: Confirmation not received within 1 minute, cancelling', components: [] });
+			}
+		} else if (subcommand === "edit") {
+			const name = interaction.options.getString("name");
+
+			const messageEntry = await db.messages.findOne({ where: { name: name, guild: interaction.guild.id } });
+			if (!messageEntry) {
+				return await interaction.reply({ content: `:x: No message found with the name "${name}"`, ephemeral: true });
+			}
+
+			const channel = await interaction.guild.channels.cache.get(messageEntry.channel);
+			if (!channel) {
+				return await interaction.reply({ content: ":x: Could not find the channel where the message was sent.", ephemeral: true });
+			}
+
+			const targetMessage = await channel.messages.fetch(messageEntry.discordid).catch(() => null);
+			if (!targetMessage) {
+				return await interaction.reply({ content: ":x: Could not find the original message to edit. It might have been deleted.", ephemeral: true });
+			}
+
+			const editModal = new ModalBuilder()
+				.setCustomId('editMessageModal')
+				.setTitle('Edit Message Content');
+
+			const editContentInput = new TextInputBuilder()
+				.setCustomId('editContentInput')
+				.setLabel('New Message Content')
+				.setStyle(TextInputStyle.Paragraph)
+				.setRequired(true)
+				.setMaxLength(2000)
+				.setValue(targetMessage.content);
+
+			const editModalRow = new ActionRowBuilder().addComponents(editContentInput);
+			editModal.addComponents(editModalRow);
+
+			await interaction.showModal(editModal);
+
+			const editFilter = i => i.customId === 'editMessageModal' && i.user.id === interaction.user.id;
+			const editSubmittedModal = await interaction.awaitModalSubmit({ filter: editFilter, time: 60_000 }).catch(() => null);
+
+			if (!editSubmittedModal) {
+				return await interaction.followUp({ content: ":x: No response received within the time limit. Action cancelled.", ephemeral: true });
+			}
+
+			const newContent = editSubmittedModal.fields.getTextInputValue('editContentInput');
+
+			const confirm = new ButtonBuilder()
+				.setCustomId('confirmEdit')
+				.setLabel('Confirm Edit')
+				.setStyle(ButtonStyle.Success);
+
+			const cancel = new ButtonBuilder()
+				.setCustomId('cancelEdit')
+				.setLabel('Cancel Edit')
+				.setStyle(ButtonStyle.Danger);
+
+			const editRow = new ActionRowBuilder().addComponents(confirm, cancel);
+
+			let editResponse;
+			try {
+				editResponse = await editSubmittedModal.reply({ content: newContent, components: [editRow], ephemeral: true, fetchReply: true });
+			} catch (error) {
+				console.error(`Failed to create the edited message preview: ${error}`);
+				return await editSubmittedModal.reply({ content: `:x: Failed to create the edited message preview: ${error}`, ephemeral: true });
+			}
+
+			const editCollectorFilter = i => i.user.id === interaction.user.id;
+			try {
+				const editConfirmation = await editResponse.awaitMessageComponent({ filter: editCollectorFilter, time: 60_000 });
+
+				if (editConfirmation.customId === 'confirmEdit') {
+					await targetMessage.edit({ content: newContent });
+
+					await editConfirmation.update({ content: `:white_check_mark: Message edited successfully`, components: [] });
+				} else if (editConfirmation.customId === 'cancelEdit') {
+					await editConfirmation.update({ content: ':x: Edit action cancelled', components: [] });
+				}
+			} catch (error) {
+				await editSubmittedModal.editReply({ content: ':x: Confirmation not received within 1 minute, cancelling', components: [] });
 			}
 		}
 	}

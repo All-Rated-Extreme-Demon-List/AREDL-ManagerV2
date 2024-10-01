@@ -83,25 +83,20 @@ module.exports = {
 			await interaction.deferReply({ ephemeral: true });
 
 			const menu = interaction.client.menus.get(interaction.customId);
-			if (!menu) {
-				console.error(`No menu matching ${interaction.customId} was found.`);
-				await interaction.reply(`:x: Something went wrong (Menu ID "${interaction.customId}" not found)`);
-				return;
-			}
-
-			// Execute code
-			try {
-				await menu.execute(interaction);
-			} catch (error) {
-				console.error(`Error executing ${interaction.customId}`);
-				console.error(error);
+			if (menu) {
+				// Execute code
+				try {
+					await menu.execute(interaction);
+				} catch (error) {
+					console.error(`Error executing ${interaction.customId}`);
+					console.error(error);
+				}
 			}
 
 		} else if (interaction.isModalSubmit()) {
 
 			const modal = interaction.client.modals.get(interaction.customId);
 			if (modal) {
-
 				// Execute code
 				try {
 					await modal.execute(interaction);
