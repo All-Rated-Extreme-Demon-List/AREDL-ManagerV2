@@ -109,8 +109,12 @@ module.exports = {
 
 			let colorResolved;
 			if (color) {
-				colorResolved = resolveColor(color);
-				if (!colorResolved) return await interaction.reply({ content: ":x: Invalid color", ephemeral: true });
+				try {
+					colorResolved = resolveColor(color);
+					if (!colorResolved) return await interaction.reply({ content: ":x: Invalid color", ephemeral: true });
+				} catch(error) {
+					return await interaction.reply({ content: `:x: Failed to resolve the color: ${error}`, ephemeral: true });
+				}
 			}
 
 			const channelResolved = await interaction.guild.channels.cache.get(channel.id);
@@ -122,7 +126,7 @@ module.exports = {
 
 			const descriptionInput = new TextInputBuilder()
 				.setCustomId('descriptionInput')
-				.setLabel('Embed Description - You can leave this empty')
+				.setLabel('Embed Description (can be empty)')
 				.setStyle(TextInputStyle.Paragraph)
 				.setRequired(false)
 				.setMaxLength(4000);
@@ -230,8 +234,12 @@ module.exports = {
 
 			let colorResolved;
 			if (color) {
-				colorResolved = resolveColor(color);
-				if (!colorResolved) return await interaction.reply({ content: ":x: Invalid color", ephemeral: true });
+				try {
+					colorResolved = resolveColor(color);
+					if (!colorResolved) return await interaction.reply({ content: ":x: Invalid color", ephemeral: true });
+				} catch(error) {
+					return await interaction.reply({ content: `:x: Failed to resolve the color: ${error}`, ephemeral: true });
+				}
 			}
 
 			const editModal = new ModalBuilder()
@@ -240,7 +248,7 @@ module.exports = {
 
 			const editDescriptionInput = new TextInputBuilder()
 				.setCustomId('editDescriptionInput')
-				.setLabel('New Embed Description - You can leave this empty')
+				.setLabel('New Embed Description (can be empty)')
 				.setStyle(TextInputStyle.Paragraph)
 				.setRequired(false)
 				.setMaxLength(4000)
@@ -264,6 +272,7 @@ module.exports = {
 			if (newDescription) updatedEmbed.setDescription(newDescription);
 			if (newTitle) updatedEmbed.setTitle(newTitle);
 			if (newImage) updatedEmbed.setImage(newImage.url);
+			if (colorResolved) updatedEmbed.setColor(colorResolved);
 
 			const confirmEdit = new ButtonBuilder()
 				.setCustomId('confirmEdit')
@@ -304,6 +313,32 @@ module.exports = {
 			} catch (error) {
 				await editSubmittedModal.editReply({ content: ':x: Confirmation not received within 1 minute, cancelling', components: [] });
 			}
+		} else if (subcommand === "delete") {
+			const name = interaction.options.getString("name");
+
+			const embedEntry = await db.embeds.findOne({ where: { name: name, guild: interaction.guild.id } });
+			if (!embedEntry) {
+				return await interaction.reply({ content: `:x: No embed found with the name "${name}"`, ephemeral: true });
+			}
+
+			const channel = await interaction.guild.channels.cache.get(embedEntry.channel);
+			if (!channel) {
+				return await interaction.reply({ content: ":x: Could not find the channel where the embed was sent.", ephemeral: true });
+			}
+
+			const targetMessage = await channel.messages.fetch(embedEntry.discordid).catch(() => null);
+			if (!targetMessage) {
+				return await interaction.reply({ content: ":x: Could not find the original embed to delete. It might have been deleted.", ephemeral: true });
+			}
+
+			await db.embeds.destroy({ where: { name: name, guild: interaction.guild.id } });
+			try {
+				await targetMessage.delete();
+			} catch (error) {
+				console.error(`Failed to delete the embed: ${error}`);
+				return await interaction.reply({ content: `:x: Removed the embed from the bot, but failed to delete the message (it may have already been deleted): ${error}`, ephemeral: true });
+			}
+				await interaction.reply({ content: `:white_check_mark: Embed "${name}" deleted successfully`, ephemeral: true });
 		}
 	}
 };
