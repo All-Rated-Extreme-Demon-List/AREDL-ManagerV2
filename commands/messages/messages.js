@@ -52,14 +52,12 @@ module.exports = {
 	async autocomplete(interaction) {
 		const focused = interaction.options.getFocused();
 		const { db } = require('../../index.js');
-		const subcommand = interaction.options.getSubcommand();
-		if (subcommand === 'edit') return await interaction.respond(
+		return await interaction.respond(
 			(await db.messages.findAll({ where: { guild: interaction.guild.id } }))
 				.filter(message => message.name.toLowerCase().includes(focused.toLowerCase()))
 				.slice(0, 25)
 				.map(message => ({ name: message.name, value: message.name }))
 		);
-		else return await interaction.respond([]);
 	},
 
 	async execute(interaction) {
@@ -242,7 +240,7 @@ module.exports = {
 				return await interaction.reply({ content: ":x: Could not find the channel where the message was sent.", ephemeral: true });
 			}
 
-			const targetMessage = await channel.messages.fetch(embedEntry.discordid).catch(() => null);
+			const targetMessage = await channel.messages.fetch(messageEntry.discordid).catch(() => null);
 
 			try {
 				await db.messages.destroy({ where: { name: name, guild: interaction.guild.id } });
