@@ -35,6 +35,18 @@ module.exports = {
 						.setAutocomplete(true)
 						.setRequired(true)
 				)
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName("delete")
+				.setDescription("Delete a previously sent message")
+				.addStringOption(option =>
+					option
+						.setName("name")
+						.setDescription("Internal name of the message to delete")
+						.setAutocomplete(true)
+						.setRequired(true)
+				)
 		),
 
 	async autocomplete(interaction) {
@@ -217,6 +229,36 @@ module.exports = {
 			} catch (error) {
 				await editSubmittedModal.editReply({ content: ':x: Confirmation not received within 1 minute, cancelling', components: [] });
 			}
+		} else if (subcommand === "delete") {
+			const name = interaction.options.getString("name");
+
+			const messageEntry = await db.messages.findOne({ where: { name: name, guild: interaction.guild.id } });
+			if (!messageEntry) {
+				return await interaction.reply({ content: `:x: No message found with the name "${name}"`, ephemeral: true });
+			}
+
+			const channel = await interaction.guild.channels.cache.get(messageEntry.channel);
+			if (!channel) {
+				return await interaction.reply({ content: ":x: Could not find the channel where the message was sent.", ephemeral: true });
+			}
+
+			const targetMessage = await channel.messages.fetch(embedEntry.discordid).catch(() => null);
+
+			try {
+				await db.messages.destroy({ where: { name: name, guild: interaction.guild.id } });
+			}
+			catch (error) {
+				console.error(`Failed to delete the message: ${error}`);
+				return await interaction.reply({ content: `:x: Failed to delete the message from the bot: ${error}`, ephemeral: true });
+			}
+			try {
+				await targetMessage.delete();
+			} catch (error) {
+				console.error(`Failed to delete the message: ${error}`);
+				return await interaction.reply({ content: `:x: Removed the message from the bot, but failed to delete the message (it may have already been deleted): ${error}`, ephemeral: true });
+			}
+				await interaction.reply({ content: `:white_check_mark: Message "${name}" deleted successfully`, ephemeral: true });
 		}
+				
 	}
 };

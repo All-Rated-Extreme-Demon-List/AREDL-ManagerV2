@@ -327,11 +327,14 @@ module.exports = {
 			}
 
 			const targetMessage = await channel.messages.fetch(embedEntry.discordid).catch(() => null);
-			if (!targetMessage) {
-				return await interaction.reply({ content: ":x: Could not find the original embed to delete. It might have been deleted.", ephemeral: true });
-			}
 
-			await db.embeds.destroy({ where: { name: name, guild: interaction.guild.id } });
+			try {
+				await db.embeds.destroy({ where: { name: name, guild: interaction.guild.id } });
+			}
+			catch (error) {
+				console.error(`Failed to delete the embed: ${error}`);
+				return await interaction.reply({ content: `:x: Failed to delete the embed from the bot: ${error}`, ephemeral: true });
+			}
 			try {
 				await targetMessage.delete();
 			} catch (error) {
