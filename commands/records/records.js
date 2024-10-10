@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { pendingRecordsID, priorityRoleID, priorityRecordsID, submissionLockRoleID, enableSeparateStaffServer, enablePriorityRole, staffGuildId, guildId } = require('../../config.json');
 const isUrlHttp = require('is-url-http');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -188,7 +189,7 @@ module.exports = {
 					assigned: 'None',
 				});
 			} catch (error) {
-				console.log(`Couldn't register the record ; something went wrong with Sequelize : ${error}`);
+				logger.info(`Couldn't register the record ; something went wrong with Sequelize : ${error}`);
 				await sent.delete();
 				await sentvideo.delete();
 				return await interaction.editReply(':x: Something went wrong while submitting the record; Please try again later');
@@ -202,7 +203,7 @@ module.exports = {
 			if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsSubmitted: 1, nbRecordsPending: await db.pendingRecords.count() });
 			else await db.dailyStats.update({ nbRecordsSubmitted: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsSubmitted + 1 }, { where: { date: Date.now() } });
 
-			console.log(`${interaction.user.tag} (${interaction.user.id}) submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
+			logger.info(`${interaction.user.tag} (${interaction.user.id}) submitted ${interaction.options.getString('levelname')} for ${interaction.options.getString('username')}`);
 			// Reply
 			await interaction.editReply((enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID) ? `:white_check_mark: The priority record for ${interaction.options.getString('levelname')} has been submitted successfully` : `:white_check_mark: The record for ${interaction.options.getString('levelname')} has been submitted successfully`));
 
@@ -374,7 +375,7 @@ module.exports = {
 				});
 
 			} catch (fetchError) {
-				console.log(`Failed to fetch _name_map.json: ${fetchError}`);
+				logger.info(`Failed to fetch _name_map.json: ${fetchError}`);
 				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
 			}
 
@@ -410,7 +411,7 @@ module.exports = {
 				});
 				commitSha = refData.object.sha;
 			} catch (getRefErr) {
-				console.log(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
+				logger.info(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
 				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
 			}
 
@@ -424,7 +425,7 @@ module.exports = {
 				});
 				treeSha = commitData.tree.sha;
 			} catch (getCommitErr) {
-				console.log(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
+				logger.info(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
 				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
 			}
 
@@ -443,7 +444,7 @@ module.exports = {
 					})),
 				});
 			} catch (createTreeErr) {
-				console.log(`Something went wrong while creating a new tree: \n${createTreeErr}`);
+				logger.info(`Something went wrong while creating a new tree: \n${createTreeErr}`);
 				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
 			}
 
@@ -458,7 +459,7 @@ module.exports = {
 					parents: [commitSha],
 				});
 			} catch (createCommitErr) {
-				console.log(`Something went wrong while creating a new commit: \n${createCommitErr}`);
+				logger.info(`Something went wrong while creating a new commit: \n${createCommitErr}`);
 				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
 			}
 
@@ -471,14 +472,14 @@ module.exports = {
 					sha: newCommit.data.sha,
 				});
 			} catch (updateRefErr) {
-				console.log(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
+				logger.info(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
 				return await interaction.editReply(':x: Something went wrong while creating the user; please try again later');
 			}
 
 			// Add user to cache
 			cache.updateUsers();
 
-			console.log(`${interaction.user.tag} (${interaction.user.id}) created a new user: ${interaction.options.getString('username')}`);
+			logger.info(`${interaction.user.tag} (${interaction.user.id}) created a new user: ${interaction.options.getString('username')}`);
 			await interaction.editReply(`:white_check_mark: Successfully created the user: **${interaction.options.getString('username')}**. You can now submit records.`);
 		}
 	},

@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const Sequelize = require('sequelize');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -331,7 +332,7 @@ module.exports = {
 			// Update sqlite db
 			const update = await db.infos.update({ status: (interaction.options.getString('status') === 'enabled') }, { where: { name: 'commitdebug' } });
 			if (!update) return await interaction.editReply(':x: Something went wrong while executing the command');
-			console.log(`Changed debug status to ${interaction.options.getString('status')}`);
+			logger.info(`Changed debug status to ${interaction.options.getString('status')}`);
 			return await interaction.editReply(`:white_check_mark: Changed debug status to ${interaction.options.getString('status')}`);
 
 		} else if (interaction.options.getSubcommand() === 'commitreset') {

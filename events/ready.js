@@ -2,6 +2,7 @@ const { Events } = require('discord.js');
 const { db, cache } = require('../index.js');
 const { guildId, enableSeparateStaffServer, staffGuildId, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../config.json');
 const { scheduledTasksInit } = require('../startUtils.js');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	name: Events.ClientReady,
@@ -9,11 +10,11 @@ module.exports = {
 	async execute(client) {
 
 		// Update levels cache
-		cache.updateLevels();
+		await cache.updateLevels();
 		// Update users cache
-		cache.updateUsers();
+		await cache.updateUsers();
 
-		console.log('Checking pending record data...');
+		logger.info('Checking pending record data...');
 
 		const pendingRecords = await db.pendingRecords.findAll();
 		let nbFound = 0;
@@ -27,7 +28,7 @@ module.exports = {
 			} catch (_) {
 				await db.pendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
 				nbFound++;
-				console.log(`Found an errored record : ${pendingRecords[i].discordid}`);
+				logger.info(`Found an errored record : ${pendingRecords[i].discordid}`);
 
 				// Try deleting the other message as well in case only the first one is missing smh
 				try {
@@ -38,10 +39,10 @@ module.exports = {
 				}
 			}
 		}
-		console.log(`Found a total of ${nbFound} errored records.`);
+		logger.info(`Found a total of ${nbFound} errored records.`);
 
 		await scheduledTasksInit();
-		console.log(`Initialization complete`);
+		logger.info(`Initialization complete`);
 		return 1;
 	},
 };

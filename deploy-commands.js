@@ -18,9 +18,9 @@ for (const folder of commandFolders) {
 		const command = require(filePath);
 		if ('data' in command && 'execute' in command && 'enabled' in command) {
 			if (command.enabled) commands.push(command.data.toJSON());
-			else console.log(`Ignoring disabled command ${filePath}`);
+			else logger.info(`Ignoring disabled command ${filePath}`);
 		} else {
-			console.log(`[WARNING] The command at ${filePath} is missing a required "data", "execute" or "enabled" property.`);
+			logger.info(`[WARNING] The command at ${filePath} is missing a required "data", "execute" or "enabled" property.`);
 		}
 	}
 }
@@ -31,7 +31,7 @@ const rest = new REST().setToken(token);
 // and deploy commands
 (async () => {
 	try {
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+		logger.info(`Started refreshing ${commands.length} application (/) commands.`);
 
 		// The put method is used to fully refresh all commands in the guild with the current set
 		const data = await rest.put(
@@ -45,8 +45,8 @@ const rest = new REST().setToken(token);
 			);
 		}
 
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+		logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
-		console.error(error);
+		logger.error(error);
 	}
 })();

@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const { guildId } = require('../config.json');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	name: Events.GuildMemberRemove,
@@ -7,7 +8,7 @@ module.exports = {
 	async execute(member) {
 
 		if (member.guild.id != guildId) return;
-		console.log(`Member left: ${member.id}`);
+		logger.info(`Member left: ${member.id}`);
 
 		const { db } = require('../index.js');
 

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, AttachmentBuilder } = require('discord.js');
 const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../../config.json');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -216,7 +217,7 @@ module.exports = {
 					discordid: sent.id,
 				});
 			} catch (error) {
-				console.log(`Couldn't register the level ; something went wrong with Sequelize : ${error}`);
+				logger.info(`Couldn't register the level ; something went wrong with Sequelize : ${error}`);
 				return await interaction.editReply(':x: Something went wrong while adding the level; Please try again later');
 			}
 			return;
@@ -271,7 +272,7 @@ module.exports = {
 					discordid: sent.id,
 				});
 			} catch (error) {
-				console.log(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
+				logger.info(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
 				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
 			}
 			return;
@@ -321,7 +322,7 @@ module.exports = {
 					discordid: sent.id,
 				});
 			} catch (error) {
-				console.log(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
+				logger.info(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
 				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
 			}
 			return;
@@ -373,7 +374,7 @@ module.exports = {
 					discordid: sent.id,
 				});
 			} catch (error) {
-				console.log(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
+				logger.info(`Couldn't register the level to move ; something went wrong with Sequelize : ${error}`);
 				return await interaction.editReply(':x: Something went wrong while moving the level; Please try again later');
 			}
 			return;
@@ -398,7 +399,7 @@ module.exports = {
 				});
 
 			} catch (fetchError) {
-				console.log(`Failed to fetch _name_map.json: ${fetchError}`);
+				logger.info(`Failed to fetch _name_map.json: ${fetchError}`);
 				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
 			}
 
@@ -424,7 +425,7 @@ module.exports = {
 				});
 				commitSha = refData.object.sha;
 			} catch (getRefErr) {
-				console.log(`Failed to get the latest commit SHA: ${getRefErr}`);
+				logger.info(`Failed to get the latest commit SHA: ${getRefErr}`);
 				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
 			}
 
@@ -438,7 +439,7 @@ module.exports = {
 				});
 				treeSha = commitData.tree.sha;
 			} catch (getCommitErr) {
-				console.log(`Failed to get the commit SHA: ${getCommitErr}`);
+				logger.info(`Failed to get the commit SHA: ${getCommitErr}`);
 				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
 			}
 
@@ -457,7 +458,7 @@ module.exports = {
 					})),
 				});
 			} catch (createTreeErr) {
-				console.log(`Failed to create a new tree: ${createTreeErr}`);
+				logger.info(`Failed to create a new tree: ${createTreeErr}`);
 				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
 			}
 
@@ -472,7 +473,7 @@ module.exports = {
 					parents: [commitSha],
 				});
 			} catch (createCommitErr) {
-				console.log(`Failed to create a new commit: ${createCommitErr}`);
+				logger.info(`Failed to create a new commit: ${createCommitErr}`);
 				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
 			}
 
@@ -485,7 +486,7 @@ module.exports = {
 					sha: newCommit.data.sha,
 				});
 			} catch (updateRefErr) {
-				console.log(`Failed to update the branch: ${updateRefErr}`);
+				logger.info(`Failed to update the branch: ${updateRefErr}`);
 				return await interaction.editReply(':x: Something went wrong while renaming the user; please try again later');
 			}
 
@@ -495,10 +496,10 @@ module.exports = {
 				await db.acceptedRecords.update({ username: newname }, { where: { username: user.name } });
 				await db.deniedRecords.update({ username: newname }, { where: { username: user.name } });
 			} catch(error) {
-				console.log(`Failed to update records (username change): ${error}`);
+				logger.info(`Failed to update records (username change): ${error}`);
 			}
 			cache.updateUsers();
-			console.log(`${interaction.user.tag} (${interaction.user.id}) renamed ${user.name} (${user.user_id}) to ${newname}`);
+			logger.info(`${interaction.user.tag} (${interaction.user.id}) renamed ${user.name} (${user.user_id}) to ${newname}`);
 			return await interaction.editReply(`:white_check_mark: Successfully renamed **${user.name}** to **${newname}**`);
 
 		} else if (interaction.options.getSubcommand() === 'mutualvictors') {
@@ -522,7 +523,7 @@ module.exports = {
 				});
 
 			} catch (fetchError) {
-				console.log(`Failed to fetch ${level1}.json: ${fetchError}`);
+				logger.info(`Failed to fetch ${level1}.json: ${fetchError}`);
 				return await interaction.editReply(`:x: Failed to fetch data for **${level1}** from github; please try again later`);
 			}
 
@@ -535,7 +536,7 @@ module.exports = {
 				});
 
 			} catch (fetchError) {
-				console.log(`Failed to fetch ${level2}.json: ${fetchError}`);
+				logger.info(`Failed to fetch ${level2}.json: ${fetchError}`);
 				return await interaction.editReply(`:x: Failed to fetch data for **${level2}** from github; please try again later`);
 			}
 

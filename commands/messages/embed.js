@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, resolveColor, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -153,7 +154,7 @@ module.exports = {
 				try {
 				if (image) embed.setImage(image.url);
 				} catch (error) {
-					console.error(`Failed to set the image: ${error}`);
+					logger.error(`Failed to set the image: ${error}`);
 					return await submittedModalInteraction.reply({ content: `:x: Failed to set the image: ${error}`, ephemeral: true });
 				}
 
@@ -173,7 +174,7 @@ module.exports = {
 				try {
 					response = await submittedModalInteraction.reply({ content: "Embed preview:", embeds: [embed], components: [row], ephemeral: true, fetchReply: true });
 				} catch (error) {
-					console.error(`Failed to create the embed: ${error}`);
+					logger.error(`Failed to create the embed: ${error}`);
 					return await submittedModalInteraction.reply({ content: `:x: Failed to create the embed: ${error}`, ephemeral: true });
 				}
 
@@ -187,7 +188,7 @@ module.exports = {
 								embeds: [embed],
 							});
 						} catch (error) {
-							console.error(`Failed to send ${name} embed: ${error}`);
+							logger.error(`Failed to send ${name} embed: ${error}`);
 							return await confirmation.update({ content: `:x: Failed to send the embed. Check the bot permissions and try again.`, components: [] });
 						}
 
@@ -290,7 +291,7 @@ module.exports = {
 			try {
 				editResponse = await editSubmittedModal.reply({ content: "Embed preview (edited):", embeds: [updatedEmbed], components: [editRow], ephemeral: true, fetchReply: true });
 			} catch (error) {
-				console.error(`Failed to create the edited embed preview: ${error}`);
+				logger.error(`Failed to create the edited embed preview: ${error}`);
 				return await editSubmittedModal.reply({ content: `:x: Failed to create the edited embed preview: ${error}`, ephemeral: true });
 			}
 
@@ -302,7 +303,7 @@ module.exports = {
 					try {
 						await targetMessage.edit({ embeds: [updatedEmbed] });
 					} catch (error) {
-						console.error(`Failed to edit the embed: ${error}`);
+						logger.error(`Failed to edit the embed: ${error}`);
 						return await editConfirmation.update({ content: `:x: Failed to edit the embed: ${error}`, components: [] });
 					}
 
@@ -332,13 +333,13 @@ module.exports = {
 				await db.embeds.destroy({ where: { name: name, guild: interaction.guild.id } });
 			}
 			catch (error) {
-				console.error(`Failed to delete the embed: ${error}`);
+				logger.error(`Failed to delete the embed: ${error}`);
 				return await interaction.reply({ content: `:x: Failed to delete the embed from the bot: ${error}`, ephemeral: true });
 			}
 			try {
 				await targetMessage.delete();
 			} catch (error) {
-				console.error(`Failed to delete the embed: ${error}`);
+				logger.error(`Failed to delete the embed: ${error}`);
 				return await interaction.reply({ content: `:x: Removed the embed from the bot, but failed to delete the message (it may have already been deleted): ${error}`, ephemeral: true });
 			}
 				await interaction.reply({ content: `:white_check_mark: Embed "${name}" deleted successfully`, ephemeral: true });

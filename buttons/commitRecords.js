@@ -1,6 +1,7 @@
 const { db } = require('../index.js');
 const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../config.json');
 const { EmbedBuilder } = require('discord.js');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	customId: 'commitRecords',
@@ -38,7 +39,7 @@ module.exports = {
 						branch: githubBranch,
 					});
 				} catch (fetchError) {
-					console.log(`Couldn't fetch ${filename}.json: \n${fetchError}`);
+					logger.info(`Couldn't fetch ${filename}.json: \n${fetchError}`);
 					continue;
 				}
 
@@ -46,11 +47,11 @@ module.exports = {
 				try {
 					parsedData = JSON.parse(Buffer.from(fileResponse.data.content, 'base64').toString('utf-8'));
 				} catch (parseError) {
-					console.log(`Unable to parse data fetched from ${filename}:\n${parseError}`);
+					logger.info(`Unable to parse data fetched from ${filename}:\n${parseError}`);
 					continue;
 				}
 				if (!Array.isArray(parsedData.records)) {
-					console.log(`The records field of the fetched ${filename}.json is not an array`);
+					logger.info(`The records field of the fetched ${filename}.json is not an array`);
 					continue;
 				}
 				previousContent[filename] = parsedData;
@@ -72,7 +73,7 @@ module.exports = {
 
 			// If duplicate, don't add it to githubCodes
 			if (previousContent[filename].records.some(fileRecord => fileRecord.user == user)) {
-				console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
+				logger.info(`Canceled adding duplicated record of ${filename} for ${user}`);
 				await db.recordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 				duplicateRecords++;
 				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
@@ -83,7 +84,7 @@ module.exports = {
 			try {
 				newRecord = JSON.parse(githubCode);
 			} catch (parseError) {
-				console.log(`Unable to parse data:\n${githubCode}\n${parseError}`);
+				logger.info(`Unable to parse data:\n${githubCode}\n${parseError}`);
 				erroredRecords.push(`${filename}.json (${user})`);
 				interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
 				continue;
@@ -94,7 +95,7 @@ module.exports = {
 				newContent[filename] = [newRecord];
 			} else {
 				if (newContent[filename].some(fileRecord => fileRecord.user === user)) {
-					console.log(`Canceled adding duplicated record of ${filename} for ${user}`);
+					logger.info(`Canceled adding duplicated record of ${filename} for ${user}`);
 					await db.recordsToCommit.destroy({ where: { id: record.dataValues['id'] } });
 					duplicateRecords++;
 					interaction.editReply(`Found ${duplicateRecords} duplicate and ${erroredRecords.length} errored records...`);
@@ -123,7 +124,7 @@ module.exports = {
 		}
 
 		if (changes.length === 0) {
-			console.log('No new or updated records to commit after filtering out duplicates and errors.');
+			logger.info('No new or updated records to commit after filtering out duplicates and errors.');
 			await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 			return await interaction.editReply(':x: No changes to commit after removing duplicates and handling errors.');
 		}
@@ -141,7 +142,7 @@ module.exports = {
 				});
 				commitSha = refData.object.sha;
 			} catch (getRefError) {
-				console.log(`Something went wrong while fetching the latest commit SHA:\n${getRefError}`);
+				logger.info(`Something went wrong while fetching the latest commit SHA:\n${getRefError}`);
 				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getRefError)');
 			}
@@ -155,7 +156,7 @@ module.exports = {
 				});
 				treeSha = commitData.tree.sha;
 			} catch (getCommitError) {
-				console.log(`Something went wrong while fetching the latest commit:\n${getCommitError}`);
+				logger.info(`Something went wrong while fetching the latest commit:\n${getCommitError}`);
 				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (getCommitError)');
 			}
@@ -175,7 +176,7 @@ module.exports = {
 					})),
 				});
 			} catch (createTreeError) {
-				console.log(`Something went wrong while creating a new tree:\n${createTreeError}`);
+				logger.info(`Something went wrong while creating a new tree:\n${createTreeError}`);
 				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createTreeError)');
 			}
@@ -191,7 +192,7 @@ module.exports = {
 					parents: [commitSha],
 				});
 			} catch (createCommitError) {
-				console.log(`Something went wrong while creating a new commit:\n${createCommitError}`);
+				logger.info(`Something went wrong while creating a new commit:\n${createCommitError}`);
 				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (createCommitError)');
 			}
@@ -205,17 +206,17 @@ module.exports = {
 					sha: newCommit.data.sha,
 				});
 			} catch (updateRefError) {
-				console.log(`Something went wrong while updating the branch :\n${updateRefError}`);
+				logger.info(`Something went wrong while updating the branch :\n${updateRefError}`);
 				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				return await interaction.editReply(':x: Something went wrong while commiting the records to github, please try again later (updateRefError)');
 			}
-			console.log(`Successfully created commit on ${githubBranch} (record addition): ${newCommit.data.sha}`);
+			logger.info(`Successfully created commit on ${githubBranch} (record addition): ${newCommit.data.sha}`);
 			try {
 				await db.recordsToCommit.destroy({ where: { discordid: interaction.message.id } });
 				await db.messageLocks.destroy({ where: { discordid: interaction.message.id } });
 				await interaction.message.delete();
 			} catch (cleanupError) {
-				console.log(`Something went wrong while cleaning up the commit database & discord message:\n${cleanupError}`);
+				logger.info(`Something went wrong while cleaning up the commit database & discord message:\n${cleanupError}`);
 			}
 
 			let detailedErrors = '';
@@ -248,7 +249,7 @@ module.exports = {
 					});
 					fileSha = response.data.sha;
 				} catch (error) {
-					console.log(`Error fetching ${change.path} SHA:\n${error}`);
+					logger.info(`Error fetching ${change.path} SHA:\n${error}`);
 					erroredRecords.push(`All from ${change.path}`);
 					await interaction.editReply(`:x: Couldn't fetch data from ${change.path}, skipping...`);
 					i++;
@@ -264,9 +265,9 @@ module.exports = {
 						content: Buffer.from(change.content).toString('base64'),
 						sha: fileSha,
 					});
-					console.log(`Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag}`);
+					logger.info(`Updated ${change.path} (${i}/${changes.length}) (${interaction.user.tag}`);
 				} catch (error) {
-					console.log(`Failed to update ${change.path} (${i}/${changes.length}) (${interaction.user.tag}):\n${error}`);
+					logger.info(`Failed to update ${change.path} (${i}/${changes.length}) (${interaction.user.tag}):\n${error}`);
 					erroredRecords.push(`All from ${change.path}`);
 					await interaction.editReply(`:x: Couldn't update the file ${change.path}, skipping...`);
 				}

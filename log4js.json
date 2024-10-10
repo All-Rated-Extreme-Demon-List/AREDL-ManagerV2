@@ -1,0 +1,38 @@
+{
+	"appenders": {
+	  "console": { "type": "console" },
+	  "logfile": {
+		"type": "file",
+		"filename": "logs/latest.log",
+		"maxLogSize": 204800,
+		"backups": 1,
+		"compress": false
+	  },
+	  "logarchive": {
+		"type": "dateFile",
+		"filename": "logs/archive/output",
+		"pattern": "-yyyy-MM-dd.log",
+		"compress": true,
+		"keepFileExt": true 
+	  },
+	  "sqlfile": {
+		"type": "file",
+		"filename": "logs/sql.log",
+		"maxLogSize": 2048000,
+		"backups": 1,
+		"compress": false
+	  },
+	  "sqlarchive": {
+		"type": "dateFile",
+		"filename": "logs/archive/sql-output",
+		"pattern": "-yyyy-MM-dd.log",
+		"compress": true,
+		"keepFileExt": true 
+	  }
+	},
+	"categories": {
+	  "default": { "appenders": ["console", "logfile", "logarchive"], "level": "debug" },
+	  "sql": { "appenders": ["sqlfile", "sqlarchive"], "level": "debug" },
+	  "error": { "appenders": ["console", "logfile", "logarchive"], "level": "error" }
+	}
+  }

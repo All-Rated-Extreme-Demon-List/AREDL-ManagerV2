@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -118,7 +119,7 @@ module.exports = {
 			try {
 				response = await submittedModal.reply({ content: content, components: [row], ephemeral: true, fetchReply: true });
 			} catch (error) {
-				console.error(`Failed to create the message preview: ${error}`);
+				logger.error(`Failed to create the message preview: ${error}`);
 				return await submittedModal.reply({ content: `:x: Failed to create the message preview: ${error}`, ephemeral: true });
 			}
 
@@ -131,7 +132,7 @@ module.exports = {
 					try {
 						sent = await channelResolved.send({ content });
 					} catch (error) {
-						console.error(`Failed to send the message: ${error}`);
+						logger.error(`Failed to send the message: ${error}`);
 						return await confirmation.update({ content: `:x: Failed to send the message. Check the bot permissions and try again.`, components: [] });
 					}
 
@@ -209,7 +210,7 @@ module.exports = {
 			try {
 				editResponse = await editSubmittedModal.reply({ content: newContent, components: [editRow], ephemeral: true, fetchReply: true });
 			} catch (error) {
-				console.error(`Failed to create the edited message preview: ${error}`);
+				logger.error(`Failed to create the edited message preview: ${error}`);
 				return await editSubmittedModal.reply({ content: `:x: Failed to create the edited message preview: ${error}`, ephemeral: true });
 			}
 
@@ -246,13 +247,13 @@ module.exports = {
 				await db.messages.destroy({ where: { name: name, guild: interaction.guild.id } });
 			}
 			catch (error) {
-				console.error(`Failed to delete the message: ${error}`);
+				logger.error(`Failed to delete the message: ${error}`);
 				return await interaction.reply({ content: `:x: Failed to delete the message from the bot: ${error}`, ephemeral: true });
 			}
 			try {
 				await targetMessage.delete();
 			} catch (error) {
-				console.error(`Failed to delete the message: ${error}`);
+				logger.error(`Failed to delete the message: ${error}`);
 				return await interaction.reply({ content: `:x: Removed the message from the bot, but failed to delete the message (it may have already been deleted): ${error}`, ephemeral: true });
 			}
 				await interaction.reply({ content: `:white_check_mark: Message "${name}" deleted successfully`, ephemeral: true });

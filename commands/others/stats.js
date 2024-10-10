@@ -4,6 +4,7 @@ const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const path = require('path');
 const ExcelJS = require('exceljs');
 const fs = require('fs');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -266,7 +267,7 @@ module.exports = {
 
 				fs.unlinkSync(filePath);
 			} catch (error) {
-				console.error(error);
+				logger.error(error);
 				await interaction.editReply({ content: ':x: An error occurred while exporting the database.' });
 			}
 		}

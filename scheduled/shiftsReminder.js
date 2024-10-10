@@ -1,16 +1,17 @@
 const { staffGuildId, enableShifts, scheduleShiftsReminder } = require('../config.json');
 const { EmbedBuilder } = require('discord.js');
 const Sequelize = require('sequelize');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	name: 'shiftsReminder',
 	cron: scheduleShiftsReminder,
 	enabled: enableShifts,
 	async execute() {
-		console.log('Running shift reminder');
+		logger.info('Running shift reminder');
 		const { db, client } = require('../index.js');
 
-		console.log('Checking last shifts undone records..');
+		logger.info('Checking last shifts undone records..');
 		const uncheckedAssignedRecords = await db.pendingRecords.findAll({
 			attributes: [
 				[Sequelize.literal('COUNT(*)'), 'count'],
@@ -27,10 +28,10 @@ module.exports = {
 				try {
 					if (staff && staff.shiftReminder) await client.users.send(modId, `> ## Shift Reminder\n> Your shift ends in 2 hours, and you currently have ${modRecords.dataValues['count']} assigned records left`);
 				} catch (_) {
-					console.log(`Couldn't DM a reminder to ${modId}`);
+					logger.info(`Couldn't DM a reminder to ${modId}`);
 				}
 			}
 		}
-		console.log('Shift reminder executed successfully');
+		logger.info('Shift reminder executed successfully');
 	},
 };

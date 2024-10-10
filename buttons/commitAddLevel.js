@@ -1,4 +1,5 @@
 const { githubOwner, githubRepo, githubDataPath, githubBranch } = require('../config.json');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	customId: 'commitAddLevel',
@@ -36,7 +37,7 @@ module.exports = {
 				branch: githubBranch,
 			});
 		} catch (_) {
-			console.log('No changelog file found, creating a new one');
+			logger.info('No changelog file found, creating a new one');
 		}
 
 		const list = JSON.parse(Buffer.from(list_response.data.content, 'base64').toString('utf-8'));
@@ -98,7 +99,7 @@ module.exports = {
 				});
 				commitSha = refData.object.sha;
 			} catch (getRefErr) {
-				console.log(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
+				logger.info(`Something went wrong while getting the latest commit SHA: \n${getRefErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (getRefError)');
 			}
 
@@ -112,7 +113,7 @@ module.exports = {
 				});
 				treeSha = commitData.tree.sha;
 			} catch (getCommitErr) {
-				console.log(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
+				logger.info(`Something went wrong while getting the latest commit: \n${getCommitErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (getCommitError)');
 			}
 
@@ -131,7 +132,7 @@ module.exports = {
 					})),
 				});
 			} catch (createTreeErr) {
-				console.log(`Something went wrong while creating a new tree: \n${createTreeErr}`);
+				logger.info(`Something went wrong while creating a new tree: \n${createTreeErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (createTreeError)');
 			}
 
@@ -146,7 +147,7 @@ module.exports = {
 					parents: [commitSha],
 				});
 			} catch (createCommitErr) {
-				console.log(`Something went wrong while creating a new commit: \n${createCommitErr}`);
+				logger.info(`Something went wrong while creating a new commit: \n${createCommitErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (createCommitError)');
 			}
 
@@ -159,7 +160,7 @@ module.exports = {
 					sha: newCommit.data.sha,
 				});
 			} catch (updateRefErr) {
-				console.log(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
+				logger.info(`Something went wrong while updating the branch reference: \n${updateRefErr}`);
 				return await interaction.editReply(':x: Couldn\'t commit to github, please try again later (updateRefError)');
 			}
 
@@ -178,17 +179,17 @@ module.exports = {
 					});
 				}
 			} catch (changelogErr) {
-				console.log(`An error occured while creating a changelog entry:\n${changelogErr}`);
+				logger.info(`An error occured while creating a changelog entry:\n${changelogErr}`);
 				return await interaction.editReply(`:white_check_mark: Successfully created file: **${level.filename}.json** (${newCommit.data.html_url}), but an error occured while creating a changelog entry`);
 			}
 
-			console.log(`${interaction.user.tag} (${interaction.user.id}) placed ${level.filename} at ${level.position}`);
+			logger.info(`${interaction.user.tag} (${interaction.user.id}) placed ${level.filename} at ${level.position}`);
 			try {
-				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}`);
+				logger.info(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}`);
 				db.levelsToPlace.destroy({ where: { discordid: level.discordid } });
 				cache.levels.create({ name: JSON.parse(level.githubCode).name, filename: level.filename, position: level.position });
 			} catch (cleanupErr) {
-				console.log(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}, but an error occured while cleaning up:\n${cleanupErr}`);
+				logger.info(`Successfully created commit on ${githubBranch}: ${newCommit.data.sha}, but an error occured while cleaning up:\n${cleanupErr}`);
 			}
 
 			return await interaction.editReply(`:white_check_mark: Successfully created file: **${level.filename}.json** (${newCommit.data.html_url})`);

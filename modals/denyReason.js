@@ -1,6 +1,7 @@
 const { EmbedBuilder, } = require('discord.js');
 const { archiveRecordsID, deniedRecordsID, recordsID, guildId, staffGuildId, enableSeparateStaffServer } = require('../config.json');
 const { db } = require('../index.js');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	customId: 'denyReason',
@@ -14,7 +15,7 @@ module.exports = {
 			try {
 				await interaction.message.delete();
 			} catch (error) {
-				console.log(error);
+				logger.info(error);
 			}
 			return;
 		}
@@ -41,7 +42,7 @@ module.exports = {
 				moderator: interaction.user.id,
 			});
 		} catch (error) {
-			console.log(`Couldn't add the denied record ; something went wrong with Sequelize : ${error}`);
+			logger.info(`Couldn't add the denied record ; something went wrong with Sequelize : ${error}`);
 			return await interaction.editReply(':x: Something went wrong while adding the denied record to the database');
 		}
 
@@ -124,7 +125,7 @@ module.exports = {
 		else await db.dailyStats.update({ nbRecordsDenied: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsDenied + 1 }, { where: { date: Date.now() } });
 
 		// Reply
-		console.log(`${interaction.user.tag} (${interaction.user.id}) denied ${record.levelname} for ${record.username} submitted by ${record.submitter} (Reason: '${reason}')`);
+		logger.info(`${interaction.user.tag} (${interaction.user.id}) denied ${record.levelname} for ${record.username} submitted by ${record.submitter} (Reason: '${reason}')`);
 		return await interaction.editReply(':white_check_mark: The record has been denied');
 	},
 };

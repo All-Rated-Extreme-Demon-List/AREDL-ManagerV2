@@ -1,0 +1,482 @@
+[2024-10-10T11:44:03.675] [INFO] default - ----------------------------------------
+[2024-10-10T11:44:03.677] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:44:03.677] [INFO] default - ----------------------------------------
+[2024-10-10T11:44:03.677] [INFO] default - Syncing database data...
+[2024-10-10T11:44:08.429] [INFO] default - Database sync done
+[2024-10-10T11:44:08.431] [INFO] default - Initializing client...
+[2024-10-10T11:44:08.432] [INFO] default -   Loading commands
+[2024-10-10T11:44:08.447] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:44:08.453] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:44:08.459] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:44:08.462] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:44:08.464] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:44:08.466] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:44:08.467] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:44:08.763] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:44:08.764] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:44:08.764] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:44:08.766] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:44:08.767] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:44:08.771] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:44:08.772] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:44:08.772] [INFO] default -   Loading buttons
+[2024-10-10T11:44:08.773] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:44:08.773] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:44:08.774] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:44:08.774] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:44:08.774] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:44:08.775] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:44:08.775] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:44:08.776] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:44:08.776] [INFO] default -   Loading menus
+[2024-10-10T11:44:08.776] [INFO] default -   Loading modals
+[2024-10-10T11:44:08.777] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:44:08.777] [INFO] default -   Loading events
+[2024-10-10T11:44:09.060] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:44:09.060] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:44:09.061] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:44:09.061] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:44:09.061] [INFO] default - Client initialization done
+[2024-10-10T11:44:09.061] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:44:10.375] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:44:10.376] [INFO] default - Logging in client with discord...
+[2024-10-10T11:44:12.555] [INFO] default - Client logged in as AREDL Manager Beta#9869
+[2024-10-10T11:44:12.777] [INFO] default - Scheduled - Updating cached levels...
+[2024-10-10T11:44:12.778] [INFO] default - Updating cached users...
+[2024-10-10T11:44:12.778] [INFO] default - Checking pending record data...
+[2024-10-10T11:44:12.786] [ERROR] error - Unhandled Rejection at: Promise {
+  <rejected> ReferenceError: cloneOrPullRepo is not defined
+      at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:10:3)
+      at cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:42)
+      at Object.execute (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js:13:9)
+      at Client.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/startUtils.js:94:49)
+      at Object.onceWrapper (node:events:633:26)
+      at Client.emit (node:events:518:28)
+      at WebSocketManager.triggerClientReady (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:381:17)
+      at WebSocketManager.checkShardsReady (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:364:10)
+      at WebSocketShard.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:194:16)
+      at WebSocketShard.emit (node:events:518:28)
+      at WebSocketShard.checkReady (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketShard.js:184:12)
+      at WebSocketShard.gotGuild (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketShard.js:158:10)
+      at WebSocketManager.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:234:15)
+      at WebSocketManager.emit (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/@vladfrangu/async_event_emitter/dist/index.cjs:287:31)
+      at WebSocketShard.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/@discordjs/ws/dist/index.js:1190:51)
+      at WebSocketShard.emit (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/@vladfrangu/async_event_emitter/dist/index.cjs:287:31)
+} reason: ReferenceError: cloneOrPullRepo is not defined
+    at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:10:3)
+    at cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:42)
+    at Object.execute (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js:13:9)
+    at Client.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/startUtils.js:94:49)
+    at Object.onceWrapper (node:events:633:26)
+    at Client.emit (node:events:518:28)
+    at WebSocketManager.triggerClientReady (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:381:17)
+    at WebSocketManager.checkShardsReady (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:364:10)
+    at WebSocketShard.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:194:16)
+    at WebSocketShard.emit (node:events:518:28)
+    at WebSocketShard.checkReady (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketShard.js:184:12)
+    at WebSocketShard.gotGuild (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketShard.js:158:10)
+    at WebSocketManager.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/discord.js/src/client/websocket/WebSocketManager.js:234:15)
+    at WebSocketManager.emit (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/@vladfrangu/async_event_emitter/dist/index.cjs:287:31)
+    at WebSocketShard.<anonymous> (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/@discordjs/ws/dist/index.js:1190:51)
+    at WebSocketShard.emit (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/node_modules/@vladfrangu/async_event_emitter/dist/index.cjs:287:31)
+[2024-10-10T11:44:12.796] [INFO] default - Found a total of 0 errored records.
+[2024-10-10T11:44:12.796] [INFO] default - Setting up scheduled tasks
+[2024-10-10T11:44:12.814] [INFO] default -   Started updateCache(30 * * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/cacheUpdate.js
+[2024-10-10T11:44:12.816] [INFO] default -   Ignored disabled sendChangelog(00 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/sendChangelog.js
+[2024-10-10T11:44:12.819] [INFO] default -   Ignored disabled shifts(10 0 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shifts.js
+[2024-10-10T11:44:12.821] [INFO] default -   Ignored disabled shiftsReminder(10 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shiftsReminder.js
+[2024-10-10T11:44:12.822] [INFO] default - Scheduled tasks setup done
+[2024-10-10T11:44:12.823] [INFO] default - Initialization complete
+[2024-10-10T11:44:13.836] [INFO] default - Successfully updated 7301 cached users.
+[2024-10-10T11:44:59.908] [INFO] default - ----------------------------------------
+[2024-10-10T11:44:59.909] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:44:59.909] [INFO] default - ----------------------------------------
+[2024-10-10T11:44:59.910] [INFO] default - Syncing database data...
+[2024-10-10T11:45:04.750] [INFO] default - Database sync done
+[2024-10-10T11:45:04.752] [INFO] default - Initializing client...
+[2024-10-10T11:45:04.752] [INFO] default -   Loading commands
+[2024-10-10T11:45:04.773] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:45:04.781] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:45:04.786] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:45:04.788] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:45:04.791] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:45:04.792] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:45:04.794] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:45:05.095] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:45:05.095] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:45:05.096] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:45:05.097] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:45:05.098] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:45:05.102] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:45:05.104] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:45:05.104] [INFO] default -   Loading buttons
+[2024-10-10T11:45:05.104] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:45:05.105] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:45:05.105] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:45:05.105] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:45:05.106] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:45:05.106] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:45:05.106] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:45:05.107] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:45:05.107] [INFO] default -   Loading menus
+[2024-10-10T11:45:05.107] [INFO] default -   Loading modals
+[2024-10-10T11:45:05.107] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:45:05.107] [INFO] default -   Loading events
+[2024-10-10T11:45:05.502] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:45:05.502] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:45:05.503] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:45:05.503] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:45:05.503] [INFO] default - Client initialization done
+[2024-10-10T11:45:05.503] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:45:06.465] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:45:06.466] [INFO] default - Logging in client with discord...
+[2024-10-10T11:45:08.462] [INFO] default - Client logged in as AREDL Manager Beta#9869
+[2024-10-10T11:45:08.681] [INFO] default - Scheduled - Updating cached levels...
+[2024-10-10T11:45:08.682] [INFO] default - Git - Updating GitHub repository...
+[2024-10-10T11:45:08.682] [INFO] default - Git - Cloning the repository for the first time, this may take a while...
+[2024-10-10T11:45:08.684] [INFO] default - Updating cached users...
+[2024-10-10T11:45:08.685] [INFO] default - Checking pending record data...
+[2024-10-10T11:45:08.694] [ERROR] default - Git - Error updating the repository:
+Error: git.clone() requires a string 'repoPath'
+[2024-10-10T11:45:08.695] [INFO] default - Scheduled - Parsing levels...
+[2024-10-10T11:45:08.695] [ERROR] error - Unhandled Rejection at: Promise {
+  <rejected> ReferenceError: list is not defined
+      at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:12:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:36)
+} reason: ReferenceError: list is not defined
+    at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:12:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:36)
+[2024-10-10T11:45:08.701] [INFO] default - Found a total of 0 errored records.
+[2024-10-10T11:45:08.702] [INFO] default - Setting up scheduled tasks
+[2024-10-10T11:45:08.713] [INFO] default -   Started updateCache(30 * * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/cacheUpdate.js
+[2024-10-10T11:45:08.715] [INFO] default -   Ignored disabled sendChangelog(00 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/sendChangelog.js
+[2024-10-10T11:45:08.717] [INFO] default -   Ignored disabled shifts(10 0 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shifts.js
+[2024-10-10T11:45:08.719] [INFO] default -   Ignored disabled shiftsReminder(10 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shiftsReminder.js
+[2024-10-10T11:45:08.719] [INFO] default - Scheduled tasks setup done
+[2024-10-10T11:45:08.719] [INFO] default - Initialization complete
+[2024-10-10T11:45:09.820] [INFO] default - Successfully updated 7301 cached users.
+[2024-10-10T11:46:01.544] [INFO] default - ----------------------------------------
+[2024-10-10T11:46:01.545] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:46:01.546] [INFO] default - ----------------------------------------
+[2024-10-10T11:46:01.546] [INFO] default - Syncing database data...
+[2024-10-10T11:46:29.534] [INFO] default - Database sync done
+[2024-10-10T11:46:29.536] [INFO] default - Initializing client...
+[2024-10-10T11:46:29.536] [INFO] default -   Loading commands
+[2024-10-10T11:46:29.552] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:46:29.557] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:46:29.561] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:46:29.563] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:46:29.565] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:46:29.566] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:46:29.568] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:46:29.889] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:46:29.890] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:46:29.892] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:46:29.897] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:46:29.901] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:46:29.913] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:46:29.917] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:46:29.917] [INFO] default -   Loading buttons
+[2024-10-10T11:46:29.920] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:46:29.922] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:46:29.923] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:46:29.924] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:46:29.925] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:46:29.927] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:46:29.928] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:46:29.929] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:46:29.930] [INFO] default -   Loading menus
+[2024-10-10T11:46:29.930] [INFO] default -   Loading modals
+[2024-10-10T11:46:29.932] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:46:29.932] [INFO] default -   Loading events
+[2024-10-10T11:46:30.232] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:46:30.232] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:46:30.233] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:46:30.233] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:46:30.233] [INFO] default - Client initialization done
+[2024-10-10T11:46:30.233] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:46:32.688] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:46:32.689] [INFO] default - Logging in client with discord...
+[2024-10-10T11:46:37.710] [INFO] default - Client logged in as AREDL Manager Beta#9869
+[2024-10-10T11:46:38.579] [INFO] default - Scheduled - Updating cached levels...
+[2024-10-10T11:46:38.580] [INFO] default - Git - Updating GitHub repository...
+[2024-10-10T11:46:38.580] [INFO] default - Git - Cloning the repository for the first time, this may take a while...
+[2024-10-10T11:46:38.582] [INFO] default - Updating cached users...
+[2024-10-10T11:46:38.583] [INFO] default - Checking pending record data...
+[2024-10-10T11:46:38.598] [ERROR] default - Git - Error updating the repository:
+Error: git.clone() requires a string 'repoPath'
+[2024-10-10T11:46:38.598] [INFO] default - Scheduled - Parsing levels...
+[2024-10-10T11:46:38.599] [ERROR] error - Unhandled Rejection at: Promise {
+  <rejected> ReferenceError: list is not defined
+      at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:12:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:36)
+} reason: ReferenceError: list is not defined
+    at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:12:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:36)
+[2024-10-10T11:46:38.605] [INFO] default - Found a total of 0 errored records.
+[2024-10-10T11:46:38.606] [INFO] default - Setting up scheduled tasks
+[2024-10-10T11:46:38.619] [INFO] default -   Started updateCache(30 * * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/cacheUpdate.js
+[2024-10-10T11:46:38.621] [INFO] default -   Ignored disabled sendChangelog(00 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/sendChangelog.js
+[2024-10-10T11:46:38.623] [INFO] default -   Ignored disabled shifts(10 0 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shifts.js
+[2024-10-10T11:46:38.625] [INFO] default -   Ignored disabled shiftsReminder(10 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shiftsReminder.js
+[2024-10-10T11:46:38.626] [INFO] default - Scheduled tasks setup done
+[2024-10-10T11:46:38.626] [INFO] default - Initialization complete
+[2024-10-10T11:46:39.938] [INFO] default - Successfully updated 7301 cached users.
+[2024-10-10T11:46:53.559] [INFO] default - ----------------------------------------
+[2024-10-10T11:46:53.560] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:46:53.560] [INFO] default - ----------------------------------------
+[2024-10-10T11:46:53.561] [INFO] default - Syncing database data...
+[2024-10-10T11:46:58.543] [INFO] default - Database sync done
+[2024-10-10T11:46:58.545] [INFO] default - Initializing client...
+[2024-10-10T11:46:58.545] [INFO] default -   Loading commands
+[2024-10-10T11:46:58.560] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:46:58.566] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:46:58.570] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:46:58.572] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:46:58.574] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:46:58.576] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:46:58.578] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:46:58.996] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:46:58.996] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:46:58.997] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:46:58.998] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:46:58.999] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:46:59.003] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:46:59.005] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:46:59.005] [INFO] default -   Loading buttons
+[2024-10-10T11:46:59.005] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:46:59.006] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:46:59.006] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:46:59.007] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:46:59.007] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:46:59.007] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:46:59.008] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:46:59.008] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:46:59.008] [INFO] default -   Loading menus
+[2024-10-10T11:46:59.008] [INFO] default -   Loading modals
+[2024-10-10T11:46:59.009] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:46:59.009] [INFO] default -   Loading events
+[2024-10-10T11:46:59.296] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:46:59.297] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:46:59.297] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:46:59.298] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:46:59.298] [INFO] default - Client initialization done
+[2024-10-10T11:46:59.298] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:47:00.123] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:47:00.123] [INFO] default - Logging in client with discord...
+[2024-10-10T11:47:01.537] [INFO] default - Client logged in as AREDL Manager Beta#9869
+[2024-10-10T11:47:01.826] [INFO] default - Scheduled - Updating cached levels...
+[2024-10-10T11:47:01.827] [INFO] default - Git - Updating GitHub repository...
+[2024-10-10T11:47:01.827] [INFO] default - Git - Cloning the repository for the first time, this may take a while...
+[2024-10-10T11:47:01.831] [INFO] default - Updating cached users...
+[2024-10-10T11:47:01.831] [INFO] default - Checking pending record data...
+[2024-10-10T11:47:01.873] [INFO] default - Found a total of 0 errored records.
+[2024-10-10T11:47:01.874] [INFO] default - Setting up scheduled tasks
+[2024-10-10T11:47:01.888] [INFO] default -   Started updateCache(30 * * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/cacheUpdate.js
+[2024-10-10T11:47:01.890] [INFO] default -   Ignored disabled sendChangelog(00 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/sendChangelog.js
+[2024-10-10T11:47:01.892] [INFO] default -   Ignored disabled shifts(10 0 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shifts.js
+[2024-10-10T11:47:01.894] [INFO] default -   Ignored disabled shiftsReminder(10 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shiftsReminder.js
+[2024-10-10T11:47:01.895] [INFO] default - Scheduled tasks setup done
+[2024-10-10T11:47:01.895] [INFO] default - Initialization complete
+[2024-10-10T11:47:02.880] [INFO] default - Successfully updated 7301 cached users.
+[2024-10-10T11:48:17.230] [ERROR] default - Git - Error updating the repository:
+Error: Cloning into '/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/data/repo'...
+error: RPC failed; curl 56 GnuTLS recv error (-54): Error in the pull function.
+error: 6866 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output
+
+[2024-10-10T11:48:17.231] [INFO] default - Scheduled - Parsing levels...
+[2024-10-10T11:48:17.231] [ERROR] error - Unhandled Rejection at: Promise {
+  <rejected> ReferenceError: list is not defined
+      at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:12:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:36)
+} reason: ReferenceError: list is not defined
+    at updateCachedLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/cacheUpdate.js:12:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async cache.updateLevels (/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/others/dbSchema.js:194:36)
+[2024-10-10T11:49:33.011] [INFO] default - ----------------------------------------
+[2024-10-10T11:49:33.012] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:49:33.012] [INFO] default - ----------------------------------------
+[2024-10-10T11:49:33.012] [INFO] default - Syncing database data...
+[2024-10-10T11:49:37.994] [INFO] default - Database sync done
+[2024-10-10T11:49:37.996] [INFO] default - Initializing client...
+[2024-10-10T11:49:37.997] [INFO] default -   Loading commands
+[2024-10-10T11:49:38.012] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:49:38.018] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:49:38.022] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:49:38.024] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:49:38.026] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:49:38.029] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:49:38.031] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:49:38.517] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:49:38.517] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:49:38.518] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:49:38.519] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:49:38.520] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:49:38.525] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:49:38.527] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:49:38.527] [INFO] default -   Loading buttons
+[2024-10-10T11:49:38.528] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:49:38.528] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:49:38.529] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:49:38.529] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:49:38.529] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:49:38.530] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:49:38.531] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:49:38.531] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:49:38.531] [INFO] default -   Loading menus
+[2024-10-10T11:49:38.531] [INFO] default -   Loading modals
+[2024-10-10T11:49:38.532] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:49:38.532] [INFO] default -   Loading events
+[2024-10-10T11:49:38.970] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:49:38.971] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:49:38.972] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:49:38.972] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:49:38.972] [INFO] default - Client initialization done
+[2024-10-10T11:49:38.972] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:49:40.063] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:49:40.064] [INFO] default - Logging in client with discord...
+[2024-10-10T11:49:42.473] [INFO] default - Client logged in as AREDL Manager Beta#9869
+[2024-10-10T11:49:42.892] [INFO] default - Scheduled - Updating cached levels...
+[2024-10-10T11:49:42.893] [INFO] default - Git - Updating GitHub repository...
+[2024-10-10T11:49:42.893] [INFO] default - Git - Cloning the repository for the first time, this may take a while...
+[2024-10-10T11:49:42.896] [INFO] default - Updating cached users...
+[2024-10-10T11:49:42.897] [INFO] default - Checking pending record data...
+[2024-10-10T11:49:42.937] [INFO] default - Found a total of 0 errored records.
+[2024-10-10T11:49:42.938] [INFO] default - Setting up scheduled tasks
+[2024-10-10T11:49:42.949] [INFO] default -   Started updateCache(30 * * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/cacheUpdate.js
+[2024-10-10T11:49:42.951] [INFO] default -   Ignored disabled sendChangelog(00 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/sendChangelog.js
+[2024-10-10T11:49:42.954] [INFO] default -   Ignored disabled shifts(10 0 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shifts.js
+[2024-10-10T11:49:42.956] [INFO] default -   Ignored disabled shiftsReminder(10 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shiftsReminder.js
+[2024-10-10T11:49:42.956] [INFO] default - Scheduled tasks setup done
+[2024-10-10T11:49:42.957] [INFO] default - Initialization complete
+[2024-10-10T11:49:44.154] [INFO] default - Successfully updated 7301 cached users.
+[2024-10-10T11:50:48.077] [ERROR] default - Git - Error updating the repository:
+Error: Cloning into '/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/data/repo'...
+error: RPC failed; curl 56 GnuTLS recv error (-54): Error in the pull function.
+error: 1971 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output
+
+[2024-10-10T11:50:48.078] [INFO] default - Scheduled - Parsing levels...
+[2024-10-10T11:50:48.079] [ERROR] default - Git - Unable to parse data from data/_list.json:
+Error: ENOENT: no such file or directory, open '/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/data/repo/data/_list.json'
+[2024-10-10T11:50:48.079] [ERROR] default - Scheduled - Canceled updating levels cachee: no levels found.
+[2024-10-10T11:50:48.079] [INFO] default - Scheduled - Parsing legacy levels...
+[2024-10-10T11:50:48.080] [ERROR] default - Git - Unable to parse data from data/_legacy.json:
+Error: ENOENT: no such file or directory, open '/home/jlascoum/Documents/AREDL/AREDL-ManagerV2/data/repo/data/_legacy.json'
+[2024-10-10T11:50:48.080] [ERROR] default - Scheduled - Canceled updating legacy levels cachee: no levels found.
+[2024-10-10T11:50:48.080] [INFO] default - Scheduled - Successfully updated cached levels.
+[2024-10-10T11:52:17.848] [INFO] default - ----------------------------------------
+[2024-10-10T11:52:17.849] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:52:17.850] [INFO] default - ----------------------------------------
+[2024-10-10T11:52:17.850] [INFO] default - Syncing database data...
+[2024-10-10T11:52:22.651] [INFO] default - Database sync done
+[2024-10-10T11:52:22.653] [INFO] default - Initializing client...
+[2024-10-10T11:52:22.653] [INFO] default -   Loading commands
+[2024-10-10T11:52:22.669] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:52:22.674] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:52:22.678] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:52:22.681] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:52:22.682] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:52:22.684] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:52:22.687] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:52:22.985] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:52:22.986] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:52:22.986] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:52:22.987] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:52:22.988] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:52:22.993] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:52:22.994] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:52:22.994] [INFO] default -   Loading buttons
+[2024-10-10T11:52:22.994] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:52:22.994] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:52:22.995] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:52:22.995] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:52:22.995] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:52:22.996] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:52:22.996] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:52:22.996] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:52:22.996] [INFO] default -   Loading menus
+[2024-10-10T11:52:22.996] [INFO] default -   Loading modals
+[2024-10-10T11:52:22.997] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:52:22.997] [INFO] default -   Loading events
+[2024-10-10T11:52:23.440] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:52:23.440] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:52:23.440] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:52:23.441] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:52:23.441] [INFO] default - Client initialization done
+[2024-10-10T11:52:23.441] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:52:23.947] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:52:23.948] [INFO] default - Logging in client with discord...
+[2024-10-10T11:53:15.392] [INFO] default - ----------------------------------------
+[2024-10-10T11:53:15.393] [INFO] default - AREDL Manager starting...
+[2024-10-10T11:53:15.394] [INFO] default - ----------------------------------------
+[2024-10-10T11:53:15.394] [INFO] default - Syncing database data...
+[2024-10-10T11:53:20.318] [INFO] default - Database sync done
+[2024-10-10T11:53:20.320] [INFO] default - Initializing client...
+[2024-10-10T11:53:20.320] [INFO] default -   Loading commands
+[2024-10-10T11:53:20.337] [INFO] default -     Loaded list from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/list/list.js
+[2024-10-10T11:53:20.344] [INFO] default -     Loaded embed from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/embed.js
+[2024-10-10T11:53:20.350] [INFO] default -     Loaded message from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/messages/messages.js
+[2024-10-10T11:53:20.352] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish-lb.js
+[2024-10-10T11:53:20.354] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/fish.js
+[2024-10-10T11:53:20.355] [INFO] default -     Loaded botping from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/ping.js
+[2024-10-10T11:53:20.357] [INFO] default -     Loaded placement from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/placement.js
+[2024-10-10T11:53:20.624] [INFO] default -     Loaded stats from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/stats.js
+[2024-10-10T11:53:20.624] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/test.js
+[2024-10-10T11:53:20.625] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/others/updatestats.js
+[2024-10-10T11:53:20.626] [INFO] default -     Loaded recordadmin from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordadmin.js
+[2024-10-10T11:53:20.628] [INFO] default -     Loaded recordmod from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/recordmod.js
+[2024-10-10T11:53:20.632] [INFO] default -     Loaded record from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/records/records.js
+[2024-10-10T11:53:20.634] [INFO] default -     Ignored disabled command /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/commands/shifts/shift.js
+[2024-10-10T11:53:20.634] [INFO] default -   Loading buttons
+[2024-10-10T11:53:20.634] [INFO] default -     Loaded accept from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/acceptRecord.js
+[2024-10-10T11:53:20.634] [INFO] default -     Loaded commitAddLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitAddLevel.js
+[2024-10-10T11:53:20.635] [INFO] default -     Loaded commitLevelFromLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelFromLegacy.js
+[2024-10-10T11:53:20.635] [INFO] default -     Loaded commitLevelToLegacy from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitLevelToLegacy.js
+[2024-10-10T11:53:20.635] [INFO] default -     Loaded commitMoveLevel from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitMoveLevel.js
+[2024-10-10T11:53:20.636] [INFO] default -     Loaded commitRecords from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/commitRecords.js
+[2024-10-10T11:53:20.636] [INFO] default -     Loaded deny from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/denyRecord.js
+[2024-10-10T11:53:20.636] [INFO] default -     Loaded removeMsg from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/buttons/removeMessage.js
+[2024-10-10T11:53:20.636] [INFO] default -   Loading menus
+[2024-10-10T11:53:20.637] [INFO] default -   Loading modals
+[2024-10-10T11:53:20.637] [INFO] default -     Loaded denyReason from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/modals/denyReason.js
+[2024-10-10T11:53:20.637] [INFO] default -   Loading events
+[2024-10-10T11:53:20.919] [INFO] default -     Loaded guildMemberAdd from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberAdd.js
+[2024-10-10T11:53:20.920] [INFO] default -     Loaded guildMemberRemove from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/guildMemberRemove.js
+[2024-10-10T11:53:20.920] [INFO] default -     Loaded interactionCreate from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/interactionCreate.js
+[2024-10-10T11:53:20.920] [INFO] default -     Loaded ready from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/events/ready.js
+[2024-10-10T11:53:20.920] [INFO] default - Client initialization done
+[2024-10-10T11:53:20.920] [INFO] default - Checking github token permissions for Minebox260/AREDLtest...
+[2024-10-10T11:53:26.779] [INFO] default - Found push access to Minebox260/AREDLtest
+[2024-10-10T11:53:26.780] [INFO] default - Logging in client with discord...
+[2024-10-10T11:53:28.984] [INFO] default - Client logged in as AREDL Manager Beta#9869
+[2024-10-10T11:53:29.193] [INFO] default - Scheduled - Updating cached levels...
+[2024-10-10T11:53:29.193] [INFO] default - Git - Updating GitHub repository...
+[2024-10-10T11:53:29.194] [INFO] default - Git - Cloning the repository for the first time, this may take a while...
+[2024-10-10T11:54:54.488] [INFO] default - Git - Successfully updated the repository
+[2024-10-10T11:54:54.489] [INFO] default - Scheduled - Parsing levels...
+[2024-10-10T11:54:54.833] [INFO] default - Scheduled - Successfully updated 1004 cached levels.
+[2024-10-10T11:54:54.833] [INFO] default - Scheduled - Parsing legacy levels...
+[2024-10-10T11:54:54.857] [INFO] default - Scheduled - Successfully updated 16 cached legacy levels.
+[2024-10-10T11:54:54.857] [INFO] default - Scheduled - Successfully updated cached levels.
+[2024-10-10T11:54:54.858] [INFO] default - Updating cached users...
+[2024-10-10T11:54:55.531] [INFO] default - Successfully updated 7301 cached users.
+[2024-10-10T11:54:55.963] [INFO] default - Checking pending record data...
+[2024-10-10T11:54:56.016] [INFO] default - Found a total of 0 errored records.
+[2024-10-10T11:54:56.017] [INFO] default - Setting up scheduled tasks
+[2024-10-10T11:54:56.028] [INFO] default -   Started updateCache(30 * * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/cacheUpdate.js
+[2024-10-10T11:54:56.030] [INFO] default -   Ignored disabled sendChangelog(00 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/sendChangelog.js
+[2024-10-10T11:54:56.032] [INFO] default -   Ignored disabled shifts(10 0 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shifts.js
+[2024-10-10T11:54:56.033] [INFO] default -   Ignored disabled shiftsReminder(10 22 * * *) from /home/jlascoum/Documents/AREDL/AREDL-ManagerV2/scheduled/shiftsReminder.js
+[2024-10-10T11:54:56.033] [INFO] default - Scheduled tasks setup done
+[2024-10-10T11:54:56.033] [INFO] default - Initialization complete

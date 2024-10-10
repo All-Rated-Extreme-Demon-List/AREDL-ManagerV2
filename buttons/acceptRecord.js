@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
-
+const logger = require('log4js').getLogger();
 const { archiveRecordsID, acceptedRecordsID, recordsID, enableSeparateStaffServer, guildId, staffGuildId } = require('../config.json');
 const { db } = require('../index.js');
 
@@ -18,7 +18,7 @@ module.exports = {
 			try {
 				await interaction.message.delete();
 			} catch (error) {
-				console.log(error);
+				logger.info(error);
 			}
 			return;
 		}
@@ -44,7 +44,7 @@ module.exports = {
 			});
 		}
 		catch (error) {
-			console.log(`Couldn't add record to the commit db :\n${error}`);
+			logger.info(`Couldn't add record to the commit db :\n${error}`);
 			return await interaction.reply(':x: Something went wrong while accepting the record');
 		}
 
@@ -74,7 +74,7 @@ module.exports = {
 			if (record.embedDiscordid != null) await (await interaction.message.channel.messages.fetch(record.embedDiscordid)).delete();
 		} catch (error) {
 			await interaction.editReply(':x: The record has already been accepted/denied, or something went wrong while deleting the messages from pending');
-			console.log(error);
+			logger.info(error);
 			return;
 		}
 
@@ -136,7 +136,7 @@ module.exports = {
 				await interaction.user.send({ content: dmMessage });
 				await interaction.user.send({ content: dmMessage2 });
 			} catch (_) {
-				console.log(`Failed to send in moderator ${interaction.user.id} dms, ignoring send in dms setting`);
+				logger.info(`Failed to send in moderator ${interaction.user.id} dms, ignoring send in dms setting`);
 			}
 		}
 
@@ -172,14 +172,14 @@ module.exports = {
 				moderator: interaction.user.id,
 			});
 		} catch (error) {
-			console.log(`Couldn't add the accepted record ; something went wrong with Sequelize : ${error}`);
+			logger.info(`Couldn't add the accepted record ; something went wrong with Sequelize : ${error}`);
 			return await interaction.editReply(':x: Something went wrong while adding the accepted record to the database');
 		}
 
 		if (!(await db.dailyStats.findOne({ where: { date: Date.now() } }))) db.dailyStats.create({ date: Date.now(), nbRecordsAccepted: 1, nbRecordsPending: await db.pendingRecords.count() });
 		else await db.dailyStats.update({ nbRecordsAccepted: (await db.dailyStats.findOne({ where: { date: Date.now() } })).nbRecordsAccepted + 1 }, { where: { date: Date.now() } });
 
-		console.log(`${interaction.user.tag} (${interaction.user.id}) accepted record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
+		logger.info(`${interaction.user.tag} (${interaction.user.id}) accepted record of ${record.levelname} for ${record.username} submitted by ${record.submitter}`);
 		// Reply
 		return await interaction.editReply(':white_check_mark: The record has been accepted');
 

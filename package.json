@@ -16,8 +16,10 @@
     "exceljs": "^4.4.0",
     "is-url-http": "^2.3.8",
     "log-timestamp": "^0.3.0",
+    "log4js": "^6.9.1",
     "node-cron": "^3.0.3",
     "sequelize": "^6.35.0",
+    "simple-git": "^3.27.0",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

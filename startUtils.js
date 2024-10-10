@@ -3,14 +3,15 @@ const path = require('node:path');
 const { Collection } = require('discord.js');
 const cron = require('node-cron');
 const { githubOwner, githubRepo } = require('./config.json');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	async clientInit(client) {
-		console.log('Initializing client...');
+		logger.info('Initializing client...');
 		// Commands
 		client.commands = new Collection();
 		client.cooldowns = new Collection();
-		console.log('  Loading commands');
+		logger.info('  Loading commands');
 		const parentCommandPath = path.join(__dirname, 'commands');
 
 		if (fs.existsSync(parentCommandPath)) {
@@ -25,19 +26,19 @@ module.exports = {
 					if ('data' in command && 'execute' in command && 'enabled' in command) {
 						if (command.enabled) {
 							client.commands.set(command.data.name, command);
-							console.log(`    Loaded ${command.data.name} from ${filePath}`);
+							logger.info(`    Loaded ${command.data.name} from ${filePath}`);
 						} else {
-							console.log(`    Ignored disabled command ${filePath}`);
+							logger.info(`    Ignored disabled command ${filePath}`);
 						}
 					} else {
-						console.log(`  [WARNING] The command at ${filePath} is missing a required "data", "execute" or "enabled" property.`);
+						logger.info(`  [WARNING] The command at ${filePath} is missing a required "data", "execute" or "enabled" property.`);
 					}
 				}
 			}
 		}
 
 		// Buttons
-		console.log('  Loading buttons');
+		logger.info('  Loading buttons');
 		client.buttons = new Collection();
 		const buttonsPath = path.join(__dirname, 'buttons');
 
@@ -47,12 +48,12 @@ module.exports = {
 				const filePath = path.join(buttonsPath, file);
 				const button = require(filePath);
 				client.buttons.set(button.customId, button);
-				console.log(`    Loaded ${button.customId} from ${filePath}`);
+				logger.info(`    Loaded ${button.customId} from ${filePath}`);
 			}
 		}
 
 		// Select Menus
-		console.log('  Loading menus');
+		logger.info('  Loading menus');
 		client.menus = new Collection();
 		const menusPath = path.join(__dirname, 'menus');
 
@@ -62,12 +63,12 @@ module.exports = {
 				const filePath = path.join(menusPath, file);
 				const menu = require(filePath);
 				client.menus.set(menu.customId, menu);
-				console.log(`    Loaded ${menu.customId} from ${filePath}`);
+				logger.info(`    Loaded ${menu.customId} from ${filePath}`);
 			}
 		}
 
 		// Modals
-		console.log('  Loading modals');
+		logger.info('  Loading modals');
 		client.modals = new Collection();
 		const modalsPath = path.join(__dirname, 'modals');
 		if (fs.existsSync(modalsPath)) {
@@ -76,12 +77,12 @@ module.exports = {
 				const filePath = path.join(modalsPath, file);
 				const modal = require(filePath);
 				client.modals.set(modal.customId, modal);
-				console.log(`    Loaded ${modal.customId} from ${filePath}`);
+				logger.info(`    Loaded ${modal.customId} from ${filePath}`);
 			}
 		}
 
 		// Events
-		console.log('  Loading events');
+		logger.info('  Loading events');
 		const eventsPath = path.join(__dirname, 'events');
 
 		if (fs.existsSync(eventsPath)) {
@@ -94,16 +95,16 @@ module.exports = {
 				} else {
 					client.on(event.name, (...args) => event.execute(...args));
 				}
-				console.log(`    Loaded ${event.name} from ${filePath}`);
+				logger.info(`    Loaded ${event.name} from ${filePath}`);
 			}
 		}
 
-		console.log('Client initialization done');
+		logger.info('Client initialization done');
 	},
 
 	// Sequelize sync init
 	async sequelizeInit(db, cache) {
-		console.log('Syncing database data...');
+		logger.info('Syncing database data...');
 		for (const table of Object.keys(db)) await db[table].sync({ alter: true});
 		for (const table of Object.keys(cache)) {
 			if (table !== 'updateLevels' && table !== 'updateUsers') await cache[table].sync({ alter: true});
@@ -111,14 +112,14 @@ module.exports = {
 
 		// Create infos if they don't exist
 		if (!(await db.infos.count({ where: { name: 'records' } }))) {
-			console.log('Records status not found, creating...');
+			logger.info('Records status not found, creating...');
 			await db.infos.create({
 				status: false,
 				name: 'records',
 			});
 		}
 		if (!(await db.infos.count({ where: { name: 'shifts' } }))) {
-			console.log('Shifts status not found, creating...');
+			logger.info('Shifts status not found, creating...');
 			await db.infos.create({
 				status: false,
 				name: 'shifts',
@@ -126,19 +127,19 @@ module.exports = {
 		} else await db.infos.update({status:false}, {where:{name:'shifts'}});
 
 		if (!(await db.infos.count({ where: { name: 'commitdebug' } }))) {
-			console.log('Commit debug status not found, creating');
+			logger.info('Commit debug status not found, creating');
 			await db.infos.create({
 				status: 0,
 				name: 'commitdebug',
 			});
 		}
-		console.log('Database sync done');
+		logger.info('Database sync done');
 	},
 
 	// Scheduled cron tasks
 	async scheduledTasksInit() {
 		
-		console.log('Setting up scheduled tasks');
+		logger.info('Setting up scheduled tasks');
 		const scheduledPath = path.join(__dirname, 'scheduled');
 		const scheduledFiles = fs.readdirSync(scheduledPath).filter(file => file.endsWith('.js'));
 
@@ -148,16 +149,16 @@ module.exports = {
 
 			if (task.enabled) {
 				cron.schedule(task.cron, task.execute);
-				console.log(`  Started ${task.name}(${task.cron}) from ${filePath}`);
+				logger.info(`  Started ${task.name}(${task.cron}) from ${filePath}`);
 			} else {
-				console.log(`  Ignored disabled ${task.name}(${task.cron}) from ${filePath}`);
+				logger.info(`  Ignored disabled ${task.name}(${task.cron}) from ${filePath}`);
 			}
 		}
-		console.log('Scheduled tasks setup done');
+		logger.info('Scheduled tasks setup done');
 	},
 
 	async checkGithubPermissions(octokit) {
-		console.log(`Checking github token permissions for ${githubOwner}/${githubRepo}...`);
+		logger.info(`Checking github token permissions for ${githubOwner}/${githubRepo}...`);
 		try {
 			const { data } = await octokit.rest.repos.get({
 				owner: githubOwner,
@@ -165,12 +166,12 @@ module.exports = {
 			});
 
 			if (data.permissions.push) {
-				console.log(`Found push access to ${githubOwner}/${githubRepo}`);
+				logger.info(`Found push access to ${githubOwner}/${githubRepo}`);
 			} else {
-				console.log(`Couldn't find push access to ${githubOwner}/${githubRepo}`);
+				logger.info(`Couldn't find push access to ${githubOwner}/${githubRepo}`);
 			}
 		} catch (error) {
-			console.log(`Error fetching repository information: ${error}`);
+			logger.info(`Error fetching repository information: ${error}`);
 		}
 	}
 }

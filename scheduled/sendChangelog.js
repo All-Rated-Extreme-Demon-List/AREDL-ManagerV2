@@ -1,16 +1,17 @@
 const { enableChangelogMessage, scheduleChangelog } = require('../config.json');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	name: 'sendChangelog',
 	cron: scheduleChangelog,
 	enabled: enableChangelogMessage,
 	async execute() {
-		console.log("Sending changelog message...");
+		logger.info("Sending changelog message...");
 		const { db, client } = require('../index.js');
 		const { changelogID, changelogRoleID, guildId } = require('../config.json');
 
 		const changelogData = await db.changelog.findAll({});
-		if (!changelogData) return console.log("No changelog data for this day");
+		if (!changelogData) return logger.info("No changelog data for this day");
 
 		let changelogText = "";
 
@@ -46,34 +47,34 @@ module.exports = {
 			const guild = await client.guilds.fetch(guildId);
 			channel = await guild.channels.fetch(changelogID);
 		} catch (err) {
-			return console.log("Failed to fetch changelog channel");
+			return logger.info("Failed to fetch changelog channel");
 		}
 
 		try {
 			sent = await channel.send(changelogText);
 		} catch (err) {
-			return console.log("Failed to send changelog message");
+			return logger.info("Failed to send changelog message");
 		}
 
 		try {
 			await sent.react('👍');
 			await sent.react('👎');
 		} catch (err) {
-			console.log("Failed to react to changelog message");
+			logger.info("Failed to react to changelog message");
 		}
 
 		try {
 			await db.changelog.destroy({ where: {} });
 		} catch (err) {
-			console.log("Failed to clear changelog entries");
+			logger.info("Failed to clear changelog entries");
 		}
 
 		try {		
 			if (sent.crosspostable) await sent.crosspost();
 		} catch (err) {
-			console.log("Failed to crosspost changelog message");
+			logger.info("Failed to crosspost changelog message");
 		}
 
-		console.log("Changelog sent successfully");
+		logger.info("Changelog sent successfully");
 	},
 };

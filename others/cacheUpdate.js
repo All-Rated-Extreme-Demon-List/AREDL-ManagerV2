@@ -1,131 +1,50 @@
 const { githubBranch, githubDataPath, githubOwner, githubRepo } = require('../config.json');
-
+const logger = require('log4js').getLogger();
+const { cloneOrPullRepo, parseLevels } = require('./gitUtils.js');
 module.exports = {
 	async updateCachedLevels() {
+		const { cache } = require('../index.js');
 
-		const { octokit, cache } = require('../index.js');
-		const levels = [];
-		const legacy = [];
-		console.log('Updating cached levels...');
-
-		let listFileResponse;
-		let legacyFileResponse;
-		try {
-			listFileResponse = await octokit.rest.repos.getContent({
-				owner: githubOwner,
-				repo: githubRepo,
-				path: githubDataPath + `/_list.json`,
-				branch: githubBranch,
-			});
-		} catch (fetchError) {
-			console.log(`Couldn't fetch _list.json: \n${fetchError}`);
-			return -1;
-		}
-
-		try {
-			legacyFileResponse = await octokit.rest.repos.getContent({
-				owner: githubOwner,
-				repo: githubRepo,
-				path: githubDataPath + `/_legacy.json`,
-				branch: githubBranch,
-			});
-		} catch (fetchError) {
-			console.log(`Couldn't fetch _legacy.json: \n${fetchError}`);
-		}
-
-		let list_data;
-		let legacy_data;
-	
-		try {
-			list_data = JSON.parse(Buffer.from(listFileResponse.data.content, 'base64').toString('utf-8'));
-		} catch (parseError) {
-			console.log(`Unable to parse data fetched from _list.json:\n${parseError}`);
-			return -1;
-		}
-
-		if (legacyFileResponse) {
-			try {
-				legacy_data = JSON.parse(Buffer.from(legacyFileResponse.data.content, 'base64').toString('utf-8'));
-			} catch (parseError) {
-				console.log(`Unable to parse data fetched from _legacy.json:\n${parseError}`);
-			}
-		}
+		logger.info('Scheduled - ' + 'Updating cached levels...');
 		
-		let i = 1;
-		for (const filename of list_data) {
-			let fileResponse;
+		await cloneOrPullRepo();
+		logger.info('Scheduled - ' + 'Parsing levels...');
+		const levels = await parseLevels();
+		
+		if (levels.length > 0) {
+			await cache.levels.destroy({ where: {}});
 			try {
-				fileResponse = await octokit.rest.repos.getContent({
-					owner: githubOwner,
-					repo: githubRepo,
-					path: githubDataPath + `/${filename}.json`,
-					branch: githubBranch,
-				});
-			} catch (fetchError) {
-				console.log(`Couldn't fetch ${filename}.json: \n${fetchError}`);
-				continue;
+				await cache.levels.bulkCreate(levels);
+				logger.info('Scheduled - ' + `Successfully updated ${levels.length} cached levels.`);
+			} catch (error) {
+				logger.error('Scheduled - ' + `Couldn't udate cached levels, something went wrong with sequelize: ${error}`);
 			}
-			let parsedData;
-			try {
-				parsedData = JSON.parse(Buffer.from(fileResponse.data.content, 'base64').toString('utf-8'));
-			} catch (parseError) {
-				console.log(`Unable to parse data fetched from ${filename}.json:\n${parseError}`);
-				continue;
-			}
-			
-			levels.push({ name: parsedData.name, position: i, filename: filename});
-			i++;
+		} else {
+			logger.error('Scheduled - ' + 'Canceled updating levels cachee: no levels found.');
 		}
 
-		if (legacy_data) {
-			let i = 1;
-			for (const filename of legacy_data) {
-				let fileResponse;
-				try {
-					fileResponse = await octokit.rest.repos.getContent({
-						owner: githubOwner,
-						repo: githubRepo,
-						path: githubDataPath + `/${filename}.json`,
-						branch: githubBranch,
-					});
-				} catch(fetchError) {
-					console.log(`Couldn't fetch ${filename}.json: \n${fetchError}`);
-					continue;
-				}
-
-				let parsedData;
-				try {
-					parsedData = JSON.parse(Buffer.from(fileResponse.data.content, 'base64').toString('utf-8'));
-				} catch (parseError) {
-					console.log(`Unable to parse data fetched from ${filename}.json:\n${parseError}`);
-					continue;
-				}
-
-				legacy.push({ name: parsedData.name, position: i, filename: filename});
-				i++;
+		logger.info('Scheduled - ' + 'Parsing legacy levels...');
+		const legacy_levels = await parseLevels(true);
+		
+		if (legacy_levels.length > 0) {
+			await cache.legacy.destroy({ where: {}});
+			try {
+				await cache.legacy.bulkCreate(legacy_levels);
+				logger.info('Scheduled - ' + `Successfully updated ${legacy_levels.length} cached legacy levels.`);
+			} catch (error) {
+				logger.error('Scheduled - ' + `Couldn't udate cached legacy levels, something went wrong with sequelize: ${error}`);
 			}
+		} else {
+			logger.error('Scheduled - ' + 'Canceled updating legacy levels cachee: no levels found.');
 		}
-
-		cache.levels.destroy({ where: {}});
-			try {
-				cache.levels.bulkCreate(levels);
-				console.log(`Successfully updated ${levels.length} cached levels.`);
-			} catch (error) {
-				console.log(`Couldn't udate cached levels, something went wrong with sequelize: ${error}`);
-			}
-		cache.legacy.destroy({ where: {}});
-			try {
-				cache.legacy.bulkCreate(legacy);
-				console.log(`Successfully updated ${legacy.length} cached legacy levels.`);
-			} catch (error) {
-				console.log(`Couldn't udate cached legacy levels, something went wrong with sequelize: ${error}`);
-			}
+		logger.info('Scheduled - ' + 'Successfully updated cached levels.');
+		
 	},
 	async updateCachedUsers() {
 
 		const { octokit, cache } = require('../index.js');
 		const users = [];
-		console.log('Updating cached users...');
+		logger.info('Updating cached users...');
 
 		let usersFileResponse;
 		try {
@@ -136,7 +55,7 @@ module.exports = {
 				branch: githubBranch,
 			});
 		} catch (fetchError) {
-			console.log(`Couldn't fetch _name_map.json: \n${fetchError}`);
+			logger.info(`Couldn't fetch _name_map.json: \n${fetchError}`);
 			return -1;
 		}
 		
@@ -145,7 +64,7 @@ module.exports = {
 		try {
 			users_data = JSON.parse(Buffer.from(usersFileResponse.data.content, 'base64').toString('utf-8'));
 		} catch (parseError) {
-			console.log(`Unable to parse data fetched from _list.json:\n${parseError}`);
+			logger.info(`Unable to parse data fetched from _list.json:\n${parseError}`);
 			return -1;
 		}
 
@@ -157,9 +76,9 @@ module.exports = {
 		cache.users.destroy({ where: {}});
 		try {
 			cache.users.bulkCreate(users);
-			console.log(`Successfully updated ${users.length} cached users.`);
+			logger.info(`Successfully updated ${users.length} cached users.`);
 		} catch (error) {
-			console.log(`Couldn't udate cached users, something went wrong with sequelize: ${error}`);
+			logger.info(`Couldn't udate cached users, something went wrong with sequelize: ${error}`);
 		}
 	},
 };

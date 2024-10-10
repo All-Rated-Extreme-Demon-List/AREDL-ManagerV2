@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const { Collection } = require('discord.js');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -13,7 +14,7 @@ module.exports = {
 			const command = interaction.client.commands.get(interaction.commandName);
 
 			if (!command) {
-				console.error(`No command matching ${interaction.commandName} was found.`);
+				logger.error(`No command matching ${interaction.commandName} was found.`);
 				return;
 			}
 
@@ -45,21 +46,21 @@ module.exports = {
 			try {
 				await command.execute(interaction);
 			} catch (error) {
-				console.error(`Error executing ${interaction.commandName}`);
-				console.error(error);
+				logger.error(`Error executing ${interaction.commandName}`);
+				logger.error(error);
 			}
 		} else if (interaction.isAutocomplete()) {
 			const command = interaction.client.commands.get(interaction.commandName);
 
 			if (!command) {
-				console.error(`No command matching ${interaction.commandName} was found.`);
+				logger.error(`No command matching ${interaction.commandName} was found.`);
 				return;
 			}
 
 			try {
 				await command.autocomplete(interaction);
 			} catch (error) {
-				console.error(error);
+				logger.error(error);
 			}
 		} else if (interaction.isButton()) {
 
@@ -72,8 +73,8 @@ module.exports = {
 					if (button.ephemeral != null) await interaction.deferReply({ ephemeral: button.ephemeral });
 					await button.execute(interaction);
 				} catch (error) {
-					console.error(`Error executing ${interaction.customId}`);
-					console.error(error);
+					logger.error(`Error executing ${interaction.customId}`);
+					logger.error(error);
 				}
 			}
 
@@ -88,8 +89,8 @@ module.exports = {
 				try {
 					await menu.execute(interaction);
 				} catch (error) {
-					console.error(`Error executing ${interaction.customId}`);
-					console.error(error);
+					logger.error(`Error executing ${interaction.customId}`);
+					logger.error(error);
 				}
 			}
 
@@ -101,8 +102,8 @@ module.exports = {
 				try {
 					await modal.execute(interaction);
 				} catch (error) {
-					console.error(`Error executing ${interaction.customId}`);
-					console.error(error);
+					logger.error(`Error executing ${interaction.customId}`);
+					logger.error(error);
 				}
 			}
 

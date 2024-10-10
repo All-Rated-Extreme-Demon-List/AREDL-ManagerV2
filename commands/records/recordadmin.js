@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discor
 const { guildId, staffGuildId, enableSeparateStaffServer, pendingRecordsID, priorityRecordsID, enablePriorityRole } = require('../../config.json');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const Sequelize = require('sequelize');
+const logger = require('log4js').getLogger();
 
 module.exports = {
 	cooldown: 5,
@@ -49,7 +50,7 @@ module.exports = {
 			const update = await db.infos.update({ status: interaction.options.getString('status') === 'closed' }, { where: { name: 'records' } });
 
 			if (!update) return await interaction.editReply(':x: Something went wrong while executing the command');
-			console.log(`Changed record status to ${interaction.options.getString('status')}`);
+			logger.info(`Changed record status to ${interaction.options.getString('status')}`);
 			return await interaction.editReply(`:white_check_mark: Changed record status to ${interaction.options.getString('status')}`);
 
 		} else if (interaction.options.getSubcommand() === 'modinfo') {
@@ -163,7 +164,7 @@ module.exports = {
 
 			// Clears errored records //
 
-			console.log('Looking for errored records...');
+			logger.info('Looking for errored records...');
 			const pendingRecords = await db.pendingRecords.findAll();
 			let nbFound = 0;
 			const guild = await interaction.client.guilds.fetch((enableSeparateStaffServer ? staffGuildId : guildId));
@@ -176,7 +177,7 @@ module.exports = {
 				} catch (_) {
 					await db.pendingRecords.destroy({ where: { discordid: pendingRecords[i].discordid } });
 					nbFound++;
-					console.log(`Found an errored record : ${pendingRecords[i].discordid}`);
+					logger.info(`Found an errored record : ${pendingRecords[i].discordid}`);
 
 					// Try deleting the other message as well in case only the first one is missing smh
 					try {
@@ -187,7 +188,7 @@ module.exports = {
 					}
 				}
 			}
-			console.log(`Found a total of ${nbFound} records.`);
+			logger.info(`Found a total of ${nbFound} records.`);
 			return await interaction.editReply(`:white_check_mark: ${nbFound} records missing from the pending channel were found, and removed from the database.`);
 
 
