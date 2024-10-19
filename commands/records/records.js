@@ -40,8 +40,13 @@ module.exports = {
 						.setMaxLength(1024)
 						.setRequired(true))
 				.addStringOption(option =>
+					option.setName('modmenu')
+						.setDescription('Name of the mod menu you used, if any (Megahack, Eclipse, GDH, QOLMod, etc..), or None/Vanilla')
+						.setMaxLength(1024)
+						.setRequired(true))
+				.addStringOption(option =>
 					option.setName('raw')
-						.setDescription('Link to your raw footage (Optional, required for top 250 levels)')
+						.setDescription('Link to your raw footage (Optional, required for top 400 levels)')
 						.setMaxLength(1024))
 				.addIntegerOption(option =>
 					option.setName('ldm')
@@ -85,7 +90,7 @@ module.exports = {
 		if (focused.name === 'levelname') {
 			let levels = await cache.levels.findAll({
 				where: { 
-					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', focused.value.toLowerCase() + '%')
+					name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', '%' + focused.value.toLowerCase() + '%')
 				}});
 
 			await interaction.respond(
@@ -162,6 +167,7 @@ module.exports = {
 					{ name: 'Device', value: `${interaction.options.getString('device')}`, inline: true },
 					{ name: 'LDM', value: `${(interaction.options.getInteger('ldm') == null ? 'None' : interaction.options.getInteger('ldm'))}`, inline: true },
 					{ name: 'Completion link', value: `${interaction.options.getString('completionlink')}` },
+					{ name: 'Mod menu', value: `${interaction.options.getString('modmenu')}` },
 					{ name: 'Raw link', value: `${(interaction.options.getString('raw') == null ? 'None' : interaction.options.getString('raw'))}` },
 					{ name: 'Additional Info', value: `${(interaction.options.getString('additionalnotes') == null ? 'None' : interaction.options.getString('additionalnotes'))}` },
 				)
@@ -183,6 +189,7 @@ module.exports = {
 					raw: 'None',
 					ldm: 0,
 					additionalnotes: 'None',
+					modMenu: interaction.options.getString('modmenu'),
 					discordid: sentvideo.id,
 					embedDiscordid: sent.id,
 					priority: enablePriorityRole && interaction.member.roles.cache.has(priorityRoleID),

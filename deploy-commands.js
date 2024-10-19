@@ -1,7 +1,22 @@
 const { REST, Routes } = require('discord.js');
 const { clientId, guildId, staffGuildId, enableSeparateStaffServer, token } = require('./config.json');
+const log4js = require('log4js');
 const fs = require('node:fs');
 const path = require('node:path');
+
+// Logger
+log4js.configure('./log4js.json');
+const logger = log4js.getLogger();
+const errorLogger = log4js.getLogger('error');
+
+// Error logging
+process.on('uncaughtException', (err) => {
+	errorLogger.error('Uncaught Exception:', err);
+});
+  
+process.on('unhandledRejection', (reason, promise) => {
+	errorLogger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 const commands = [];
 // Grab all the command files from the commands directory

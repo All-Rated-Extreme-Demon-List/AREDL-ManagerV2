@@ -1,5 +1,6 @@
 node_modules
 data
+logs
 config.json
 package-lock.json
 eslint.config.mjs

@@ -20,6 +20,7 @@ module.exports = {
 			},
 			priority: Sequelize.BOOLEAN,
 			assigned: Sequelize.STRING,
+			modMenu: Sequelize.STRING,
 		});
 		
 		db.acceptedRecords = sequelize.define('acceptedRecords', {
@@ -32,6 +33,7 @@ module.exports = {
 			ldm: Sequelize.INTEGER,
 			additionalnotes: Sequelize.STRING,
 			priority: Sequelize.BOOLEAN,
+			modMenu: Sequelize.STRING,
 			moderator: Sequelize.STRING,
 		});
 		
@@ -49,6 +51,7 @@ module.exports = {
 				unique: true,
 			},
 			priority: Sequelize.BOOLEAN,
+			modMenu: Sequelize.STRING,
 			denyReason: Sequelize.STRING,
 			moderator: Sequelize.STRING,
 		});
@@ -140,11 +143,6 @@ module.exports = {
 				type: Sequelize.BOOLEAN,
 				defaultValue: false,
 			},
-		});
-
-		db.fish = sequelize.define('fish', {
-			user: Sequelize.STRING,
-			amount: Sequelize.DOUBLE,
 		});
 
 		db.embeds = sequelize.define('embeds', {

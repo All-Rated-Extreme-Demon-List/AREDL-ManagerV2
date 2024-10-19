@@ -36,6 +36,7 @@ module.exports = {
 				completionlink: record.completionlink,
 				raw: record.raw,
 				ldm: record.ldm,
+				modMenu: record.modMenu,
 				additionalnotes: record.additionalnotes,
 				priority: record.priority,
 				denyReason: reason,
@@ -59,6 +60,7 @@ module.exports = {
 				{ name: 'LDM', value: `${(record.ldm == 0 ? 'None' : record.ldm)}`, inline: true },
 				{ name: 'Completion link', value: `${record.completionlink}` },
 				{ name: 'Raw link', value: `${record.raw}` },
+				{ name: 'Mod menu', value: `${record.modMenu}` },
 				{ name: 'Additional Info', value: `${record.additionalnotes}` },
 			)
 			.setTimestamp();
