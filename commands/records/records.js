@@ -15,6 +15,14 @@ module.exports = {
 				.setName('submit')
 				.setDescription('Submit a record for the list')
 				.addStringOption(option =>
+					option.setName('device')
+						.setDescription('Device the level was completed on')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'PC', value: 'PC' },
+							{ name: 'Mobile', value: 'Mobile' },
+						))
+				.addStringOption(option =>
 					option.setName('username')
 						.setDescription('The username you\'re submitting for (Be sure to select one of the available options.)')
 						.setMaxLength(1024)
@@ -25,15 +33,7 @@ module.exports = {
 						.setDescription('Name of the level you\'re submitting for (Be sure to select one of the available options.)')
 						.setMaxLength(1024)
 						.setRequired(true)
-						.setAutocomplete(true))
-				.addStringOption(option =>
-					option.setName('device')
-						.setDescription('Device the level was completed on')
-						.setRequired(true)
-						.addChoices(
-							{ name: 'PC', value: 'PC' },
-							{ name: 'Mobile', value: 'Mobile' },
-						))
+						.setAutocomplete(true))	
 				.addStringOption(option =>
 					option.setName('completionlink')
 						.setDescription('Link to the completion')
